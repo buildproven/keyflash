@@ -72,6 +72,7 @@ git checkout -b fix/bug-description
 ```
 
 **Branch Naming**:
+
 - `feature/` - New features
 - `fix/` - Bug fixes
 - `docs/` - Documentation only
@@ -124,6 +125,7 @@ git commit -m "test(api): add rate limiting tests"
 ```
 
 **Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -145,6 +147,7 @@ git push origin feature/your-feature-name
 ### PR Guidelines
 
 **Good PR**:
+
 - Focused on a single concern
 - Clear title and description
 - Links to related issues
@@ -153,23 +156,28 @@ git push origin feature/your-feature-name
 - Passes all CI checks
 
 **PR Template**:
+
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] E2E tests added/updated
 - [ ] All tests passing
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Comments added for complex code
@@ -184,9 +192,9 @@ Brief description of changes
 ```typescript
 // ✅ Good
 interface KeywordData {
-  keyword: string;
-  searchVolume: number;
-  difficulty: number;
+  keyword: string
+  searchVolume: number
+  difficulty: number
 }
 
 async function fetchKeywords(
@@ -244,22 +252,22 @@ export class Button extends React.Component {
 
 ```typescript
 // ✅ Good - Organized imports
-import { useState, useEffect } from 'react';
-import { z } from 'zod';
+import { useState, useEffect } from 'react'
+import { z } from 'zod'
 
-import { fetchKeywords } from '@/lib/api';
-import { Button } from '@/components/ui/Button';
-import { KeywordTable } from '@/components/tables/KeywordTable';
+import { fetchKeywords } from '@/lib/api'
+import { Button } from '@/components/ui/Button'
+import { KeywordTable } from '@/components/tables/KeywordTable'
 
-import type { KeywordData } from '@/types';
+import type { KeywordData } from '@/types'
 
 // Component code...
 
 // ❌ Avoid - Messy imports
-import { Button } from '@/components/ui/Button';
-import { useState } from 'react';
-import { fetchKeywords } from '@/lib/api';
-import { z } from 'zod';
+import { Button } from '@/components/ui/Button'
+import { useState } from 'react'
+import { fetchKeywords } from '@/lib/api'
+import { z } from 'zod'
 ```
 
 ## Testing Guidelines
@@ -297,6 +305,7 @@ test('form works', () => {
 ### What to Test
 
 **Do Test** ✅:
+
 - User interactions
 - Edge cases (empty input, max length)
 - Error states
@@ -304,6 +313,7 @@ test('form works', () => {
 - API integrations (with mocks)
 
 **Don't Test** ❌:
+
 - Third-party libraries
 - Implementation details
 - Styling/visual appearance
@@ -316,26 +326,26 @@ test('form works', () => {
 ```typescript
 // ✅ Good - Explain WHY, not WHAT
 // Cache for 7 days because keyword data rarely changes weekly
-const CACHE_TTL = 7 * 24 * 60 * 60;
+const CACHE_TTL = 7 * 24 * 60 * 60
 
 // Sanitize input to prevent injection attacks (OWASP Top 10)
 function sanitizeKeyword(keyword: string): string {
-  return keyword.replace(/[<>\"'&]/g, '');
+  return keyword.replace(/[<>\"'&]/g, '')
 }
 
 // ❌ Avoid - Stating the obvious
 // Set cache TTL to 7 days
-const CACHE_TTL = 7 * 24 * 60 * 60;
+const CACHE_TTL = 7 * 24 * 60 * 60
 
 // Remove characters
 function sanitizeKeyword(keyword: string): string {
-  return keyword.replace(/[<>\"'&]/g, '');
+  return keyword.replace(/[<>\"'&]/g, '')
 }
 ```
 
 ### JSDoc for Complex Functions
 
-```typescript
+````typescript
 /**
  * Calculates keyword difficulty score (0-100) based on competition metrics
  *
@@ -357,19 +367,21 @@ function calculateDifficulty(
 ): number {
   // Implementation
 }
-```
+````
 
 ## Communication
 
 ### Code Reviews
 
 **As a Reviewer**:
+
 - Be respectful and constructive
 - Explain WHY, not just WHAT to change
 - Approve when ready, request changes if needed
 - Respond promptly (within 48 hours)
 
 **As an Author**:
+
 - Respond to all comments
 - Ask for clarification if needed
 - Don't take feedback personally
@@ -412,6 +424,7 @@ Contributors are recognized in several ways:
 ### Enforcement
 
 Violations may result in:
+
 1. Warning
 2. Temporary ban from community spaces
 3. Permanent ban

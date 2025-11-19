@@ -77,6 +77,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### API Setup Guides
 
 Coming soon:
+
 - Setting up Google Ads API (free tier)
 - Setting up DataForSEO API (paid)
 - Switching between API providers
@@ -145,6 +146,7 @@ Vercel will automatically deploy on every push to `main`.
 ### Self-Hosting
 
 See deployment guide (coming soon) for instructions on hosting with:
+
 - Cloudflare Pages
 - AWS (Lambda + CloudFront)
 - Docker
@@ -184,6 +186,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) (coming soon) for detailed guidelines.
 ## 📊 Roadmap
 
 ### MVP (Current Phase)
+
 - [x] Project setup and documentation
 - [ ] UI/UX design
 - [ ] Google Ads API integration
@@ -193,6 +196,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) (coming soon) for detailed guidelines.
 - [ ] Deployment to Vercel
 
 ### Post-MVP
+
 - [ ] User authentication
 - [ ] Saved searches
 - [ ] DataForSEO API integration
@@ -202,6 +206,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) (coming soon) for detailed guidelines.
 - [ ] API for developers
 
 ### Future Possibilities
+
 - [ ] Competitor keyword analysis
 - [ ] Content optimization suggestions
 - [ ] Team workspaces
@@ -214,17 +219,20 @@ Vote on features: [GitHub Discussions](https://github.com/yourusername/keyflash/
 ### Open Source + Hosted SaaS
 
 **Free Self-Hosting**:
+
 - Full source code available (AGPL-3.0)
 - Self-host on your own infrastructure
 - No feature limitations
 
 **Paid Hosted Service** (Coming Soon):
+
 - **Free Tier**: 10 searches/month, 10 keywords each
 - **Basic**: $9/month - 100 searches/month, up to 50 keywords
 - **Pro**: $29/month - Unlimited searches, up to 200 keywords
 - **Agency**: $99/month - Team features, API access
 
 **Why pay for hosting?**
+
 - No setup hassle (API keys, infrastructure)
 - Automatic updates
 - Better performance (global CDN)
@@ -238,24 +246,28 @@ This project is licensed under the **AGPL-3.0 License**.
 ### What This Means
 
 ✅ **You CAN**:
+
 - Use commercially
 - Modify the source code
 - Distribute modified versions
 - Self-host for personal or business use
 
 ❌ **You MUST**:
+
 - Disclose source code of your modifications
 - License derivative works under AGPL-3.0
 - Include original copyright notice
 - State changes made to the code
 
 ❌ **You CANNOT**:
+
 - Hold the author liable
 - Use project name/logo without permission
 
 See [LICENSE](LICENSE) for full details.
 
 **Why AGPL-3.0?**
+
 - Prevents others from creating hosted competitors without contributing back
 - Ensures improvements benefit the community
 - Maintains open source integrity for SaaS applications
@@ -263,6 +275,7 @@ See [LICENSE](LICENSE) for full details.
 ## 🙏 Acknowledgments
 
 Built with excellent open source tools:
+
 - [Next.js](https://nextjs.org/) - React framework
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Upstash](https://upstash.com/) - Serverless Redis

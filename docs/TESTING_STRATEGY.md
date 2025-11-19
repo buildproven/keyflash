@@ -28,17 +28,20 @@
 ### Test Distribution
 
 **60% Unit Tests** (Fast, Isolated)
+
 - Validation functions
 - Data transformation
 - Utility functions
 - Business logic (keyword difficulty scoring, etc.)
 
 **30% Integration Tests** (Medium Speed)
+
 - API routes (mocked external APIs)
 - Cache layer
 - API provider implementations
 
 **10% E2E Tests** (Slower, High Value)
+
 - Complete user workflows
 - Critical paths only
 - Real browser interactions
@@ -48,6 +51,7 @@
 ### Unit & Integration Tests
 
 **Framework**: **Vitest**
+
 - **Why**: Faster than Jest (5-10x), better DX, Vite-native
 - Drop-in Jest replacement (same API)
 - Built-in TypeScript support
@@ -56,9 +60,9 @@
 
 ```typescript
 // vitest.config.ts
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
@@ -68,12 +72,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
-      exclude: [
-        'node_modules/',
-        'tests/',
-        '**/*.config.{js,ts}',
-        '**/types/',
-      ],
+      exclude: ['node_modules/', 'tests/', '**/*.config.{js,ts}', '**/types/'],
       thresholds: {
         branches: 70,
         functions: 70,
@@ -87,12 +86,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-});
+})
 ```
 
 ### React Component Tests
 
 **Library**: **React Testing Library**
+
 - Tests components like users interact with them
 - No implementation detail testing
 - Excellent accessibility testing
@@ -105,6 +105,7 @@ pnpm add -D @testing-library/react @testing-library/jest-dom @testing-library/us
 ### E2E Tests
 
 **Framework**: **Playwright**
+
 - **Why**: Fast, reliable, modern
 - Multi-browser testing (Chromium, Firefox, WebKit)
 - Built-in test runner
@@ -115,7 +116,7 @@ pnpm add -D @testing-library/react @testing-library/jest-dom @testing-library/us
 
 ```typescript
 // playwright.config.ts
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -156,12 +157,13 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
-});
+})
 ```
 
 ### API Testing
 
 **Library**: **MSW (Mock Service Worker)**
+
 - Intercept network requests
 - Mock external APIs (Google Ads, DataForSEO)
 - Same mocks for tests and development
@@ -169,43 +171,49 @@ export default defineConfig({
 
 ```typescript
 // tests/mocks/handlers.ts
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw'
 
 export const handlers = [
   // Mock Google Ads API
-  http.post('https://googleads.googleapis.com/v*/customers/:customerId/googleAds:search', () => {
-    return HttpResponse.json({
-      results: [
-        {
-          keywordPlanAdGroupKeyword: {
-            text: 'test keyword',
+  http.post(
+    'https://googleads.googleapis.com/v*/customers/:customerId/googleAds:search',
+    () => {
+      return HttpResponse.json({
+        results: [
+          {
+            keywordPlanAdGroupKeyword: {
+              text: 'test keyword',
+            },
+            keywordPlanAdGroupKeywordHistoricalMetrics: {
+              avgMonthlySearches: 1000,
+              competition: 'LOW',
+            },
           },
-          keywordPlanAdGroupKeywordHistoricalMetrics: {
-            avgMonthlySearches: 1000,
-            competition: 'LOW',
-          },
-        },
-      ],
-    });
-  }),
+        ],
+      })
+    }
+  ),
 
   // Mock DataForSEO API
-  http.post('https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live', () => {
-    return HttpResponse.json({
-      tasks: [
-        {
-          result: [
-            {
-              keyword: 'test keyword',
-              search_volume: 1000,
-              competition: 0.3,
-            },
-          ],
-        },
-      ],
-    });
-  }),
-];
+  http.post(
+    'https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live',
+    () => {
+      return HttpResponse.json({
+        tasks: [
+          {
+            result: [
+              {
+                keyword: 'test keyword',
+                search_volume: 1000,
+                competition: 0.3,
+              },
+            ],
+          },
+        ],
+      })
+    }
+  ),
+]
 ```
 
 ## Test Categories
@@ -213,6 +221,7 @@ export const handlers = [
 ### 1. Unit Tests
 
 **What to Test**:
+
 - Input validation (Zod schemas)
 - Data transformation functions
 - Business logic (keyword difficulty calculation)
@@ -220,6 +229,7 @@ export const handlers = [
 - Error handling
 
 **What NOT to Test**:
+
 - Third-party libraries
 - React internals
 - Next.js framework code
@@ -228,8 +238,8 @@ export const handlers = [
 
 ```typescript
 // tests/unit/validation.test.ts
-import { describe, it, expect } from 'vitest';
-import { KeywordSearchSchema } from '@/lib/validation/schemas';
+import { describe, it, expect } from 'vitest'
+import { KeywordSearchSchema } from '@/lib/validation/schemas'
 
 describe('KeywordSearchSchema', () => {
   it('accepts valid keyword input', () => {
@@ -238,10 +248,10 @@ describe('KeywordSearchSchema', () => {
       matchType: 'phrase',
       location: 'US',
       language: 'en',
-    };
+    }
 
-    expect(() => KeywordSearchSchema.parse(input)).not.toThrow();
-  });
+    expect(() => KeywordSearchSchema.parse(input)).not.toThrow()
+  })
 
   it('rejects invalid keyword characters', () => {
     const input = {
@@ -249,10 +259,10 @@ describe('KeywordSearchSchema', () => {
       matchType: 'phrase',
       location: 'US',
       language: 'en',
-    };
+    }
 
-    expect(() => KeywordSearchSchema.parse(input)).toThrow();
-  });
+    expect(() => KeywordSearchSchema.parse(input)).toThrow()
+  })
 
   it('enforces max 200 keywords', () => {
     const input = {
@@ -260,44 +270,46 @@ describe('KeywordSearchSchema', () => {
       matchType: 'phrase',
       location: 'US',
       language: 'en',
-    };
+    }
 
-    expect(() => KeywordSearchSchema.parse(input)).toThrow('Maximum 200 keywords');
-  });
-});
+    expect(() => KeywordSearchSchema.parse(input)).toThrow(
+      'Maximum 200 keywords'
+    )
+  })
+})
 ```
 
 ```typescript
 // tests/unit/utils/sanitize.test.ts
-import { describe, it, expect } from 'vitest';
-import { sanitizeKeyword } from '@/lib/utils/sanitize';
+import { describe, it, expect } from 'vitest'
+import { sanitizeKeyword } from '@/lib/utils/sanitize'
 
 describe('sanitizeKeyword', () => {
   it('removes dangerous HTML characters', () => {
-    expect(sanitizeKeyword('<script>alert("xss")</script>'))
-      .toBe('scriptalert("xss")/script');
-  });
+    expect(sanitizeKeyword('<script>alert("xss")</script>')).toBe(
+      'scriptalert("xss")/script'
+    )
+  })
 
   it('collapses multiple spaces', () => {
-    expect(sanitizeKeyword('keyword    research'))
-      .toBe('keyword research');
-  });
+    expect(sanitizeKeyword('keyword    research')).toBe('keyword research')
+  })
 
   it('trims leading/trailing whitespace', () => {
-    expect(sanitizeKeyword('  keyword  '))
-      .toBe('keyword');
-  });
+    expect(sanitizeKeyword('  keyword  ')).toBe('keyword')
+  })
 
   it('enforces max length', () => {
-    const longKeyword = 'a'.repeat(150);
-    expect(sanitizeKeyword(longKeyword).length).toBe(100);
-  });
-});
+    const longKeyword = 'a'.repeat(150)
+    expect(sanitizeKeyword(longKeyword).length).toBe(100)
+  })
+})
 ```
 
 ### 2. Integration Tests
 
 **What to Test**:
+
 - API routes with mocked external services
 - Cache layer behavior
 - API provider switching logic
@@ -307,14 +319,14 @@ describe('sanitizeKeyword', () => {
 
 ```typescript
 // tests/integration/api/keywords.test.ts
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupServer } from 'msw/node';
-import { handlers } from '@/tests/mocks/handlers';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { setupServer } from 'msw/node'
+import { handlers } from '@/tests/mocks/handlers'
 
-const server = setupServer(...handlers);
+const server = setupServer(...handlers)
 
-beforeAll(() => server.listen());
-afterAll(() => server.close());
+beforeAll(() => server.listen())
+afterAll(() => server.close())
 
 describe('POST /api/keywords', () => {
   it('returns keyword data for valid input', async () => {
@@ -327,18 +339,18 @@ describe('POST /api/keywords', () => {
         location: 'US',
         language: 'en',
       }),
-    });
+    })
 
-    expect(response.ok).toBe(true);
+    expect(response.ok).toBe(true)
 
-    const data = await response.json();
-    expect(data.results).toHaveLength(1);
+    const data = await response.json()
+    expect(data.results).toHaveLength(1)
     expect(data.results[0]).toMatchObject({
       keyword: 'seo tools',
       searchVolume: expect.any(Number),
       difficulty: expect.any(Number),
-    });
-  });
+    })
+  })
 
   it('returns 400 for invalid input', async () => {
     const response = await fetch('http://localhost:3000/api/keywords', {
@@ -348,84 +360,87 @@ describe('POST /api/keywords', () => {
         keywords: [], // Invalid: empty array
         matchType: 'phrase',
       }),
-    });
+    })
 
-    expect(response.status).toBe(400);
-  });
+    expect(response.status).toBe(400)
+  })
 
   it('returns 429 when rate limit exceeded', async () => {
     // Make 11 requests (limit is 10/hour)
-    const requests = Array(11).fill(null).map(() =>
-      fetch('http://localhost:3000/api/keywords', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keywords: ['test'],
-          matchType: 'phrase',
-          location: 'US',
-          language: 'en',
-        }),
-      })
-    );
+    const requests = Array(11)
+      .fill(null)
+      .map(() =>
+        fetch('http://localhost:3000/api/keywords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            keywords: ['test'],
+            matchType: 'phrase',
+            location: 'US',
+            language: 'en',
+          }),
+        })
+      )
 
-    const responses = await Promise.all(requests);
-    const lastResponse = responses[responses.length - 1];
+    const responses = await Promise.all(requests)
+    const lastResponse = responses[responses.length - 1]
 
-    expect(lastResponse.status).toBe(429);
-  });
-});
+    expect(lastResponse.status).toBe(429)
+  })
+})
 ```
 
 ```typescript
 // tests/integration/cache/redis.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
-import { cacheKeywordData, getCachedKeywordData } from '@/lib/cache/redis';
+import { describe, it, expect, beforeEach } from 'vitest'
+import { cacheKeywordData, getCachedKeywordData } from '@/lib/cache/redis'
 
 describe('Redis Cache', () => {
   beforeEach(async () => {
     // Clear cache before each test
-    await clearTestCache();
-  });
+    await clearTestCache()
+  })
 
   it('caches and retrieves keyword data', async () => {
     const data = {
       keywords: ['test'],
       results: [{ keyword: 'test', searchVolume: 1000 }],
-    };
+    }
 
-    await cacheKeywordData('test-key', data);
-    const cached = await getCachedKeywordData('test-key');
+    await cacheKeywordData('test-key', data)
+    const cached = await getCachedKeywordData('test-key')
 
-    expect(cached).toEqual(data);
-  });
+    expect(cached).toEqual(data)
+  })
 
   it('returns null for cache miss', async () => {
-    const cached = await getCachedKeywordData('nonexistent-key');
-    expect(cached).toBeNull();
-  });
+    const cached = await getCachedKeywordData('nonexistent-key')
+    expect(cached).toBeNull()
+  })
 
   it('respects TTL expiration', async () => {
-    const data = { keywords: ['test'], results: [] };
+    const data = { keywords: ['test'], results: [] }
 
-    await cacheKeywordData('test-key', data, 1); // 1 second TTL
+    await cacheKeywordData('test-key', data, 1) // 1 second TTL
 
     // Immediately available
-    let cached = await getCachedKeywordData('test-key');
-    expect(cached).not.toBeNull();
+    let cached = await getCachedKeywordData('test-key')
+    expect(cached).not.toBeNull()
 
     // Wait 2 seconds
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
     // Should be expired
-    cached = await getCachedKeywordData('test-key');
-    expect(cached).toBeNull();
-  }, 5000); // Extend test timeout
-});
+    cached = await getCachedKeywordData('test-key')
+    expect(cached).toBeNull()
+  }, 5000) // Extend test timeout
+})
 ```
 
 ### 3. Component Tests
 
 **What to Test**:
+
 - User interactions (clicks, form inputs)
 - Conditional rendering
 - Error states
@@ -511,6 +526,7 @@ describe('KeywordSearchForm', () => {
 ### 4. E2E Tests
 
 **What to Test**:
+
 - Critical user journeys
 - Full workflows from start to finish
 - Cross-browser compatibility
@@ -520,121 +536,123 @@ describe('KeywordSearchForm', () => {
 
 ```typescript
 // tests/e2e/keyword-search.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test'
 
 test.describe('Keyword Search Workflow', () => {
   test('complete keyword search from landing to results', async ({ page }) => {
     // Navigate to landing page
-    await page.goto('/');
+    await page.goto('/')
 
     // Verify landing page loaded
-    await expect(page.getByRole('heading', { name: /keyflash/i }))
-      .toBeVisible();
+    await expect(page.getByRole('heading', { name: /keyflash/i })).toBeVisible()
 
     // Click "Get Started"
-    await page.getByRole('link', { name: /get started/i }).click();
+    await page.getByRole('link', { name: /get started/i }).click()
 
     // Verify search page loaded
-    await expect(page.getByRole('heading', { name: /keyword search/i }))
-      .toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /keyword search/i })
+    ).toBeVisible()
 
     // Enter keywords
-    await page.getByLabel(/keywords/i).fill('seo tools\nkeyword research');
+    await page.getByLabel(/keywords/i).fill('seo tools\nkeyword research')
 
     // Select options
-    await page.getByLabel(/phrase match/i).check();
-    await page.getByLabel(/batch size/i).selectOption('20');
+    await page.getByLabel(/phrase match/i).check()
+    await page.getByLabel(/batch size/i).selectOption('20')
 
     // Submit search
-    await page.getByRole('button', { name: /search keywords/i }).click();
+    await page.getByRole('button', { name: /search keywords/i }).click()
 
     // Wait for results
-    await expect(page.getByRole('table')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('table')).toBeVisible({ timeout: 10000 })
 
     // Verify results table has data
-    const rows = page.getByRole('row');
-    await expect(rows).toHaveCount(3); // Header + 2 keywords
+    const rows = page.getByRole('row')
+    await expect(rows).toHaveCount(3) // Header + 2 keywords
 
     // Verify columns
-    await expect(page.getByRole('columnheader', { name: /keyword/i }))
-      .toBeVisible();
-    await expect(page.getByRole('columnheader', { name: /volume/i }))
-      .toBeVisible();
-    await expect(page.getByRole('columnheader', { name: /difficulty/i }))
-      .toBeVisible();
+    await expect(
+      page.getByRole('columnheader', { name: /keyword/i })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('columnheader', { name: /volume/i })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('columnheader', { name: /difficulty/i })
+    ).toBeVisible()
 
     // Verify data
-    await expect(page.getByRole('cell', { name: /seo tools/i }))
-      .toBeVisible();
-  });
+    await expect(page.getByRole('cell', { name: /seo tools/i })).toBeVisible()
+  })
 
   test('handles rate limiting gracefully', async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/search')
 
     // Make 11 searches rapidly (limit is 10/hour)
     for (let i = 0; i < 11; i++) {
-      await page.getByLabel(/keywords/i).fill(`keyword ${i}`);
-      await page.getByRole('button', { name: /search/i }).click();
+      await page.getByLabel(/keywords/i).fill(`keyword ${i}`)
+      await page.getByRole('button', { name: /search/i }).click()
 
       if (i < 10) {
-        await expect(page.getByRole('table')).toBeVisible();
+        await expect(page.getByRole('table')).toBeVisible()
       }
     }
 
     // 11th search should show rate limit error
-    await expect(page.getByText(/rate limit exceeded/i)).toBeVisible();
-    await expect(page.getByText(/try again in \d+ minutes/i)).toBeVisible();
-  });
+    await expect(page.getByText(/rate limit exceeded/i)).toBeVisible()
+    await expect(page.getByText(/try again in \d+ minutes/i)).toBeVisible()
+  })
 
   test('exports results to CSV', async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/search')
 
     // Perform search
-    await page.getByLabel(/keywords/i).fill('test keyword');
-    await page.getByRole('button', { name: /search/i }).click();
-    await expect(page.getByRole('table')).toBeVisible();
+    await page.getByLabel(/keywords/i).fill('test keyword')
+    await page.getByRole('button', { name: /search/i }).click()
+    await expect(page.getByRole('table')).toBeVisible()
 
     // Export CSV
-    const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: /export csv/i }).click();
-    const download = await downloadPromise;
+    const downloadPromise = page.waitForEvent('download')
+    await page.getByRole('button', { name: /export csv/i }).click()
+    const download = await downloadPromise
 
     // Verify filename
-    expect(download.suggestedFilename()).toMatch(/keyflash-results-.*\.csv/);
+    expect(download.suggestedFilename()).toMatch(/keyflash-results-.*\.csv/)
 
     // Verify content
-    const content = await download.createReadStream();
+    const content = await download.createReadStream()
     // TODO: Parse and validate CSV content
-  });
-});
+  })
+})
 
 test.describe('Accessibility', () => {
   test('keyboard navigation works', async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/search')
 
     // Tab through form elements
-    await page.keyboard.press('Tab');
-    await expect(page.getByLabel(/keywords/i)).toBeFocused();
+    await page.keyboard.press('Tab')
+    await expect(page.getByLabel(/keywords/i)).toBeFocused()
 
-    await page.keyboard.press('Tab');
-    await expect(page.getByLabel(/phrase match/i)).toBeFocused();
+    await page.keyboard.press('Tab')
+    await expect(page.getByLabel(/phrase match/i)).toBeFocused()
 
     // Submit with Enter
-    await page.getByLabel(/keywords/i).fill('test');
-    await page.keyboard.press('Enter');
+    await page.getByLabel(/keywords/i).fill('test')
+    await page.keyboard.press('Enter')
 
-    await expect(page.getByRole('table')).toBeVisible();
-  });
+    await expect(page.getByRole('table')).toBeVisible()
+  })
 
   test('screen reader landmarks present', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/')
 
     // Check for proper landmarks
-    await expect(page.getByRole('banner')).toBeVisible(); // Header
-    await expect(page.getByRole('main')).toBeVisible(); // Main content
-    await expect(page.getByRole('contentinfo')).toBeVisible(); // Footer
-  });
-});
+    await expect(page.getByRole('banner')).toBeVisible() // Header
+    await expect(page.getByRole('main')).toBeVisible() // Main content
+    await expect(page.getByRole('contentinfo')).toBeVisible() // Footer
+  })
+})
 ```
 
 ## Test Coverage Goals
@@ -812,6 +830,7 @@ jobs:
 ### Pre-Release Testing
 
 **Functionality**:
+
 - [ ] Keyword search returns results
 - [ ] All filter options work
 - [ ] CSV export works
@@ -819,22 +838,26 @@ jobs:
 - [ ] Rate limiting triggers after limit
 
 **Performance**:
+
 - [ ] Search completes in <5 seconds
 - [ ] No memory leaks (check DevTools)
 - [ ] Page load <2 seconds
 
 **Cross-Browser** (use BrowserStack):
+
 - [ ] Chrome (latest)
 - [ ] Firefox (latest)
 - [ ] Safari (latest)
 - [ ] Edge (latest)
 
 **Mobile** (responsive design):
+
 - [ ] iPhone (Safari)
 - [ ] Android (Chrome)
 - [ ] Tablet (iPad)
 
 **Accessibility**:
+
 - [ ] Keyboard navigation works
 - [ ] Screen reader compatible (NVDA/VoiceOver)
 - [ ] Sufficient color contrast (WCAG AA)
@@ -851,7 +874,7 @@ export const mockKeywordData = [
     keyword: 'seo tools',
     searchVolume: 5000,
     difficulty: 45,
-    cpc: 3.20,
+    cpc: 3.2,
     intent: 'commercial',
     competition: 'medium',
   },
@@ -859,11 +882,11 @@ export const mockKeywordData = [
     keyword: 'keyword research',
     searchVolume: 8000,
     difficulty: 52,
-    cpc: 2.80,
+    cpc: 2.8,
     intent: 'informational',
     competition: 'high',
   },
-];
+]
 
 export const mockApiResponse = {
   tasks: [
@@ -871,14 +894,14 @@ export const mockApiResponse = {
       result: mockKeywordData,
     },
   ],
-};
+}
 ```
 
 ### Test Factories
 
 ```typescript
 // tests/factories/keyword.ts
-import { faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker'
 
 export function createKeyword(overrides = {}) {
   return {
@@ -886,10 +909,14 @@ export function createKeyword(overrides = {}) {
     searchVolume: faker.number.int({ min: 100, max: 100000 }),
     difficulty: faker.number.int({ min: 0, max: 100 }),
     cpc: faker.number.float({ min: 0.5, max: 10 }),
-    intent: faker.helpers.arrayElement(['informational', 'commercial', 'transactional']),
+    intent: faker.helpers.arrayElement([
+      'informational',
+      'commercial',
+      'transactional',
+    ]),
     competition: faker.helpers.arrayElement(['low', 'medium', 'high']),
     ...overrides,
-  };
+  }
 }
 ```
 

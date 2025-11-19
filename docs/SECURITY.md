@@ -3,6 +3,7 @@
 ## Security Philosophy
 
 **Principle**: Security by Design, Privacy by Default
+
 - Assume all inputs are malicious until validated
 - Never trust client-side validation alone
 - Minimize data collection and storage
@@ -66,6 +67,7 @@
 **🔴 CRITICAL CONTROL**
 
 #### Storage
+
 ```bash
 # ✅ CORRECT - Environment variables only
 GOOGLE_ADS_CLIENT_ID=xxx
@@ -81,20 +83,22 @@ DATAFORSEO_API_KEY=xxx
 ```
 
 #### Implementation
+
 ```typescript
 // ✅ Server-side only (API routes)
-const apiKey = process.env.DATAFORSEO_API_KEY;
+const apiKey = process.env.DATAFORSEO_API_KEY
 
 // ❌ Never expose to client
 // const apiKey = window.ENV.DATAFORSEO_API_KEY; // WRONG!
 
 // ✅ Validate presence on startup
 if (!process.env.GOOGLE_ADS_CLIENT_ID) {
-  throw new Error('GOOGLE_ADS_CLIENT_ID not configured');
+  throw new Error('GOOGLE_ADS_CLIENT_ID not configured')
 }
 ```
 
 #### Rotation Policy
+
 - Rotate API keys every 90 days
 - Rotate immediately if:
   - Key potentially exposed (commit, log, error message)
@@ -102,6 +106,7 @@ if (!process.env.GOOGLE_ADS_CLIENT_ID) {
   - Suspicious API usage detected
 
 #### Access Control
+
 - API keys stored in:
   - Production: Vercel environment variables (encrypted)
   - Development: .env.local (gitignored)
@@ -114,74 +119,77 @@ if (!process.env.GOOGLE_ADS_CLIENT_ID) {
 #### Keyword Input Validation
 
 ```typescript
-import { z } from 'zod';
+import { z } from 'zod'
 
 // ✅ Strict validation schema
 const KeywordSearchSchema = z.object({
-  keywords: z.array(z.string())
+  keywords: z
+    .array(z.string())
     .min(1, 'At least 1 keyword required')
     .max(200, 'Maximum 200 keywords')
     .refine(
-      (kws) => kws.every(kw => kw.length <= 100),
+      kws => kws.every(kw => kw.length <= 100),
       'Each keyword must be ≤100 characters'
     )
     .refine(
-      (kws) => kws.every(kw => /^[a-zA-Z0-9\s\-_]+$/.test(kw)),
+      kws => kws.every(kw => /^[a-zA-Z0-9\s\-_]+$/.test(kw)),
       'Only alphanumeric, spaces, hyphens, underscores allowed'
     ),
 
   matchType: z.enum(['phrase', 'exact']),
 
-  location: z.string()
+  location: z
+    .string()
     .min(2)
     .max(50)
     .regex(/^[A-Z]{2}$/, 'Must be 2-letter country code'),
 
-  language: z.string()
+  language: z
+    .string()
     .min(2)
     .max(5)
     .regex(/^[a-z]{2}(-[A-Z]{2})?$/, 'Invalid language code'),
-});
+})
 
 // ✅ Server-side validation
 export async function POST(request: Request) {
-  const body = await request.json();
+  const body = await request.json()
 
   // Parse and validate (throws if invalid)
-  const validated = KeywordSearchSchema.parse(body);
+  const validated = KeywordSearchSchema.parse(body)
 
   // Sanitize (remove extra whitespace, normalize)
   const sanitized = {
     ...validated,
-    keywords: validated.keywords.map(kw =>
-      kw.trim().toLowerCase()
-    )
-  };
+    keywords: validated.keywords.map(kw => kw.trim().toLowerCase()),
+  }
 
   // Process sanitized input
-  return processKeywords(sanitized);
+  return processKeywords(sanitized)
 }
 ```
 
 #### Why This Matters
+
 - **Injection Prevention**: Regex blocks SQL/NoSQL/command injection
 - **API Protection**: Limits prevent API abuse (200 keyword max)
 - **Data Integrity**: Ensures valid inputs to external APIs
 - **Error Prevention**: Catch invalid inputs before expensive API calls
 
 #### Sanitization Rules
+
 ```typescript
 // ✅ Safe sanitization
 function sanitizeKeyword(keyword: string): string {
   return keyword
-    .trim()                          // Remove leading/trailing whitespace
-    .replace(/\s+/g, ' ')           // Collapse multiple spaces
-    .replace(/[<>\"'&]/g, '')       // Remove HTML-dangerous chars
-    .slice(0, 100);                 // Enforce max length
+    .trim() // Remove leading/trailing whitespace
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .replace(/[<>\"'&]/g, '') // Remove HTML-dangerous chars
+    .slice(0, 100) // Enforce max length
 }
 
 // ❌ Dangerous - No sanitization
-const userInput = request.body.keyword; // Direct use = injection risk
+const userInput = request.body.keyword // Direct use = injection risk
 ```
 
 ### 3. Rate Limiting
@@ -191,23 +199,22 @@ const userInput = request.body.keyword; // Direct use = injection risk
 #### Multi-Layer Rate Limiting
 
 **Layer 1: IP-Based (Anonymous Users)**
+
 ```typescript
 // Upstash Rate Limit
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(10, '1 h'), // 10 requests per hour
   analytics: true,
-});
+})
 
 export async function POST(request: Request) {
-  const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
 
-  const { success, limit, remaining, reset } = await ratelimit.limit(
-    `ip:${ip}`
-  );
+  const { success, limit, remaining, reset } = await ratelimit.limit(`ip:${ip}`)
 
   if (!success) {
     return Response.json(
@@ -218,9 +225,9 @@ export async function POST(request: Request) {
           'X-RateLimit-Limit': limit.toString(),
           'X-RateLimit-Remaining': remaining.toString(),
           'X-RateLimit-Reset': reset.toString(),
-        }
+        },
       }
-    );
+    )
   }
 
   // Process request
@@ -228,13 +235,14 @@ export async function POST(request: Request) {
 ```
 
 **Layer 2: User-Based (Authenticated - Future)**
+
 ```typescript
 // Stricter limits for abusive users, higher for paying customers
 const userLimits = {
   free: { requests: 10, window: '1 h' },
   basic: { requests: 100, window: '1 d' },
   pro: { requests: 1000, window: '1 d' },
-};
+}
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
@@ -242,16 +250,19 @@ const ratelimit = new Ratelimit({
     userLimits[userTier].requests,
     userLimits[userTier].window
   ),
-});
+})
 ```
 
 **Layer 3: Cloudflare (DDoS Protection)**
+
 - Challenge mode for suspicious IPs
 - Block known bot user agents
 - JavaScript challenge for non-browser clients
 
 #### Rate Limit Headers
+
 Always return rate limit info:
+
 ```
 X-RateLimit-Limit: 10
 X-RateLimit-Remaining: 7
@@ -265,10 +276,11 @@ X-RateLimit-Reset: 1700000000
 **Post-MVP**: When adding user accounts
 
 #### Authentication Strategy
+
 ```typescript
 // ✅ Recommended: NextAuth.js + JWT
-import NextAuth from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
+import NextAuth from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
 
 export const authOptions = {
   providers: [
@@ -286,25 +298,26 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.tier = user.tier; // 'free', 'basic', 'pro'
+        token.id = user.id
+        token.tier = user.tier // 'free', 'basic', 'pro'
       }
-      return token;
+      return token
     },
   },
-};
+}
 ```
 
 #### Authorization Checks
+
 ```typescript
 // ✅ Protect API routes
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth'
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions)
 
   if (!session) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   // Check tier limits
@@ -312,7 +325,7 @@ export async function POST(request: Request) {
     return Response.json(
       { error: 'Upgrade to search more keywords' },
       { status: 403 }
-    );
+    )
   }
 
   // Process request
@@ -324,44 +337,46 @@ export async function POST(request: Request) {
 **🔴 CRITICAL CONTROL**
 
 #### Enforced by Vercel
+
 - All traffic automatically upgraded to HTTPS
 - TLS 1.3 (modern, secure)
 - HTTP/2 enabled
 - HSTS header (strict transport security)
 
 #### Additional Headers
+
 ```typescript
 // next.config.js
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
-    value: 'on'
+    value: 'on',
   },
   {
     key: 'Strict-Transport-Security',
-    value: 'max-age=63072000; includeSubDomains; preload'
+    value: 'max-age=63072000; includeSubDomains; preload',
   },
   {
     key: 'X-Frame-Options',
-    value: 'SAMEORIGIN' // Prevent clickjacking
+    value: 'SAMEORIGIN', // Prevent clickjacking
   },
   {
     key: 'X-Content-Type-Options',
-    value: 'nosniff' // Prevent MIME sniffing
+    value: 'nosniff', // Prevent MIME sniffing
   },
   {
     key: 'X-XSS-Protection',
-    value: '1; mode=block' // XSS protection
+    value: '1; mode=block', // XSS protection
   },
   {
     key: 'Referrer-Policy',
-    value: 'strict-origin-when-cross-origin'
+    value: 'strict-origin-when-cross-origin',
   },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()' // Disable unused features
+    value: 'camera=(), microphone=(), geolocation=()', // Disable unused features
   },
-];
+]
 
 module.exports = {
   async headers() {
@@ -370,12 +385,13 @@ module.exports = {
         source: '/:path*',
         headers: securityHeaders,
       },
-    ];
+    ]
   },
-};
+}
 ```
 
 #### Content Security Policy (CSP)
+
 ```typescript
 // Strict CSP to prevent XSS
 const csp = [
@@ -405,32 +421,33 @@ headers: [
 ```typescript
 // ❌ DANGEROUS - Exposes internal details
 try {
-  await googleAdsAPI.searchKeywords(keywords);
+  await googleAdsAPI.searchKeywords(keywords)
 } catch (error) {
-  return Response.json({ error: error.message }); // Might expose API keys, stack traces!
+  return Response.json({ error: error.message }) // Might expose API keys, stack traces!
 }
 
 // ✅ SAFE - Generic error, log details
 try {
-  await googleAdsAPI.searchKeywords(keywords);
+  await googleAdsAPI.searchKeywords(keywords)
 } catch (error) {
   // Log full error server-side
-  console.error('Keyword API error:', error);
+  console.error('Keyword API error:', error)
 
   // Return generic error to client
   return Response.json(
     { error: 'Unable to fetch keyword data. Please try again.' },
     { status: 500 }
-  );
+  )
 }
 ```
 
 #### Error Logging (Sentry)
+
 ```typescript
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from '@sentry/nextjs'
 
 try {
-  await riskyOperation();
+  await riskyOperation()
 } catch (error) {
   // Capture error with context (NO sensitive data)
   Sentry.captureException(error, {
@@ -440,9 +457,9 @@ try {
       matchType: matchType,
       // ❌ DON'T LOG: API keys, user IPs, actual keyword list
     },
-  });
+  })
 
-  throw new Error('Operation failed'); // Generic error
+  throw new Error('Operation failed') // Generic error
 }
 ```
 
@@ -453,6 +470,7 @@ try {
 #### Privacy by Design
 
 **What We DON'T Store**:
+
 - ❌ User keyword searches (unless explicitly saved by authenticated user)
 - ❌ Search history
 - ❌ IP addresses (except for rate limiting, 1 hour TTL)
@@ -460,13 +478,14 @@ try {
 - ❌ Analytics beyond aggregate metrics
 
 **What We DO Store** (Minimal):
+
 ```typescript
 // Redis cache (only for performance)
 interface CachedKeywordData {
-  keywords: string[];       // The searched keywords
-  results: KeywordData[];   // API results
-  cachedAt: number;         // Timestamp
-  ttl: 604800;              // 7 days
+  keywords: string[] // The searched keywords
+  results: KeywordData[] // API results
+  cachedAt: number // Timestamp
+  ttl: 604800 // 7 days
 }
 
 // ✅ No user identification in cache
@@ -483,6 +502,7 @@ interface CachedKeywordData {
 5. **Privacy Policy**: Required, clearly states no tracking
 
 **Future (with user accounts)**:
+
 - Right to access (export user data)
 - Right to erasure (delete account)
 - Right to rectification (update profile)
@@ -530,12 +550,14 @@ jobs:
 ```
 
 #### Dependency Update Policy
+
 - **Critical vulnerabilities**: Patch within 24 hours
 - **High vulnerabilities**: Patch within 7 days
 - **Medium/Low**: Patch in next release
 - **Automated PRs**: Dependabot creates PRs for vulnerabilities
 
 #### Lock Files
+
 ```bash
 # ✅ Always commit lock files
 pnpm-lock.yaml  # Ensures reproducible builds
@@ -548,19 +570,17 @@ pnpm-lock.yaml  # Ensures reproducible builds
 **🟡 HIGH PRIORITY**
 
 #### Request Signing (DataForSEO)
+
 ```typescript
 // ✅ Sign requests with HMAC
-import crypto from 'crypto';
+import crypto from 'crypto'
 
 function signRequest(body: string, secret: string): string {
-  return crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('hex');
+  return crypto.createHmac('sha256', secret).update(body).digest('hex')
 }
 
 // Send signed request
-const signature = signRequest(JSON.stringify(payload), API_SECRET);
+const signature = signRequest(JSON.stringify(payload), API_SECRET)
 const response = await fetch(API_URL, {
   method: 'POST',
   headers: {
@@ -568,27 +588,28 @@ const response = await fetch(API_URL, {
     'Content-Type': 'application/json',
   },
   body: JSON.stringify(payload),
-});
+})
 ```
 
 #### Timeout & Retry Policy
+
 ```typescript
 // ✅ Prevent hanging requests
-const API_TIMEOUT = 10_000; // 10 seconds
-const MAX_RETRIES = 2;
+const API_TIMEOUT = 10_000 // 10 seconds
+const MAX_RETRIES = 2
 
 async function fetchWithTimeout(url: string, options: RequestInit) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT);
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT)
 
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
-    });
-    return response;
+    })
+    return response
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(timeout)
   }
 }
 
@@ -599,13 +620,13 @@ async function retryWithBackoff<T>(
 ): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await fn();
+      return await fn()
     } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 2 ** i * 1000));
+      if (i === maxRetries - 1) throw error
+      await new Promise(resolve => setTimeout(resolve, 2 ** i * 1000))
     }
   }
-  throw new Error('Max retries exceeded');
+  throw new Error('Max retries exceeded')
 }
 ```
 
@@ -614,6 +635,7 @@ async function retryWithBackoff<T>(
 **🟢 RECOMMENDED**
 
 #### Security Metrics to Track
+
 ```typescript
 // Sentry + Custom Metrics
 const securityMetrics = {
@@ -633,10 +655,11 @@ const securityMetrics = {
   // Application errors
   'error.5xx': 'counter',
   'error.api_key_missing': 'counter',
-};
+}
 ```
 
 #### Security Alerts
+
 ```typescript
 // Alert on suspicious activity
 if (validationErrors > 10 in 1 minute from same IP) {
@@ -660,6 +683,7 @@ if (apiKeyMissing) {
 ### Pre-Launch Security Audit
 
 **🔴 CRITICAL - Must Complete Before Launch**
+
 - [ ] All API keys in environment variables (never committed)
 - [ ] .env files in .gitignore
 - [ ] Input validation on all API endpoints
@@ -671,6 +695,7 @@ if (apiKeyMissing) {
 - [ ] No sensitive data logged
 
 **🟡 HIGH - Complete Before Public Launch**
+
 - [ ] CSP header configured
 - [ ] CORS policy restricted
 - [ ] Sentry error tracking configured
@@ -679,6 +704,7 @@ if (apiKeyMissing) {
 - [ ] Retry logic with exponential backoff
 
 **🟢 RECOMMENDED - Post-Launch**
+
 - [ ] Security.txt file (responsible disclosure)
 - [ ] Bug bounty program (via HackerOne)
 - [ ] Penetration testing
@@ -687,16 +713,19 @@ if (apiKeyMissing) {
 ### Ongoing Security Maintenance
 
 **Weekly**:
+
 - Review Sentry errors for security issues
 - Check rate limit metrics
 - Review Vercel logs for anomalies
 
 **Monthly**:
+
 - Update dependencies (pnpm update)
 - Review and rotate API keys if needed
 - Check for new vulnerabilities (Snyk)
 
 **Quarterly**:
+
 - Security code review
 - Update security headers
 - Review and update threat model
@@ -706,17 +735,20 @@ if (apiKeyMissing) {
 ### Severity Levels
 
 **🔴 P0 - Critical (Respond Immediately)**
+
 - API key leak
 - Active data breach
 - Complete service outage
 - Active DDoS attack
 
 **🟡 P1 - High (Respond Within 1 Hour)**
+
 - Significant vulnerability discovered
 - Partial service outage
 - Sustained rate limit bypass
 
 **🟢 P2 - Medium (Respond Within 24 Hours)**
+
 - Minor security issue
 - Dependency vulnerability (low/medium severity)
 
@@ -730,6 +762,7 @@ if (apiKeyMissing) {
 6. **Learn**: Post-mortem, update security measures
 
 ### Emergency Contacts
+
 ```yaml
 P0_Incidents:
   - Admin: [Your contact]
@@ -744,11 +777,13 @@ P1_Incidents:
 ## Security Resources
 
 **Tools**:
+
 - [Snyk](https://snyk.io) - Dependency vulnerability scanning
 - [Sentry](https://sentry.io) - Error tracking
 - [OWASP ZAP](https://www.zaproxy.org/) - Security testing
 
 **References**:
+
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [Next.js Security](https://nextjs.org/docs/app/building-your-application/security)
 - [Vercel Security](https://vercel.com/docs/security)

@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "security:audit": "npm audit --audit-level high",
@@ -14,26 +17,37 @@
     "validate:docs": "npx create-quality-automation@latest --validate-docs",
     "validate:comprehensive": "npx create-quality-automation@latest --comprehensive",
     "validate:all": "npm run validate:comprehensive && npm run security:audit",
-    "lint": "eslint . --ext .js,.jsx,.mjs,.cjs,.html && stylelint \"**/*.{css,scss,sass,less,pcss}\" --allow-empty-input",
-    "lint:fix": "eslint . --ext .js,.jsx,.mjs,.cjs,.html --fix && stylelint \"**/*.{css,scss,sass,less,pcss}\" --fix --allow-empty-input",
+    "lint": "next lint && stylelint \"**/*.{css,scss,sass,less,pcss}\" --allow-empty-input",
+    "lint:fix": "next lint --fix && stylelint \"**/*.{css,scss,sass,less,pcss}\" --fix --allow-empty-input",
     "prepare": "husky"
   },
   "devDependencies": {
-    "husky": "^9.1.4",
-    "lint-staged": "^15.2.10",
-    "prettier": "^3.3.3",
-    "eslint": "^9.12.0",
+    "@lhci/cli": "^0.14.0",
+    "@types/node": "^20.19.25",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "autoprefixer": "^10.4.22",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.33",
     "eslint-plugin-security": "^3.0.1",
     "globals": "^15.9.0",
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.10",
+    "next": "^14.2.33",
+    "postcss": "^8.5.6",
+    "prettier": "^3.3.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "stylelint": "^16.8.0",
     "stylelint-config-standard": "^37.0.0",
-    "@lhci/cli": "^0.14.0"
+    "tailwindcss": "^3.4.18",
+    "typescript": "^5.9.3"
   },
   "lint-staged": {
     "package.json": [
       "prettier --write"
     ],
-    "**/*.{js,jsx,mjs,cjs,html}": [
+    "**/*.{js,jsx,ts,tsx,mjs,cjs}": [
       "eslint --fix",
       "prettier --write"
     ],

@@ -34,24 +34,26 @@ export default function SearchPage() {
         throw new Error('Maximum 200 keywords allowed');
       }
 
-      // TODO: Phase 3 - Replace with actual API call
-      // For now, generate mock data to test the UI
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API delay
+      // Call the API
+      const response = await fetch('/api/keywords', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          keywords,
+          matchType: formData.matchType,
+          location: formData.location,
+        }),
+      });
 
-      const mockResults: KeywordData[] = keywords.map((keyword) => ({
-        keyword,
-        searchVolume: Math.floor(Math.random() * 100000),
-        difficulty: Math.floor(Math.random() * 100),
-        cpc: Math.random() * 10,
-        competition: ['low', 'medium', 'high'][
-          Math.floor(Math.random() * 3)
-        ] as 'low' | 'medium' | 'high',
-        intent: ['informational', 'commercial', 'transactional', 'navigational'][
-          Math.floor(Math.random() * 4)
-        ] as KeywordData['intent'],
-      }));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch keyword data');
+      }
 
-      setResults(mockResults);
+      const data = await response.json();
+      setResults(data.data);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -95,8 +97,8 @@ export default function SearchPage() {
             {/* Mock Data Notice */}
             <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-900/20">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Note:</strong> Currently showing mock data. API integration
-                coming in Phase 4.
+                <strong>Note:</strong> API is functional with mock data. Real keyword
+                provider (Google Ads/DataForSEO) integration coming in Phase 4.
               </p>
             </div>
           </div>

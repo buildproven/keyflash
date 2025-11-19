@@ -10,6 +10,7 @@ import {
   getRateLimitInfo,
 } from '@/lib/rate-limit/rate-limiter';
 import { getProvider } from '@/lib/api/factory';
+import { cache } from '@/lib/cache/redis';
 import type { KeywordSearchResponse } from '@/types/keyword';
 
 /**
@@ -43,17 +44,50 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = KeywordSearchSchema.parse(body);
 
-    // Get keyword data from configured provider
-    const provider = getProvider();
-    const keywordData = await provider.getKeywordData(validated.keywords, {
-      matchType: validated.matchType,
-      location: validated.location,
-      language: validated.language,
-    });
+    // Generate cache key
+    const cacheKey = cache.generateKey(
+      validated.keywords,
+      validated.location,
+      validated.language,
+      validated.matchType
+    );
+
+    // Try to get from cache first
+    const cachedData = await cache.get(cacheKey);
+
+    let keywordData;
+    let isCached = false;
+    let provider;
+
+    if (cachedData) {
+      // Cache hit - use cached data
+      keywordData = cachedData.data;
+      isCached = true;
+      // eslint-disable-next-line no-console
+      console.log(`[Cache] HIT - ${cacheKey}`);
+    } else {
+      // Cache miss - fetch from provider
+      // eslint-disable-next-line no-console
+      console.log(`[Cache] MISS - ${cacheKey}`);
+      provider = getProvider();
+      keywordData = await provider.getKeywordData(validated.keywords, {
+        matchType: validated.matchType,
+        location: validated.location,
+        language: validated.language,
+      });
+
+      // Store in cache (fire and forget - don't wait for completion)
+      cache
+        .set(cacheKey, keywordData, provider.name)
+        .catch((error) => {
+          // eslint-disable-next-line no-console
+          console.error('[Cache] Failed to cache data:', error);
+        });
+    }
 
     const response: KeywordSearchResponse = {
       data: keywordData,
-      cached: false, // TODO: Will be true when Redis caching is implemented (Phase 5)
+      cached: isCached,
       timestamp: new Date().toISOString(),
     };
 

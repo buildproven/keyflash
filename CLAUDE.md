@@ -28,6 +28,7 @@
 ### What is KeyFlash?
 
 KeyFlash is an **open-source keyword research tool** designed to be:
+
 - **Fast**: Results in <3 seconds
 - **Simple**: Maximum 3 clicks from landing to results
 - **Affordable**: 10x cheaper than competitors (Ahrefs, SEMrush, Moz)
@@ -54,6 +55,7 @@ Quality:   ESLint, Prettier, Stylelint, Husky, lint-staged
 ### Project Status
 
 **Current Phase**: Post-Setup, Pre-MVP Development
+
 - ✅ Project structure created
 - ✅ Comprehensive documentation written
 - ✅ Quality automation configured
@@ -268,11 +270,11 @@ test(api): add rate limiting tests
 ```typescript
 // ✅ GOOD - Explicit types, clear interfaces
 interface KeywordData {
-  keyword: string;
-  searchVolume: number;
-  difficulty: number;
-  cpc: number;
-  intent: 'informational' | 'commercial' | 'transactional' | 'navigational';
+  keyword: string
+  searchVolume: number
+  difficulty: number
+  cpc: number
+  intent: 'informational' | 'commercial' | 'transactional' | 'navigational'
 }
 
 async function fetchKeywords(
@@ -326,14 +328,14 @@ export class Button extends React.Component {
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Files | `kebab-case.tsx` | `keyword-search-form.tsx` |
-| Components | `PascalCase` | `KeywordSearchForm` |
-| Functions | `camelCase` | `fetchKeywordData` |
-| Constants | `UPPER_SNAKE_CASE` | `MAX_KEYWORDS` |
-| Types/Interfaces | `PascalCase` | `KeywordData` |
-| CSS Classes | `kebab-case` | `keyword-result-row` |
+| Type             | Convention         | Example                   |
+| ---------------- | ------------------ | ------------------------- |
+| Files            | `kebab-case.tsx`   | `keyword-search-form.tsx` |
+| Components       | `PascalCase`       | `KeywordSearchForm`       |
+| Functions        | `camelCase`        | `fetchKeywordData`        |
+| Constants        | `UPPER_SNAKE_CASE` | `MAX_KEYWORDS`            |
+| Types/Interfaces | `PascalCase`       | `KeywordData`             |
+| CSS Classes      | `kebab-case`       | `keyword-result-row`      |
 
 ### File Organization
 
@@ -341,18 +343,18 @@ export class Button extends React.Component {
 // Import order: React → Third-party → Internal → Types
 
 // 1. React imports
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 // 2. Third-party libraries
-import { z } from 'zod';
+import { z } from 'zod'
 
 // 3. Internal imports (absolute paths)
-import { fetchKeywords } from '@/lib/api';
-import { Button } from '@/components/ui/Button';
-import { KeywordTable } from '@/components/tables/KeywordTable';
+import { fetchKeywords } from '@/lib/api'
+import { Button } from '@/components/ui/Button'
+import { KeywordTable } from '@/components/tables/KeywordTable'
 
 // 4. Type imports
-import type { KeywordData } from '@/types';
+import type { KeywordData } from '@/types'
 
 // Component code...
 ```
@@ -362,20 +364,20 @@ import type { KeywordData } from '@/types';
 ```typescript
 // ✅ GOOD - Explain WHY, not WHAT
 // Cache for 7 days because keyword data rarely changes weekly
-const CACHE_TTL = 7 * 24 * 60 * 60;
+const CACHE_TTL = 7 * 24 * 60 * 60
 
 // Sanitize input to prevent XSS attacks (OWASP Top 10)
 function sanitizeKeyword(keyword: string): string {
-  return keyword.replace(/[<>"'&]/g, '');
+  return keyword.replace(/[<>"'&]/g, '')
 }
 
 // ❌ AVOID - Stating the obvious
 // Set cache TTL to 7 days
-const CACHE_TTL = 7 * 24 * 60 * 60;
+const CACHE_TTL = 7 * 24 * 60 * 60
 
 // Remove characters
 function sanitizeKeyword(keyword: string): string {
-  return keyword.replace(/[<>"'&]/g, '');
+  return keyword.replace(/[<>"'&]/g, '')
 }
 ```
 
@@ -386,6 +388,7 @@ function sanitizeKeyword(keyword: string): string {
 ### Testing Pyramid
 
 **Target Coverage**: 70% overall
+
 - **60%** Unit tests
 - **30%** Integration tests
 - **10%** E2E tests
@@ -423,6 +426,7 @@ test('form works', () => {
 ### What to Test
 
 **DO Test** ✅:
+
 - User interactions
 - Edge cases (empty input, max length, special characters)
 - Error states
@@ -431,6 +435,7 @@ test('form works', () => {
 - Input validation and sanitization
 
 **DON'T Test** ❌:
+
 - Third-party libraries
 - Implementation details
 - Styling/visual appearance
@@ -495,24 +500,24 @@ pnpm test:watch
 
 ```typescript
 // ✅ GOOD - Proper input validation
-import { z } from 'zod';
+import { z } from 'zod'
 
 const KeywordSchema = z.object({
   keywords: z.array(z.string().min(1).max(100)).max(200),
   matchType: z.enum(['phrase', 'exact']),
   location: z.string().optional(),
-});
+})
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const validated = KeywordSchema.parse(body); // Throws if invalid
+  const body = await request.json()
+  const validated = KeywordSchema.parse(body) // Throws if invalid
 
   // Process validated data
 }
 
 // ❌ AVOID - No validation
 export async function POST(request: Request) {
-  const { keywords } = await request.json();
+  const { keywords } = await request.json()
   // Directly using unvalidated user input - DANGEROUS!
 }
 ```
@@ -520,6 +525,7 @@ export async function POST(request: Request) {
 ### Security Checks in CI/CD
 
 The GitHub Actions workflow automatically checks for:
+
 - Hardcoded secrets
 - XSS vulnerability patterns (`innerHTML`, `eval`, `document.write` with interpolation)
 - Unvalidated user inputs
@@ -533,6 +539,7 @@ The GitHub Actions workflow automatically checks for:
 ### Pre-commit Hooks
 
 **Automatic on `git commit`**:
+
 - Prettier formatting (auto-fix)
 - ESLint linting (auto-fix)
 - Stylelint validation (auto-fix)
@@ -564,6 +571,7 @@ pnpm validate:all        # Full validation + security audit
 ### CI/CD Quality Checks
 
 **GitHub Actions** runs on every push and PR:
+
 - ✅ Prettier formatting validation
 - ✅ ESLint (zero warnings policy)
 - ✅ Stylelint validation
@@ -596,38 +604,47 @@ KeyFlash uses a **provider pattern** to support multiple keyword APIs:
 ```typescript
 // lib/api/types.ts
 export interface KeywordAPIProvider {
-  getKeywordData(keywords: string[], options: SearchOptions): Promise<KeywordData[]>;
-  getBatchLimit(): number;
-  getRateLimit(): RateLimit;
+  getKeywordData(
+    keywords: string[],
+    options: SearchOptions
+  ): Promise<KeywordData[]>
+  getBatchLimit(): number
+  getRateLimit(): RateLimit
 }
 
 // lib/api/providers/google-ads.ts
 export class GoogleAdsProvider implements KeywordAPIProvider {
-  async getKeywordData(keywords: string[], options: SearchOptions): Promise<KeywordData[]> {
+  async getKeywordData(
+    keywords: string[],
+    options: SearchOptions
+  ): Promise<KeywordData[]> {
     // Google Ads API implementation
   }
 
   getBatchLimit(): number {
-    return 1000; // Google Ads allows up to 1000 keywords per request
+    return 1000 // Google Ads allows up to 1000 keywords per request
   }
 
   getRateLimit(): RateLimit {
-    return { requests: 1000, period: 'day' };
+    return { requests: 1000, period: 'day' }
   }
 }
 
 // lib/api/providers/dataforseo.ts
 export class DataForSEOProvider implements KeywordAPIProvider {
-  async getKeywordData(keywords: string[], options: SearchOptions): Promise<KeywordData[]> {
+  async getKeywordData(
+    keywords: string[],
+    options: SearchOptions
+  ): Promise<KeywordData[]> {
     // DataForSEO API implementation
   }
 
   getBatchLimit(): number {
-    return 10000; // DataForSEO allows larger batches
+    return 10000 // DataForSEO allows larger batches
   }
 
   getRateLimit(): RateLimit {
-    return { requests: 2000, period: 'day' };
+    return { requests: 2000, period: 'day' }
   }
 }
 
@@ -635,11 +652,11 @@ export class DataForSEOProvider implements KeywordAPIProvider {
 export function createProvider(providerName: string): KeywordAPIProvider {
   switch (providerName) {
     case 'google-ads':
-      return new GoogleAdsProvider();
+      return new GoogleAdsProvider()
     case 'dataforseo':
-      return new DataForSEOProvider();
+      return new DataForSEOProvider()
     default:
-      throw new Error(`Unknown provider: ${providerName}`);
+      throw new Error(`Unknown provider: ${providerName}`)
   }
 }
 ```
@@ -692,6 +709,7 @@ RATE_LIMIT_ENABLED=true
 ### When to Update Documentation
 
 **Always update documentation when**:
+
 - Adding new features
 - Changing API behavior
 - Modifying environment variables
@@ -701,21 +719,21 @@ RATE_LIMIT_ENABLED=true
 
 ### Documentation Files
 
-| File | Purpose | Update When |
-|------|---------|-------------|
-| `README.md` | Project overview, quick start | Major features, setup changes |
-| `docs/REQUIREMENTS.md` | Product requirements | Feature scope changes |
-| `docs/ARCHITECTURE.md` | Tech stack, system design | Architecture changes |
-| `docs/SECURITY.md` | Security measures | Security controls change |
-| `docs/TESTING_STRATEGY.md` | Testing approach | Test patterns change |
-| `CONTRIBUTING.md` | Contribution guidelines | Workflow changes |
-| `CLAUDE.md` | This file | AI assistant guidance changes |
+| File                       | Purpose                       | Update When                   |
+| -------------------------- | ----------------------------- | ----------------------------- |
+| `README.md`                | Project overview, quick start | Major features, setup changes |
+| `docs/REQUIREMENTS.md`     | Product requirements          | Feature scope changes         |
+| `docs/ARCHITECTURE.md`     | Tech stack, system design     | Architecture changes          |
+| `docs/SECURITY.md`         | Security measures             | Security controls change      |
+| `docs/TESTING_STRATEGY.md` | Testing approach              | Test patterns change          |
+| `CONTRIBUTING.md`          | Contribution guidelines       | Workflow changes              |
+| `CLAUDE.md`                | This file                     | AI assistant guidance changes |
 
 ### Code Documentation (JSDoc)
 
 Use JSDoc for complex functions:
 
-```typescript
+````typescript
 /**
  * Calculates keyword difficulty score (0-100) based on competition metrics
  *
@@ -737,7 +755,7 @@ function calculateDifficulty(
 ): number {
   // Implementation
 }
-```
+````
 
 ---
 
@@ -854,6 +872,7 @@ git commit -m "chore(deps): update dependencies"
    - Use JSDoc for public APIs
 
 6. **Run quality checks before committing**
+
    ```bash
    pnpm lint:fix
    pnpm test

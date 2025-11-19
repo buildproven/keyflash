@@ -9,7 +9,8 @@ import {
   getClientId,
   getRateLimitInfo,
 } from '@/lib/rate-limit/rate-limiter';
-import type { KeywordSearchResponse, KeywordData } from '@/types/keyword';
+import { getProvider } from '@/lib/api/factory';
+import type { KeywordSearchResponse } from '@/types/keyword';
 
 /**
  * Rate limit configuration from environment
@@ -42,27 +43,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = KeywordSearchSchema.parse(body);
 
-    // TODO: Phase 4 - Replace with real API provider (Google Ads / DataForSEO)
-    // For now, return mock data
-    const mockData: KeywordData[] = validated.keywords.map((keyword) => ({
-      keyword,
-      searchVolume: Math.floor(Math.random() * 100000),
-      difficulty: Math.floor(Math.random() * 100),
-      cpc: Math.random() * 10,
-      competition: ['low', 'medium', 'high'][
-        Math.floor(Math.random() * 3)
-      ] as 'low' | 'medium' | 'high',
-      intent: ['informational', 'commercial', 'transactional', 'navigational'][
-        Math.floor(Math.random() * 4)
-      ] as KeywordData['intent'],
-    }));
-
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Get keyword data from configured provider
+    const provider = getProvider();
+    const keywordData = await provider.getKeywordData(validated.keywords, {
+      matchType: validated.matchType,
+      location: validated.location,
+      language: validated.language,
+    });
 
     const response: KeywordSearchResponse = {
-      data: mockData,
-      cached: false,
+      data: keywordData,
+      cached: false, // TODO: Will be true when Redis caching is implemented (Phase 5)
       timestamp: new Date().toISOString(),
     };
 

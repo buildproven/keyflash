@@ -53,11 +53,11 @@ jobs:
       - name: Prettier check
         run: npm run format:check
 
-      - name: ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx,.html --max-warnings=0
+      - name: Lint (ESLint + Stylelint)
+        run: npm run lint
 
-      - name: Stylelint
-        run: npx stylelint "**/*.{css,scss,sass,less,pcss}" --allow-empty-input
+      - name: Build
+        run: npm run build
 
       - name: Security audit
         run: npm audit --audit-level high

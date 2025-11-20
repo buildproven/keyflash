@@ -7,6 +7,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:all": "npm run test && npm run test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "security:audit": "npm audit --audit-level high",
@@ -23,14 +32,21 @@
   },
   "devDependencies": {
     "@lhci/cli": "^0.14.0",
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.19.25",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "^4.0.10",
     "autoprefixer": "^10.4.22",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.33",
     "eslint-plugin-security": "^3.0.1",
     "globals": "^15.9.0",
+    "happy-dom": "^20.0.10",
     "husky": "^9.1.4",
     "lint-staged": "^15.2.10",
     "next": "^14.2.33",
@@ -41,7 +57,8 @@
     "stylelint": "^16.8.0",
     "stylelint-config-standard": "^37.0.0",
     "tailwindcss": "^3.4.18",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.10"
   },
   "lint-staged": {
     "package.json": [
@@ -65,5 +82,9 @@
   "volta": {
     "node": "20.11.1",
     "npm": "10.2.4"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.6",
+    "zod": "^4.1.12"
   }
 }

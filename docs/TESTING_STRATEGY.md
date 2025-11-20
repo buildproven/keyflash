@@ -14,37 +14,50 @@
 
 ```
          /\
-        /  \
-       / E2E \          10% - Critical user journeys
-      /--------\
-     /          \
-    / Integration \     30% - API routes, external services
+        /E2E\           10% - Critical user journeys
+       /------\
+      /Smoke   \         5% - Pre-deployment checks
+     /----------\
+    /Integration \      20% - API routes, services
    /--------------\
-  /                \
- /   Unit Tests     \   60% - Business logic, utilities
+  /Command & Config\    10% - Verify tools work
+ /------------------\
+/   Unit Tests       \  55% - Business logic
 /____________________\
 ```
 
 ### Test Distribution
 
-**60% Unit Tests** (Fast, Isolated)
+**55% Unit Tests** (Fast, Isolated)
 
 - Validation functions
 - Data transformation
 - Utility functions
 - Business logic (keyword difficulty scoring, etc.)
 
-**30% Integration Tests** (Medium Speed)
+**20% Integration Tests** (Medium Speed)
 
 - API routes (mocked external APIs)
 - Cache layer
 - API provider implementations
+
+**10% Command Execution & Config Tests** (Medium Speed)
+
+- npm scripts execution
+- Configuration validation
+- Quality automation (pre-commit hooks, CI/CD)
 
 **10% E2E Tests** (Slower, High Value)
 
 - Complete user workflows
 - Critical paths only
 - Real browser interactions
+
+**5% Smoke Tests** (Fast, Essential)
+
+- Project structure validation
+- Dependency checks
+- Quick sanity tests
 
 ## Testing Stack
 
@@ -655,6 +668,137 @@ test.describe('Accessibility', () => {
 })
 ```
 
+### 5. Command Execution Tests
+
+**What to Test**:
+
+- npm scripts actually execute successfully
+- Commands produce expected behavior
+- Auto-fix commands modify files correctly
+- Error conditions are detected
+
+**Critical**: These tests prevent shipping broken commands to users.
+
+#### Examples
+
+```typescript
+// tests/command-execution/npm-scripts.test.ts
+import { describe, it, expect } from 'vitest'
+import { IsolatedTestEnv } from '../helpers/isolated-test-env'
+
+describe('npm scripts execution', () => {
+  it('npm run format actually formats files', () => {
+    const env = new IsolatedTestEnv()
+    env.copyPackageJson().copyConfigs(['.prettierrc'])
+
+    // Create badly formatted file
+    env.writeFile('test.ts', 'const   x=1;')
+
+    // Install Prettier
+    env.exec('npm install --no-save prettier')
+
+    // Run format command
+    env.exec('npm run format')
+
+    // Verify file was formatted
+    const formatted = env.readFile('test.ts')
+    expect(formatted).toContain('const x = 1')
+  })
+})
+```
+
+### 6. Quality Automation Tests
+
+**What to Test**:
+
+- Pre-commit hooks execute correctly
+- GitHub Actions workflows are valid
+- lint-staged configuration works
+- Husky hooks are properly installed
+
+#### Examples
+
+```typescript
+// tests/quality-automation/pre-commit-hook.test.ts
+describe('pre-commit hook', () => {
+  it('prevents commit when linting fails', () => {
+    const env = new IsolatedTestEnv()
+    env.gitInit().copyHuskyHooks()
+
+    // Create file with errors
+    env.writeFile('bad.js', 'eval("dangerous")')
+    env.exec('git add bad.js')
+
+    // Commit should fail
+    const result = env.exec('git commit -m "test"', { throwOnError: false })
+    expect(result.exitCode).not.toBe(0)
+  })
+})
+```
+
+### 7. Configuration Validation Tests
+
+**What to Test**:
+
+- ESLint config is valid and functional
+- Prettier config is valid and functional
+- Vitest config is valid
+- All config files have correct syntax
+- Tools can actually run with the configs
+
+#### Examples
+
+```typescript
+// tests/config-validation/eslint.test.ts
+describe('ESLint configuration', () => {
+  it('config file has valid syntax', () => {
+    const config = require('../../eslint.config.cjs')
+    expect(config).toBeDefined()
+  })
+
+  it('can lint a simple file', () => {
+    // Create temp file and try to lint it
+    const output = execSync('npx eslint test.ts', { stdio: 'pipe' })
+    expect(output).toBeDefined()
+  })
+})
+```
+
+### 8. Smoke Tests
+
+**What to Test**:
+
+- Critical dependencies are installed
+- Essential files and directories exist
+- Basic npm scripts are defined
+- No .env files are committed
+- Documentation files exist
+
+**Purpose**: Quick pre-deployment sanity checks (< 30 seconds).
+
+#### Examples
+
+```typescript
+// tests/smoke/basic-functionality.test.ts
+describe('Project structure smoke tests', () => {
+  it('all critical dependencies are installed', () => {
+    const pkgJson = require('../../package.json')
+
+    const criticalDeps = ['next', 'react', 'zod', '@upstash/redis']
+    for (const dep of criticalDeps) {
+      expect(pkgJson.dependencies).toHaveProperty(dep)
+    }
+  })
+
+  it('critical npm scripts are defined', () => {
+    const pkgJson = require('../../package.json')
+    expect(pkgJson.scripts).toHaveProperty('test')
+    expect(pkgJson.scripts).toHaveProperty('lint')
+    expect(pkgJson.scripts).toHaveProperty('build')
+  })
+})
+```
+
 ## Test Coverage Goals
 
 ### Coverage Targets
@@ -667,7 +811,7 @@ By Category:
 - Business logic: 80%+
 - UI components: 70%+
 - Utilities: 80%+
-- Config files: 0% (not tested)
+- Config files: Validated (not coverage-tracked)
 ```
 
 ### Coverage Reports
@@ -794,13 +938,44 @@ jobs:
     "test": "vitest",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "test:commands": "vitest run tests/command-execution",
+    "test:config": "vitest run tests/config-validation",
+    "test:quality": "vitest run tests/quality-automation",
+    "test:smoke": "vitest run tests/smoke",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:commands && npm run test:config && npm run test:quality && npm run test:smoke && npm run test:e2e",
+    "test:ci": "npm run test:config && npm run test:commands && npm run test:quality && npm run test:unit && npm run test:integration && npm run test:smoke",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug"
   }
 }
+```
+
+### Quick Command Reference
+
+```bash
+# Run all tests
+npm run test:all
+
+# Run only specific test categories
+npm test:unit           # Unit tests only
+npm test:integration    # Integration tests only
+npm test:commands       # Command execution tests
+npm test:config         # Configuration validation
+npm test:quality        # Quality automation tests
+npm test:smoke          # Smoke tests
+npm test:e2e            # E2E tests
+
+# CI/CD optimized (runs critical tests first)
+npm run test:ci
+
+# Development workflow
+npm run test:watch      # Watch mode for TDD
+
+# Coverage reports
+npm run test:coverage   # Generate coverage report
 ```
 
 ## Testing Best Practices

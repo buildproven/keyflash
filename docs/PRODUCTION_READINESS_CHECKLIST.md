@@ -9,6 +9,7 @@
 ## Priority 1: CRITICAL (Required for Launch) 🔴
 
 ### 1. Real API Integration (Required)
+
 **Status**: ⏳ Pending
 **Time**: 2-4 hours
 **Blocker**: Yes
@@ -32,6 +33,7 @@
   - [ ] Add retry logic for failed requests
 
 - [ ] **Environment Variables**
+
   ```bash
   # Add to Vercel/deployment platform:
   KEYWORD_API_PROVIDER=google-ads  # or 'dataforseo'
@@ -50,12 +52,14 @@
 
 **Current Coverage**: Provider structure 100% ready, API calls are TODOs
 **Files to Complete**:
+
 - `src/lib/api/providers/google-ads.ts:108-169`
 - `src/lib/api/providers/dataforseo.ts:88-141`
 
 ---
 
 ### 2. Production Deployment
+
 **Status**: ⏳ Pending
 **Time**: 1 hour
 **Blocker**: Yes
@@ -89,6 +93,7 @@
 ---
 
 ### 3. Redis Cache Setup
+
 **Status**: ⏳ Pending
 **Time**: 30 minutes
 **Blocker**: No (optional but strongly recommended)
@@ -110,6 +115,7 @@
   - [ ] Monitor cache in Upstash dashboard
 
 **Why It's Important**:
+
 - Reduces API costs (caches results for 7 days)
 - Improves response time (instant cache hits)
 - Reduces load on keyword APIs
@@ -120,6 +126,7 @@
 ## Priority 2: IMPORTANT (Highly Recommended) 🟡
 
 ### 4. Monitoring & Error Tracking
+
 **Status**: ⏳ Not Implemented
 **Time**: 1 hour
 **Blocker**: No
@@ -152,6 +159,7 @@
   - [ ] Set up status page
 
 **Why It's Important**:
+
 - Catch production errors before users report them
 - Understand user behavior and traffic patterns
 - Monitor performance regressions
@@ -160,6 +168,7 @@
 ---
 
 ### 5. Rate Limiting Migration to Redis
+
 **Status**: ⏳ In-Memory (Not Production-Ready)
 **Time**: 2 hours
 **Blocker**: No (current works but not ideal)
@@ -170,15 +179,17 @@
     npm install @upstash/ratelimit
     ```
   - [ ] Update `src/lib/rate-limit/rate-limiter.ts`:
+
     ```typescript
-    import { Ratelimit } from "@upstash/ratelimit";
-    import { Redis } from "@upstash/redis";
+    import { Ratelimit } from '@upstash/ratelimit'
+    import { Redis } from '@upstash/redis'
 
     const ratelimit = new Ratelimit({
       redis: Redis.fromEnv(),
-      limiter: Ratelimit.slidingWindow(10, "1 h"),
-    });
+      limiter: Ratelimit.slidingWindow(10, '1 h'),
+    })
     ```
+
   - [ ] Update `checkRateLimit()` to use Redis
   - [ ] Add tests for Redis rate limiting
   - [ ] Verify works across serverless instances
@@ -186,6 +197,7 @@
 **Current Limitation**: In-memory rate limiting resets on serverless function restart and doesn't work across multiple instances.
 
 **Why It's Important**:
+
 - Serverless functions are stateless (rate limits reset)
 - Multiple instances don't share state
 - Redis ensures consistent rate limiting
@@ -193,6 +205,7 @@
 ---
 
 ### 6. Security Hardening
+
 **Status**: ✅ Good Foundation (Needs Production Review)
 **Time**: 2-3 hours
 **Blocker**: No
@@ -223,7 +236,10 @@
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
         ],
       },
     ]
@@ -238,14 +254,17 @@
   - [ ] Enable automated security updates
 
 **Current Vulnerabilities**:
+
 ```
 11 vulnerabilities (8 low, 3 high)
 ```
+
 - [ ] Run `npm audit` and fix high-severity issues
 
 ---
 
 ### 7. Performance Optimization
+
 **Status**: ✅ Good (Needs Production Validation)
 **Time**: 2-3 hours
 **Blocker**: No
@@ -280,6 +299,7 @@
   - [ ] Optimize cold start time if needed
 
 **Performance Targets**:
+
 - API Response: <3s (p95) ✅ (with cache: <500ms)
 - First Contentful Paint: <2s ✅
 - Time to Interactive: <3.5s
@@ -290,6 +310,7 @@
 ## Priority 3: NICE TO HAVE (Post-Launch) 🟢
 
 ### 8. User Authentication (If Offering Accounts)
+
 **Status**: ⏳ Not Implemented (May Not Be Needed)
 **Time**: 4-8 hours
 **Blocker**: No
@@ -297,12 +318,14 @@
 **Decision Required**: Does KeyFlash need user accounts?
 
 **Option A: No Authentication (Simpler MVP)**
+
 - Public API with IP-based rate limiting
 - No user data to manage (privacy win)
 - Lower development/maintenance cost
 - Easier GDPR compliance
 
 **Option B: Add Authentication**
+
 - [ ] Choose auth provider:
   - NextAuth.js (free, self-hosted)
   - Clerk (paid, easier)
@@ -318,6 +341,7 @@
 ---
 
 ### 9. Analytics & Business Metrics
+
 **Status**: ⏳ Not Implemented
 **Time**: 2-3 hours
 **Blocker**: No
@@ -350,6 +374,7 @@
 ---
 
 ### 10. Enhanced Testing
+
 **Status**: ✅ Good (120 tests, 78% coverage)
 **Time**: 4-6 hours
 **Blocker**: No
@@ -383,6 +408,7 @@
 ---
 
 ### 11. Content & SEO
+
 **Status**: ⏳ Not Implemented
 **Time**: 3-4 hours
 **Blocker**: No
@@ -414,6 +440,7 @@
 ---
 
 ### 12. Legal & Compliance
+
 **Status**: ⏳ Not Implemented
 **Time**: 2-3 hours
 **Blocker**: Depends on jurisdiction
@@ -447,6 +474,7 @@
 ---
 
 ### 13. Additional Features (Future Roadmap)
+
 **Status**: ⏳ Not Planned for MVP
 **Time**: Varies
 **Blocker**: No
@@ -489,8 +517,10 @@
 ## Summary & Prioritization
 
 ### To Ship MVP (Minimum Viable Product)
+
 **Time**: 4-8 hours
 **Must Have**:
+
 1. ✅ Choose API provider (Google Ads OR DataForSEO)
 2. ✅ Complete API integration (implement TODO methods)
 3. ✅ Set up Redis cache (Upstash)
@@ -499,18 +529,15 @@
 6. ✅ Fix npm audit vulnerabilities
 
 ### To Ship Robust Product
+
 **Time**: +8-12 hours
-**Should Have** (in addition to MVP):
-7. ✅ Set up Sentry error tracking
-8. ✅ Migrate rate limiting to Redis
-9. ✅ Add security headers
-10. ✅ Run load tests
-11. ✅ Add monitoring/analytics
-12. ✅ Create legal pages (Privacy, ToS)
+**Should Have** (in addition to MVP): 7. ✅ Set up Sentry error tracking 8. ✅ Migrate rate limiting to Redis 9. ✅ Add security headers 10. ✅ Run load tests 11. ✅ Add monitoring/analytics 12. ✅ Create legal pages (Privacy, ToS)
 
 ### Post-Launch Iterations
+
 **Time**: Ongoing
 **Nice to Have**:
+
 - User authentication (if needed)
 - Advanced keyword features
 - Enhanced visualizations
@@ -522,24 +549,28 @@
 ## Quick Start: Launch in 4 Hours
 
 **Hour 1: API Integration**
+
 1. Sign up for Google Ads API
 2. Get OAuth credentials
 3. Implement `callKeywordPlannerAPI()` method
 4. Test with real keywords
 
 **Hour 2: Infrastructure**
+
 1. Create Upstash Redis account
 2. Deploy to Vercel
 3. Configure environment variables
 4. Verify deployment works
 
 **Hour 3: Testing & Monitoring**
+
 1. Run E2E tests on production
 2. Set up Sentry
 3. Run load tests
 4. Fix any critical issues
 
 **Hour 4: Launch Prep**
+
 1. Add security headers
 2. Create Privacy Policy
 3. Run final checks
@@ -550,16 +581,19 @@
 ## Risk Assessment
 
 ### High Risk (Address Immediately)
+
 - **No real API integration**: Product won't work without it
 - **In-memory rate limiting**: Will reset on serverless restarts
 - **No error monitoring**: Won't know when things break
 
 ### Medium Risk (Address Soon)
+
 - **npm vulnerabilities**: Could expose security issues
 - **No load testing**: Unknown performance under traffic
 - **No legal pages**: Potential compliance issues
 
 ### Low Risk (Can Wait)
+
 - **No user authentication**: Not needed for MVP
 - **Basic UI/UX**: Functional but could be improved
 - **Limited features**: MVP intentionally minimal
@@ -569,18 +603,21 @@
 ## Success Metrics
 
 **Launch Day**:
+
 - [ ] Zero errors in Sentry
 - [ ] All E2E tests passing
 - [ ] API response time <3s
 - [ ] Cache hit rate >50% (after initial warm-up)
 
 **Week 1**:
+
 - [ ] 100+ successful searches
 - [ ] <1% error rate
 - [ ] 99.9% uptime
 - [ ] No critical security issues
 
 **Month 1**:
+
 - [ ] 1,000+ searches
 - [ ] 80%+ cache hit rate
 - [ ] API costs <$50/month

@@ -1,18 +1,18 @@
-import type { KeywordAPIProvider } from './types';
-import { GoogleAdsProvider } from './providers/google-ads';
-import { DataForSEOProvider } from './providers/dataforseo';
+import type { KeywordAPIProvider } from './types'
+import { GoogleAdsProvider } from './providers/google-ads'
+import { DataForSEOProvider } from './providers/dataforseo'
 
 /**
  * Supported API provider names
  */
-export type ProviderName = 'google-ads' | 'dataforseo' | 'mock';
+export type ProviderName = 'google-ads' | 'dataforseo' | 'mock'
 
 /**
  * Mock provider for development and testing
  * Returns randomized data without requiring API credentials
  */
 class MockProvider implements KeywordAPIProvider {
-  readonly name = 'Mock';
+  readonly name = 'Mock'
 
   validateConfiguration(): void {
     // Mock provider doesn't require configuration
@@ -22,9 +22,9 @@ class MockProvider implements KeywordAPIProvider {
     keywords: string[]
   ): Promise<import('@/types/keyword').KeywordData[]> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 800))
 
-    return keywords.map((keyword) => ({
+    return keywords.map(keyword => ({
       keyword,
       searchVolume: Math.floor(Math.random() * 100000),
       difficulty: Math.floor(Math.random() * 100),
@@ -32,21 +32,26 @@ class MockProvider implements KeywordAPIProvider {
       competition: (['low', 'medium', 'high'] as const)[
         Math.floor(Math.random() * 3)
       ],
-      intent: (['informational', 'commercial', 'transactional', 'navigational'] as const)[
-        Math.floor(Math.random() * 4)
-      ],
-    }));
+      intent: (
+        [
+          'informational',
+          'commercial',
+          'transactional',
+          'navigational',
+        ] as const
+      )[Math.floor(Math.random() * 4)],
+    }))
   }
 
   getBatchLimit(): number {
-    return 200; // Match UI limit
+    return 200 // Match UI limit
   }
 
   getRateLimit() {
     return {
       requests: 1000,
       period: 'hour' as const,
-    };
+    }
   }
 }
 
@@ -64,23 +69,23 @@ class MockProvider implements KeywordAPIProvider {
 export function createProvider(): KeywordAPIProvider {
   const providerName = (
     process.env.KEYWORD_API_PROVIDER || 'mock'
-  ).toLowerCase() as ProviderName;
+  ).toLowerCase() as ProviderName
 
   switch (providerName) {
     case 'google-ads':
-      return new GoogleAdsProvider();
+      return new GoogleAdsProvider()
 
     case 'dataforseo':
-      return new DataForSEOProvider();
+      return new DataForSEOProvider()
 
     case 'mock':
-      return new MockProvider();
+      return new MockProvider()
 
     default:
       console.warn(
         `Unknown provider "${providerName}". Falling back to mock provider.`
-      );
-      return new MockProvider();
+      )
+      return new MockProvider()
   }
 }
 
@@ -92,10 +97,10 @@ export function createProvider(): KeywordAPIProvider {
  * @throws Error with setup instructions if provider is misconfigured
  */
 export function getProvider(): KeywordAPIProvider {
-  const provider = createProvider();
+  const provider = createProvider()
 
   try {
-    provider.validateConfiguration();
+    provider.validateConfiguration()
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(
@@ -105,12 +110,12 @@ export function getProvider(): KeywordAPIProvider {
           '2. Add your API credentials\n' +
           '3. Restart the development server\n\n' +
           'Or set KEYWORD_API_PROVIDER=mock to use mock data.'
-      );
+      )
     }
-    throw error;
+    throw error
   }
 
-  return provider;
+  return provider
 }
 
 /**
@@ -120,16 +125,16 @@ export function getProvider(): KeywordAPIProvider {
  * @returns True if provider is properly configured
  */
 export function isProviderAvailable(providerName: ProviderName): boolean {
-  if (providerName === 'mock') return true;
+  if (providerName === 'mock') return true
 
   try {
-    const provider = createProvider();
+    const provider = createProvider()
     if (provider.name.toLowerCase().replace(/\s/g, '-') !== providerName) {
-      return false;
+      return false
     }
-    provider.validateConfiguration();
-    return true;
+    provider.validateConfiguration()
+    return true
   } catch {
-    return false;
+    return false
   }
 }

@@ -28,7 +28,8 @@ const nextConfig = {
           // Disable browser features that could be exploited
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+            value:
+              'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
           // XSS protection (legacy browsers)
           {
@@ -62,12 +63,12 @@ const nextConfig = {
           },
         ],
       },
-    ];
+    ]
   },
 
   // Request size limits for security
   async rewrites() {
-    return [];
+    return []
   },
 }
 

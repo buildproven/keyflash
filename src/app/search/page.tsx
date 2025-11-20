@@ -1,37 +1,37 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { KeywordSearchForm } from '@/components/forms/keyword-search-form';
-import { KeywordResultsTable } from '@/components/tables/keyword-results-table';
-import { LoadingState } from '@/components/ui/loading-state';
-import { ErrorState } from '@/components/ui/error-state';
-import { exportToCSV } from '@/lib/utils/csv-export';
-import type { KeywordSearchFormData, KeywordData } from '@/types/keyword';
+import Link from 'next/link'
+import { useState } from 'react'
+import { KeywordSearchForm } from '@/components/forms/keyword-search-form'
+import { KeywordResultsTable } from '@/components/tables/keyword-results-table'
+import { LoadingState } from '@/components/ui/loading-state'
+import { ErrorState } from '@/components/ui/error-state'
+import { exportToCSV } from '@/lib/utils/csv-export'
+import type { KeywordSearchFormData, KeywordData } from '@/types/keyword'
 
 export default function SearchPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<KeywordData[]>([]);
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [results, setResults] = useState<KeywordData[]>([])
 
   const handleSearch = async (formData: KeywordSearchFormData) => {
-    setIsLoading(true);
-    setError(null);
-    setResults([]);
+    setIsLoading(true)
+    setError(null)
+    setResults([])
 
     try {
       // Parse keywords from input (comma or newline separated)
       const keywords = formData.keywordsInput
         .split(/[,\n]/)
-        .map((k) => k.trim())
-        .filter((k) => k.length > 0);
+        .map(k => k.trim())
+        .filter(k => k.length > 0)
 
       if (keywords.length === 0) {
-        throw new Error('Please enter at least one keyword');
+        throw new Error('Please enter at least one keyword')
       }
 
       if (keywords.length > 200) {
-        throw new Error('Maximum 200 keywords allowed');
+        throw new Error('Maximum 200 keywords allowed')
       }
 
       // Call the API
@@ -45,33 +45,33 @@ export default function SearchPage() {
           matchType: formData.matchType,
           location: formData.location,
         }),
-      });
+      })
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch keyword data');
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to fetch keyword data')
       }
 
-      const data = await response.json();
-      setResults(data.data);
+      const data = await response.json()
+      setResults(data.data)
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'An unexpected error occurred'
-      );
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleExport = () => {
     if (results.length > 0) {
-      exportToCSV(results, 'keyflash-results.csv');
+      exportToCSV(results, 'keyflash-results.csv')
     }
-  };
+  }
 
   const handleRetry = () => {
-    setError(null);
-  };
+    setError(null)
+  }
 
   return (
     <div className="container mx-auto px-6 py-12">
@@ -91,14 +91,18 @@ export default function SearchPage() {
           {/* Search Form */}
           <div className="lg:col-span-1">
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-              <KeywordSearchForm onSubmit={handleSearch} isLoading={isLoading} />
+              <KeywordSearchForm
+                onSubmit={handleSearch}
+                isLoading={isLoading}
+              />
             </div>
 
             {/* Mock Data Notice */}
             <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-900/20">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Note:</strong> API is functional with mock data. Real keyword
-                provider (Google Ads/DataForSEO) integration coming in Phase 4.
+                <strong>Note:</strong> API is functional with mock data. Real
+                keyword provider (Google Ads/DataForSEO) integration coming in
+                Phase 4.
               </p>
             </div>
           </div>
@@ -140,5 +144,5 @@ export default function SearchPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

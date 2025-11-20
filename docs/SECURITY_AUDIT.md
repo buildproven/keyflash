@@ -49,6 +49,7 @@ form-action 'self';
 ```
 
 **Notes**:
+
 - `unsafe-eval` required for Next.js development mode
 - `unsafe-inline` required for Tailwind CSS
 - Upstash whitelisted for Redis cache
@@ -76,6 +77,7 @@ form-action 'self';
 **Location**: `src/lib/validation/schemas.ts`
 
 All user inputs validated with Zod schemas:
+
 - Keyword count limits (1-200)
 - Keyword length limits (1-100 chars)
 - Match type enum validation
@@ -91,6 +93,7 @@ All user inputs validated with Zod schemas:
 ### 7. API Security ✅
 
 **Implemented**:
+
 - No API keys in code (verified by CI)
 - Environment variable validation
 - Error messages don't leak internals
@@ -122,15 +125,18 @@ All user inputs validated with Zod schemas:
    - Used by Lighthouse CI prompts
 
 **Low Severity (4)**:
+
 - All in dev dependencies
 - No production impact
 
 **Action Taken**:
+
 - ✅ Updated @lhci/cli from 0.14.0 → 0.15.1
 - ✅ Reduced vulnerabilities from 11 → 7
 - ❌ Cannot fix remaining without breaking changes
 
 **Recommendation**:
+
 - Monitor for updates to eslint-config-next and @lhci/cli
 - Consider removing Lighthouse CI if not used in production CI/CD
 - Vulnerabilities acceptable for MVP launch (dev-only)
@@ -140,51 +146,61 @@ All user inputs validated with Zod schemas:
 ## OWASP Top 10 Compliance
 
 ### A01:2021 – Broken Access Control ✅
+
 - ✅ No authentication bypass vulnerabilities
 - ✅ Rate limiting prevents abuse
 - ✅ API endpoints properly validated
 
 ### A02:2021 – Cryptographic Failures ✅
+
 - ✅ No sensitive data stored
 - ✅ HTTPS enforced (HSTS)
 - ✅ No secrets in code
 
 ### A03:2021 – Injection ✅
+
 - ✅ All inputs validated with Zod
 - ✅ No SQL injection (no database yet)
 - ✅ No command injection
 - ✅ XSS prevented via CSP + React escaping
 
 ### A04:2021 – Insecure Design ✅
+
 - ✅ Privacy by design (no data storage)
 - ✅ Rate limiting implemented
 - ✅ Error handling doesn't leak info
 
 ### A05:2021 – Security Misconfiguration ✅
+
 - ✅ Security headers configured
 - ✅ `poweredByHeader: false` (no Next.js fingerprinting)
 - ✅ Strict mode enabled
 - ⚠️ Dev dependencies have vulnerabilities (acceptable)
 
 ### A06:2021 – Vulnerable Components ⚠️
+
 - ⚠️ 7 vulnerabilities in dev dependencies
 - ✅ No vulnerabilities in production dependencies
 - ✅ Automated dependency scanning enabled
 
 ### A07:2021 – Identification & Authentication Failures N/A
+
 - N/A: No authentication system (IP-based rate limiting only)
 
 ### A08:2021 – Software & Data Integrity Failures ✅
+
 - ✅ No CDN usage for scripts
 - ✅ Subresource Integrity not needed (self-hosted)
 - ✅ No auto-update mechanism
 
 ### A09:2021 – Security Logging & Monitoring ⏳
+
 - ⏳ TODO: Add Sentry for error tracking
 - ⏳ TODO: Add monitoring for suspicious activity
 - ✅ Console logging in place
 
 ### A10:2021 – Server-Side Request Forgery (SSRF) ✅
+
 - ✅ No server-side URL fetching
 - ✅ API calls to known providers only
 - ✅ No user-controllable URLs
@@ -194,18 +210,21 @@ All user inputs validated with Zod schemas:
 ## Privacy & Compliance
 
 ### Data Collection
+
 - ✅ **No user data stored**
 - ✅ **No keyword searches stored**
 - ✅ **No cookies** (except rate limiting)
 - ✅ **No tracking**
 
 ### GDPR Compliance ✅
+
 - ✅ Minimal data collection
 - ✅ No personal data storage
 - ✅ Privacy-first design
 - ⏳ TODO: Add Privacy Policy page
 
 ### CCPA Compliance ✅
+
 - ✅ No personal information sale
 - ✅ Transparent data practices
 - ⏳ TODO: Add Terms of Service
@@ -239,18 +258,21 @@ All user inputs validated with Zod schemas:
 ## Known Limitations
 
 ### 1. Rate Limiting (Medium Priority)
+
 **Current**: In-memory rate limiting
 **Issue**: Resets on serverless function restart
 **Fix**: Migrate to Redis-based rate limiting
 **Timeline**: Priority 2 (see PRODUCTION_READINESS_CHECKLIST.md)
 
 ### 2. Dev Dependencies (Low Priority)
+
 **Current**: 7 vulnerabilities in dev dependencies
 **Issue**: Not used in production
 **Fix**: Wait for upstream updates or upgrade to Next.js 16
 **Timeline**: Post-launch
 
 ### 3. Monitoring (Medium Priority)
+
 **Current**: No centralized error tracking
 **Issue**: Can't detect production issues proactively
 **Fix**: Add Sentry
@@ -261,6 +283,7 @@ All user inputs validated with Zod schemas:
 ## Security Test Results
 
 ### Automated Tests ✅
+
 - ✅ 120 tests passing
 - ✅ Input validation tested
 - ✅ Error handling tested
@@ -268,6 +291,7 @@ All user inputs validated with Zod schemas:
 - ✅ Zero lint warnings
 
 ### Manual Security Review ✅
+
 - ✅ No hardcoded secrets
 - ✅ No sensitive data exposure
 - ✅ Proper error messages
@@ -279,6 +303,7 @@ All user inputs validated with Zod schemas:
 ## Recommendations
 
 ### Immediate (Before Launch)
+
 1. ✅ Add security headers (DONE)
 2. ✅ Implement CSP (DONE)
 3. ✅ Add HSTS (DONE)
@@ -287,6 +312,7 @@ All user inputs validated with Zod schemas:
 6. ⏳ Set up Sentry
 
 ### Short-term (First Week)
+
 1. Migrate rate limiting to Redis
 2. Add comprehensive logging
 3. Set up security monitoring
@@ -294,6 +320,7 @@ All user inputs validated with Zod schemas:
 5. Add Privacy Policy and ToS
 
 ### Long-term (First Month)
+
 1. Consider Web Application Firewall (WAF)
 2. Implement API key authentication (if offering API)
 3. Add automated security scanning to CI/CD
@@ -304,6 +331,7 @@ All user inputs validated with Zod schemas:
 ## Security Contact
 
 **Reporting Vulnerabilities**:
+
 - Email: [To be configured]
 - GitHub Security: https://github.com/brettstark73/keyflash/security
 
@@ -323,10 +351,10 @@ All user inputs validated with Zod schemas:
 
 ## Audit History
 
-| Date | Auditor | Findings | Status |
-|------|---------|----------|--------|
-| 2025-11-20 | Automated | 7 dev vulnerabilities | Acceptable |
-| 2025-11-20 | Manual | Security hardening complete | ✅ Pass |
+| Date       | Auditor   | Findings                    | Status     |
+| ---------- | --------- | --------------------------- | ---------- |
+| 2025-11-20 | Automated | 7 dev vulnerabilities       | Acceptable |
+| 2025-11-20 | Manual    | Security hardening complete | ✅ Pass    |
 
 ---
 
@@ -337,4 +365,4 @@ All user inputs validated with Zod schemas:
 
 **Security Status**: ✅ **PRODUCTION READY**
 
-*Note: Remaining vulnerabilities are in development dependencies only and do not affect production security.*
+_Note: Remaining vulnerabilities are in development dependencies only and do not affect production security._

@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server';
-import { ZodError } from 'zod';
+import { NextResponse } from 'next/server'
+import { ZodError } from 'zod'
 
 /**
  * Standard API error response format
  */
 export interface APIError {
-  error: string;
-  message: string;
-  statusCode: number;
-  timestamp: string;
+  error: string
+  message: string
+  statusCode: number
+  timestamp: string
 }
 
 /**
@@ -17,19 +17,19 @@ export interface APIError {
  * @returns NextResponse with error details
  */
 export function handleAPIError(error: unknown): NextResponse<APIError> {
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date().toISOString()
 
   // Zod validation errors
   if (error instanceof ZodError) {
     return NextResponse.json(
       {
         error: 'Validation Error',
-        message: error.issues.map((issue) => issue.message).join(', '),
+        message: error.issues.map(issue => issue.message).join(', '),
         statusCode: 400,
         timestamp,
       },
       { status: 400 }
-    );
+    )
   }
 
   // Standard Error objects
@@ -44,7 +44,7 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
           timestamp,
         },
         { status: 429 }
-      );
+      )
     }
 
     // Generic error
@@ -56,7 +56,7 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
         timestamp,
       },
       { status: 500 }
-    );
+    )
   }
 
   // Unknown error type
@@ -68,7 +68,7 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
       timestamp,
     },
     { status: 500 }
-  );
+  )
 }
 
 /**
@@ -78,5 +78,5 @@ export function createSuccessResponse<T>(
   data: T,
   status: number = 200
 ): NextResponse<T> {
-  return NextResponse.json(data, { status });
+  return NextResponse.json(data, { status })
 }

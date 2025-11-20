@@ -24,10 +24,12 @@ KeyFlash MVP has been successfully developed with a complete technical foundatio
 ## Development Timeline
 
 ### Phase 1: Next.js Foundation ✅
+
 **Completed**: Session 1
 **Commits**: `ac0c82c`, `7bbf5da`
 
 **Implemented**:
+
 - Next.js 14 with App Router and TypeScript 5
 - Tailwind CSS 3 styling with custom theme
 - Landing page (`/`) and search page (`/search`)
@@ -35,6 +37,7 @@ KeyFlash MVP has been successfully developed with a complete technical foundatio
 - ESLint 8 + Next.js config (compatibility fix)
 
 **Key Files Created**:
+
 ```
 src/app/layout.tsx
 src/app/page.tsx
@@ -43,6 +46,7 @@ tailwind.config.js
 ```
 
 **Technical Decisions**:
+
 - Used system fonts instead of Google Fonts for reliability
 - Downgraded to ESLint 8 for Next.js 14 compatibility
 - Strict TypeScript enabled from start
@@ -50,10 +54,12 @@ tailwind.config.js
 ---
 
 ### Phase 2: Core UI Components ✅
+
 **Completed**: Session 1
 **Commit**: `2f74e23`
 
 **Implemented**:
+
 - Keyword search form with Zod validation
 - Keyword results table with sorting/export
 - UI state components (loading, error, empty)
@@ -61,6 +67,7 @@ tailwind.config.js
 - Form validation with client-side error messages
 
 **Components Created** (9 total):
+
 ```
 src/components/forms/keyword-search-form.tsx
 src/components/tables/keyword-results-table.tsx
@@ -73,6 +80,7 @@ src/types/keyword.ts
 ```
 
 **Validation Rules**:
+
 - Keywords: 1-200 per search
 - Each keyword: 1-100 characters
 - Match types: `phrase` or `exact`
@@ -81,10 +89,12 @@ src/types/keyword.ts
 ---
 
 ### Phase 3: API Layer ✅
+
 **Completed**: Session 1
 **Commit**: `7a6221e`
 
 **Implemented**:
+
 - `/api/keywords` POST endpoint for keyword search
 - `/api/health` GET endpoint for health checks
 - Rate limiting (10 requests/hour per IP, configurable)
@@ -92,6 +102,7 @@ src/types/keyword.ts
 - Mock data provider
 
 **API Routes Created**:
+
 ```
 src/app/api/keywords/route.ts
 src/app/api/health/route.ts
@@ -100,12 +111,14 @@ src/lib/utils/error-handler.ts
 ```
 
 **Rate Limiting**:
+
 - In-memory implementation (production: migrate to Redis)
 - Default: 10 requests/hour per IP
 - Configurable via `RATE_LIMIT_REQUESTS_PER_HOUR`
 - Returns 429 status when exceeded
 
 **Error Handling**:
+
 - Zod validation errors (400)
 - Rate limit errors (429)
 - Internal server errors (500)
@@ -114,10 +127,12 @@ src/lib/utils/error-handler.ts
 ---
 
 ### Phase 4: API Provider Infrastructure ✅
+
 **Completed**: Session 2
 **Commit**: `7129095`
 
 **Implemented**:
+
 - Provider abstraction layer (`KeywordAPIProvider` interface)
 - Google Ads provider (OAuth2 flow structure)
 - DataForSEO provider (Basic Auth structure)
@@ -126,6 +141,7 @@ src/lib/utils/error-handler.ts
 - Environment-based configuration
 
 **Providers Created**:
+
 ```
 src/lib/api/types.ts              # Provider interfaces
 src/lib/api/factory.ts            # Provider factory
@@ -135,13 +151,14 @@ tests/unit/api/providers.test.ts   # 17 provider tests
 ```
 
 **Provider Features**:
-| Provider    | Batch Limit | Rate Limit     | Auth Method |
+| Provider | Batch Limit | Rate Limit | Auth Method |
 |-------------|-------------|----------------|-------------|
-| Google Ads  | 1,000       | 1,000/day      | OAuth2      |
-| DataForSEO  | 10,000      | 2,000/day      | Basic Auth  |
-| Mock        | 200         | Unlimited      | None        |
+| Google Ads | 1,000 | 1,000/day | OAuth2 |
+| DataForSEO | 10,000 | 2,000/day | Basic Auth |
+| Mock | 200 | Unlimited | None |
 
 **Environment Variables**:
+
 ```bash
 # Choose provider
 KEYWORD_API_PROVIDER=google-ads  # or 'dataforseo' or 'mock'
@@ -159,6 +176,7 @@ DATAFORSEO_API_PASSWORD=
 ```
 
 **Implementation Status**:
+
 - ✅ Provider interfaces defined
 - ✅ Configuration validation implemented
 - ✅ Factory pattern functional
@@ -167,6 +185,7 @@ DATAFORSEO_API_PASSWORD=
 - ⏳ OAuth token refresh (TODO: requires credentials)
 
 **Code Quality**:
+
 - All providers implement `KeywordAPIProvider` interface
 - Detailed TODO comments for API implementation
 - TypeScript strict mode compliant
@@ -175,10 +194,12 @@ DATAFORSEO_API_PASSWORD=
 ---
 
 ### Phase 5: Caching Layer ✅
+
 **Completed**: Session 2
 **Commit**: `b602ea1`
 
 **Implemented**:
+
 - Redis client wrapper (Upstash SDK)
 - Cache integration in `/api/keywords`
 - Graceful degradation (works without Redis)
@@ -186,6 +207,7 @@ DATAFORSEO_API_PASSWORD=
 - 7-day TTL with configurable override
 
 **Cache Files Created**:
+
 ```
 src/lib/cache/redis.ts
 tests/unit/cache/redis.test.ts  # 23 cache tests
@@ -194,6 +216,7 @@ tests/unit/cache/redis.test.ts  # 23 cache tests
 **Caching Strategy**:
 
 **Cache Key Format**:
+
 ```
 kw:{location}:{language}:{matchType}:{hash}
 
@@ -203,17 +226,20 @@ kw:default:en:exact:3sjwkl
 ```
 
 **Cache Flow**:
+
 1. Generate cache key from search parameters
 2. Check Redis cache
 3. **Cache HIT** → Return cached data (`cached: true`)
 4. **Cache MISS** → Fetch from provider, cache result, return (`cached: false`)
 
 **TTL Configuration**:
+
 - Default: 7 days (604,800 seconds)
 - Rationale: Keyword data rarely changes weekly
 - Configurable via constructor parameter
 
 **Features**:
+
 - ✅ Singleton pattern for cache client
 - ✅ Hash-based key generation (order-independent)
 - ✅ Fire-and-forget cache writes (non-blocking)
@@ -222,12 +248,14 @@ kw:default:en:exact:3sjwkl
 - ✅ Works without Redis (graceful degradation)
 
 **Environment Variables**:
+
 ```bash
 UPSTASH_REDIS_REST_URL=https://...
 UPSTASH_REDIS_REST_TOKEN=...
 ```
 
 **Monitoring**:
+
 - Console logs for cache HIT/MISS (production monitoring)
 - Error logging for cache failures
 - Ping endpoint for health checks
@@ -235,10 +263,12 @@ UPSTASH_REDIS_REST_TOKEN=...
 ---
 
 ### Phase 6: E2E Tests & Performance ✅
+
 **Completed**: Session 2
 **Status**: Infrastructure complete, browsers require deployment environment
 
 **Implemented**:
+
 - Playwright configuration
 - E2E tests for landing page (5 tests)
 - E2E tests for keyword search (11 tests)
@@ -247,6 +277,7 @@ UPSTASH_REDIS_REST_TOKEN=...
 - Mobile device testing
 
 **E2E Test Files**:
+
 ```
 playwright.config.ts
 tests/e2e/landing-page.spec.ts     # 5 E2E tests
@@ -256,6 +287,7 @@ tests/e2e/keyword-search.spec.ts   # 11 E2E tests
 **Test Coverage**:
 
 **Landing Page Tests** (5):
+
 - ✅ Display correct content
 - ✅ Navigate to search page
 - ✅ Fast initial load (<3s)
@@ -263,6 +295,7 @@ tests/e2e/keyword-search.spec.ts   # 11 E2E tests
 - ✅ Accessible keyboard navigation
 
 **Keyword Search Tests** (11):
+
 - ✅ Display search form
 - ✅ Search and display results
 - ✅ Validate empty input
@@ -276,6 +309,7 @@ tests/e2e/keyword-search.spec.ts   # 11 E2E tests
 - ✅ Support different match types
 
 **Browser Support**:
+
 - Chromium (Desktop)
 - Firefox (Desktop)
 - Safari (Desktop)
@@ -283,6 +317,7 @@ tests/e2e/keyword-search.spec.ts   # 11 E2E tests
 - Mobile Safari (iPhone 12)
 
 **NPM Scripts Added**:
+
 ```bash
 npm run test:e2e          # Run E2E tests
 npm run test:e2e:ui       # Run with UI mode
@@ -300,16 +335,17 @@ npm run test:all          # Run unit + E2E tests
 ### Overall Coverage: 76.09%
 
 **Breakdown by Category**:
-| Category       | Statements | Branches | Functions | Lines  |
+| Category | Statements | Branches | Functions | Lines |
 |----------------|------------|----------|-----------|--------|
-| **API Routes** | 82.14%     | 75%      | 66.66%    | 82.14% |
-| **Components** | 96.84%     | 70.73%   | 90.47%    | 96.84% |
-| **Validation** | 100%       | 100%     | 100%      | 100%   |
-| **Utilities**  | 100%       | 85%      | 100%      | 100%   |
-| **Providers**  | 53.06%     | 71.87%   | 37.5%     | 47.5%  |
-| **Caching**    | 61.9%      | 74.07%   | 100%      | 61.29% |
+| **API Routes** | 82.14% | 75% | 66.66% | 82.14% |
+| **Components** | 96.84% | 70.73% | 90.47% | 96.84% |
+| **Validation** | 100% | 100% | 100% | 100% |
+| **Utilities** | 100% | 85% | 100% | 100% |
+| **Providers** | 53.06% | 71.87% | 37.5% | 47.5% |
+| **Caching** | 61.9% | 74.07% | 100% | 61.29% |
 
 **Notes**:
+
 - Provider coverage low because real API calls are TODO (require credentials)
 - Cache coverage includes graceful degradation paths
 - All critical user-facing functionality 100% covered
@@ -320,6 +356,7 @@ npm run test:all          # Run unit + E2E tests
 **Test Files**: 11 unit test files + 2 E2E test files
 
 **Test Distribution**:
+
 - **Unit Tests**: 104 tests
   - Component tests: 27 tests
   - API tests: 28 tests (keywords + health + providers)
@@ -333,6 +370,7 @@ npm run test:all          # Run unit + E2E tests
   - Keyword search: 11 tests
 
 **Test Frameworks**:
+
 - **Vitest** for unit/integration tests
 - **React Testing Library** for component tests
 - **Playwright** for E2E tests
@@ -417,25 +455,30 @@ keyflash/
 ## Technology Stack
 
 ### Core Framework
+
 - **Next.js 14** - App Router, server components, API routes
 - **React 18** - UI components with hooks
 - **TypeScript 5** - Strict mode enabled
 
 ### Styling
+
 - **Tailwind CSS 3** - Utility-first styling
 - **System Fonts** - Reliable font stack (no external dependencies)
 
 ### Data & Caching
+
 - **Zod 4** - Schema validation
 - **Upstash Redis** - Serverless Redis caching
 
 ### Testing
+
 - **Vitest 4** - Unit testing framework
 - **React Testing Library** - Component testing
 - **Playwright 1.56** - E2E testing
 - **@vitest/coverage-v8** - Coverage reporting
 
 ### Quality Tools
+
 - **ESLint 8** - Linting (Next.js config)
 - **Prettier 3** - Code formatting
 - **Stylelint 16** - CSS linting
@@ -443,6 +486,7 @@ keyflash/
 - **lint-staged 15** - Pre-commit checks
 
 ### CI/CD
+
 - **GitHub Actions** - Automated quality checks
 - **Lighthouse CI** - Performance/SEO monitoring
 
@@ -453,6 +497,7 @@ keyflash/
 ### Required for Production
 
 **API Provider** (choose one):
+
 ```bash
 # Option 1: Google Ads
 KEYWORD_API_PROVIDER=google-ads
@@ -469,6 +514,7 @@ DATAFORSEO_API_PASSWORD=your_password
 ```
 
 **Caching** (recommended):
+
 ```bash
 UPSTASH_REDIS_REST_URL=https://...
 UPSTASH_REDIS_REST_TOKEN=...
@@ -477,12 +523,14 @@ UPSTASH_REDIS_REST_TOKEN=...
 ### Optional Configuration
 
 **Rate Limiting**:
+
 ```bash
 RATE_LIMIT_REQUESTS_PER_HOUR=10    # Default: 10
 RATE_LIMIT_ENABLED=true             # Default: true
 ```
 
 **Development**:
+
 ```bash
 NODE_ENV=development
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -554,6 +602,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### Post-Launch Enhancements (Phase 7+)
 
 **High Priority**:
+
 - [ ] Migrate rate limiting to Redis (currently in-memory)
 - [ ] Add user authentication (Auth0/NextAuth)
 - [ ] Implement saved searches feature
@@ -561,6 +610,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - [ ] Create analytics dashboard
 
 **Medium Priority**:
+
 - [ ] Add keyword suggestion autocomplete
 - [ ] Implement competitor analysis
 - [ ] Add SERP features data
@@ -568,6 +618,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - [ ] Add bulk keyword import
 
 **Low Priority**:
+
 - [ ] Dark mode toggle
 - [ ] Multi-language support (i18n)
 - [ ] Advanced filtering options
@@ -615,15 +666,16 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ### Target Metrics (from REQUIREMENTS.md)
 
-| Metric              | Target   | Status |
-|---------------------|----------|--------|
-| API Response Time   | <3s p95  | ✅ TBD |
-| Initial Page Load   | <2s FCP  | ✅ Yes |
-| Bundle Size         | <200KB   | ✅ 96KB|
-| Lighthouse SEO      | >90%     | ✅ Yes |
-| Test Coverage       | >70%     | ✅ 76% |
+| Metric            | Target  | Status  |
+| ----------------- | ------- | ------- |
+| API Response Time | <3s p95 | ✅ TBD  |
+| Initial Page Load | <2s FCP | ✅ Yes  |
+| Bundle Size       | <200KB  | ✅ 96KB |
+| Lighthouse SEO    | >90%    | ✅ Yes  |
+| Test Coverage     | >70%    | ✅ 76%  |
 
 **First Load JS Sizes**:
+
 ```
 /                     96.1 kB
 /search              112 kB
@@ -632,6 +684,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### Build Output
+
 ```
 Route (app)                              Size     First Load JS
 ┌ ○ /                                    175 B          96.1 kB
@@ -650,6 +703,7 @@ All targets met or exceeded! 🎉
 ### Pre-Commit Hooks (Husky + lint-staged)
 
 **Automatically runs on `git commit`**:
+
 - ✅ Prettier formatting (auto-fix)
 - ✅ ESLint linting (auto-fix)
 - ✅ Stylelint validation (auto-fix)
@@ -658,6 +712,7 @@ All targets met or exceeded! 🎉
 ### CI/CD (GitHub Actions)
 
 **Runs on every push and PR**:
+
 - ✅ Build verification
 - ✅ ESLint (zero warnings policy)
 - ✅ Prettier check
@@ -675,6 +730,7 @@ All targets met or exceeded! 🎉
 ## Security Measures
 
 ### Input Validation
+
 - ✅ Zod schemas for all user inputs
 - ✅ Keyword count limits (1-200)
 - ✅ Character limits (1-100 per keyword)
@@ -682,6 +738,7 @@ All targets met or exceeded! 🎉
 - ✅ No `eval()`, `Function()`, or dangerous patterns
 
 ### API Security
+
 - ✅ Rate limiting (10 req/hour per IP)
 - ✅ Error messages don't leak internals
 - ✅ No hardcoded secrets (verified by CI)
@@ -689,6 +746,7 @@ All targets met or exceeded! 🎉
 - ✅ HTTPS enforcement (Next.js default)
 
 ### Data Privacy
+
 - ✅ No keyword search storage (GDPR compliant)
 - ✅ No user tracking
 - ✅ Minimal data collection
@@ -701,6 +759,7 @@ All targets met or exceeded! 🎉
 ## Dependencies
 
 ### Production Dependencies (2)
+
 ```json
 {
   "@upstash/redis": "^1.35.6",
@@ -709,6 +768,7 @@ All targets met or exceeded! 🎉
 ```
 
 ### Development Dependencies (25)
+
 ```json
 {
   "@lhci/cli": "^0.14.0",
@@ -749,23 +809,29 @@ All targets met or exceeded! 🎉
 ## Git Commits
 
 ### Phase 1
+
 - `ac0c82c` - Initial Next.js setup with landing and search pages
 - `7bbf5da` - Fix CI compatibility issues
 
 ### Phase 2
+
 - `2f74e23` - Implement core UI components with validation
 
 ### Phase 3
+
 - `7a6221e` - Add API routes with rate limiting and error handling
 
 ### Phase 4
+
 - `4b49125` - Add comprehensive test suite (95% coverage)
 - `7129095` - Implement API provider infrastructure
 
 ### Phase 5
+
 - `b602ea1` - Implement Redis caching layer
 
 ### Phase 6
+
 - `02f8572` - Add MVP development summary (this document)
 
 **Total Commits**: 7 commits across 2 development sessions
@@ -775,6 +841,7 @@ All targets met or exceeded! 🎉
 ## Resources & Documentation
 
 ### Internal Documentation
+
 - **README.md** - Project overview and quick start
 - **docs/REQUIREMENTS.md** - Product requirements
 - **docs/ARCHITECTURE.md** - System architecture
@@ -784,6 +851,7 @@ All targets met or exceeded! 🎉
 - **CLAUDE.md** - AI assistant guide
 
 ### External Resources
+
 - **Next.js Docs**: https://nextjs.org/docs
 - **Tailwind CSS**: https://tailwindcss.com/docs
 - **Vitest**: https://vitest.dev/
@@ -807,6 +875,7 @@ KeyFlash MVP is **complete and production-ready** with the following highlights:
 ✅ **Scalable Architecture** - Provider pattern, caching, rate limiting
 
 ### What's Working
+
 - ✅ Complete UI with form validation
 - ✅ API routes with error handling
 - ✅ Mock data provider (for development)
@@ -816,6 +885,7 @@ KeyFlash MVP is **complete and production-ready** with the following highlights:
 - ✅ E2E test framework
 
 ### What's Needed
+
 - ⏳ Real API credentials (Google Ads OR DataForSEO)
 - ⏳ Production deployment (Vercel recommended)
 - ⏳ Redis instance (Upstash free tier)

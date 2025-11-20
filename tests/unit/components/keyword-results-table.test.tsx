@@ -116,4 +116,108 @@ describe('KeywordResultsTable', () => {
     expect(screen.getByText('Competition')).toBeInTheDocument()
     expect(screen.getByText('Intent')).toBeInTheDocument()
   })
+
+  it('should display difficulty bar with correct color for low difficulty', () => {
+    const lowDifficultyData: KeywordData[] = [
+      {
+        keyword: 'easy keyword',
+        searchVolume: 1000,
+        difficulty: 20, // < 30 = green
+        cpc: 0.5,
+        competition: 'low',
+        intent: 'informational',
+      },
+    ]
+
+    render(<KeywordResultsTable data={lowDifficultyData} />)
+
+    expect(screen.getByText('20/100')).toBeInTheDocument()
+  })
+
+  it('should display difficulty bar with correct color for medium difficulty', () => {
+    const mediumDifficultyData: KeywordData[] = [
+      {
+        keyword: 'medium keyword',
+        searchVolume: 5000,
+        difficulty: 50, // 30-70 = yellow
+        cpc: 1.5,
+        competition: 'medium',
+        intent: 'commercial',
+      },
+    ]
+
+    render(<KeywordResultsTable data={mediumDifficultyData} />)
+
+    expect(screen.getByText('50/100')).toBeInTheDocument()
+  })
+
+  it('should display difficulty bar with correct color for high difficulty', () => {
+    const highDifficultyData: KeywordData[] = [
+      {
+        keyword: 'hard keyword',
+        searchVolume: 50000,
+        difficulty: 85, // >= 70 = red
+        cpc: 5.0,
+        competition: 'high',
+        intent: 'transactional',
+      },
+    ]
+
+    render(<KeywordResultsTable data={highDifficultyData} />)
+
+    expect(screen.getByText('85/100')).toBeInTheDocument()
+  })
+
+  it('should display low competition badge with correct styling', () => {
+    const lowCompData: KeywordData[] = [
+      {
+        keyword: 'test',
+        searchVolume: 1000,
+        difficulty: 30,
+        cpc: 1.0,
+        competition: 'low',
+        intent: 'informational',
+      },
+    ]
+
+    render(<KeywordResultsTable data={lowCompData} />)
+
+    const badge = screen.getByText('low')
+    expect(badge).toBeInTheDocument()
+  })
+
+  it('should display multiple intent types correctly', () => {
+    const multiIntentData: KeywordData[] = [
+      {
+        keyword: 'info keyword',
+        searchVolume: 1000,
+        difficulty: 30,
+        cpc: 1.0,
+        competition: 'low',
+        intent: 'informational',
+      },
+      {
+        keyword: 'buy keyword',
+        searchVolume: 2000,
+        difficulty: 40,
+        cpc: 2.0,
+        competition: 'medium',
+        intent: 'transactional',
+      },
+      {
+        keyword: 'nav keyword',
+        searchVolume: 3000,
+        difficulty: 50,
+        cpc: 3.0,
+        competition: 'high',
+        intent: 'navigational',
+      },
+    ]
+
+    render(<KeywordResultsTable data={multiIntentData} />)
+
+    expect(screen.getByText('informational')).toBeInTheDocument()
+    expect(screen.getByText('transactional')).toBeInTheDocument()
+    expect(screen.getByText('navigational')).toBeInTheDocument()
+  })
 })

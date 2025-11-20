@@ -259,4 +259,6 @@ describe('RedisCache', () => {
       expect(typeof cache.isAvailable).toBe('function');
     });
   });
+
 });
+

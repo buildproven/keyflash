@@ -96,5 +96,28 @@ describe('KeywordSearchForm', () => {
     expect(screen.getByRole('button', { name: /searching/i})).toBeInTheDocument();
   });
 
+  it('should allow changing match type to exact', async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<KeywordSearchForm onSubmit={onSubmit} />);
+
+    // Find and click the "Exact Match" radio button
+    const exactRadio = screen.getByLabelText(/exact match/i);
+    await user.click(exactRadio);
+
+    // Verify it's checked
+    expect(exactRadio).toBeChecked();
+
+    // Submit and verify exact match type is sent
+    await user.type(screen.getByLabelText(/keywords/i), 'test keyword');
+    await user.click(screen.getByRole('button', { name: /get keyword data/i }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        matchType: 'exact',
+      })
+    );
+  });
+
   // Note: Max length validation is tested at the schema level in validation.test.ts
 });

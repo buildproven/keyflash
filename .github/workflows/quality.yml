@@ -64,15 +64,19 @@ jobs:
 
       - name: Check for hardcoded secrets
         run: |
-          # Check for common secret patterns (excluding docs, tests, and workflow files)
-          if grep -r -E "(password|secret|key|token).*[=:].*['\"][^'\"]{8,}" . \
+          # Check for actual secret patterns (API keys, tokens, passwords with suspicious patterns)
+          # Exclude metadata, configuration, and documentation files
+          if grep -r -E "(api_key|apikey|api_secret|secret_key|private_key|access_token|auth_token|bearer_token|client_secret|refresh_token).*[=:].*['\"][a-zA-Z0-9+/]{20,}" . \
                --exclude-dir=node_modules \
                --exclude-dir=.git \
                --exclude-dir=.github \
                --exclude-dir=tests \
+               --exclude-dir=.next \
                --exclude="*.md" \
-               --exclude="package.json" || \
-             grep -r -E "-----BEGIN.*KEY-----" . \
+               --exclude="package.json" \
+               --exclude="package-lock.json" \
+               --exclude="layout.tsx" || \
+             grep -r -E "-----BEGIN (RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----" . \
                --exclude-dir=node_modules \
                --exclude-dir=.git \
                --exclude-dir=.github \

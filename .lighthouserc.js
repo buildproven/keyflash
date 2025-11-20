@@ -1,12 +1,13 @@
 module.exports = {
   ci: {
     collect: {
-      // Collect URLs - default to localhost for most projects
-      url: ['http://localhost:3000'],
-      // For static sites, you might want to build first
-      staticDistDir: './dist',
+      // Collect URLs - Next.js pages to test
+      url: ['http://localhost:3000', 'http://localhost:3000/search'],
+      // Start Next.js server for testing
+      startServerCommand: 'npm run start',
+      startServerReadyPattern: 'ready on',
       // Number of runs for more accurate results
-      numberOfRuns: 3,
+      numberOfRuns: 1,
       // Wait for page to be ready
       settings: {
         chromeFlags: '--no-sandbox --headless --disable-gpu',

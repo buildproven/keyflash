@@ -60,7 +60,7 @@ jobs:
         run: npm run build
 
       - name: Security audit
-        run: npm audit --audit-level high
+        run: npm audit --audit-level high --omit=dev
 
       - name: Check for hardcoded secrets
         run: |

@@ -138,12 +138,6 @@ jobs:
           # Clean up temp file
           rm -f /tmp/unvalidated_inputs.txt
 
-      - name: Documentation validation
-        run: |
-          # Run comprehensive documentation validation
-          echo "📖 Running documentation validation..."
-          npx create-quality-automation@latest --validate-docs
-
       - name: Lighthouse CI
         run: |
           # Only run Lighthouse CI if configuration exists

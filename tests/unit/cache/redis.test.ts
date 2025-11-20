@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { RedisCache } from '@/lib/cache/redis'
 import type { KeywordData } from '@/types/keyword'
+import type { CachedKeywordData } from '@/lib/cache/redis'
 
 // Create mock Redis methods
 const mockGet = vi.fn()
@@ -152,14 +153,16 @@ describe('RedisCache', () => {
   })
 
   describe('error handling', () => {
-    it('should handle invalid URLs gracefully', () => {
+    it('should handle invalid URLs gracefully by catching Redis constructor error', () => {
+      // When Redis constructor throws due to invalid URL, RedisCache should catch it
       const cache = new RedisCache({
         url: 'invalid-url',
         token: 'test-token',
       })
 
-      // Should still initialize but may not be available
+      // Should still initialize but not be available
       expect(cache).toBeDefined()
+      expect(cache.isAvailable()).toBe(false)
     })
 
     it('should handle missing token gracefully', () => {

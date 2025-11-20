@@ -1,7 +1,17 @@
 {
   "name": "keyflash",
   "version": "1.0.0",
-  "description": "",
+  "description": "Fast and affordable keyword research tool. Get keyword data in under 3 seconds - 10x cheaper than Ahrefs, SEMrush, and Moz.",
+  "keywords": [
+    "keyword-research",
+    "seo",
+    "search-volume",
+    "keyword-difficulty",
+    "seo-tools",
+    "marketing",
+    "open-source"
+  ],
+  "license": "AGPL-3.0",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",

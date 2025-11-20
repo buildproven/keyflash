@@ -3,8 +3,8 @@ import type {
   SearchOptions,
   RateLimit,
   ProviderConfig,
-} from '../types';
-import type { KeywordData } from '@/types/keyword';
+} from '../types'
+import type { KeywordData } from '@/types/keyword'
 
 /**
  * Google Ads Keyword Planner API Provider
@@ -24,7 +24,7 @@ import type { KeywordData } from '@/types/keyword';
  * Documentation: https://developers.google.com/google-ads/api
  */
 export class GoogleAdsProvider implements KeywordAPIProvider {
-  readonly name = 'Google Ads';
+  readonly name = 'Google Ads'
 
   private config: Required<
     Pick<
@@ -35,7 +35,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       | 'refreshToken'
       | 'customerId'
     >
-  >;
+  >
 
   constructor() {
     this.config = {
@@ -44,23 +44,23 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       developerToken: process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
       refreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN || '',
       customerId: process.env.GOOGLE_ADS_CUSTOMER_ID || '',
-    };
+    }
   }
 
   validateConfiguration(): void {
-    const missing: string[] = [];
+    const missing: string[] = []
 
-    if (!this.config.clientId) missing.push('GOOGLE_ADS_CLIENT_ID');
-    if (!this.config.clientSecret) missing.push('GOOGLE_ADS_CLIENT_SECRET');
-    if (!this.config.developerToken) missing.push('GOOGLE_ADS_DEVELOPER_TOKEN');
-    if (!this.config.refreshToken) missing.push('GOOGLE_ADS_REFRESH_TOKEN');
-    if (!this.config.customerId) missing.push('GOOGLE_ADS_CUSTOMER_ID');
+    if (!this.config.clientId) missing.push('GOOGLE_ADS_CLIENT_ID')
+    if (!this.config.clientSecret) missing.push('GOOGLE_ADS_CLIENT_SECRET')
+    if (!this.config.developerToken) missing.push('GOOGLE_ADS_DEVELOPER_TOKEN')
+    if (!this.config.refreshToken) missing.push('GOOGLE_ADS_REFRESH_TOKEN')
+    if (!this.config.customerId) missing.push('GOOGLE_ADS_CUSTOMER_ID')
 
     if (missing.length > 0) {
       throw new Error(
         `Google Ads provider missing configuration: ${missing.join(', ')}. ` +
           'Please set these environment variables.'
-      );
+      )
     }
   }
 
@@ -68,7 +68,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
     keywords: string[],
     options: SearchOptions
   ): Promise<KeywordData[]> {
-    this.validateConfiguration();
+    this.validateConfiguration()
 
     // TODO: Implement actual Google Ads API call
     // For now, return mock data structure
@@ -79,13 +79,11 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
     // 4. Handle API errors and rate limits
 
     // Suppress unused warning until API is implemented
-    void options;
+    void options
 
-    console.warn(
-      `[${this.name}] API integration pending. Returning mock data.`
-    );
+    console.warn(`[${this.name}] API integration pending. Returning mock data.`)
 
-    return keywords.map((keyword) => ({
+    return keywords.map(keyword => ({
       keyword,
       searchVolume: Math.floor(Math.random() * 100000),
       difficulty: Math.floor(Math.random() * 100),
@@ -93,22 +91,27 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       competition: (['low', 'medium', 'high'] as const)[
         Math.floor(Math.random() * 3)
       ],
-      intent: (['informational', 'commercial', 'transactional', 'navigational'] as const)[
-        Math.floor(Math.random() * 4)
-      ],
-    }));
+      intent: (
+        [
+          'informational',
+          'commercial',
+          'transactional',
+          'navigational',
+        ] as const
+      )[Math.floor(Math.random() * 4)],
+    }))
   }
 
   getBatchLimit(): number {
     // Google Ads allows up to 1000 keywords per request
-    return 1000;
+    return 1000
   }
 
   getRateLimit(): RateLimit {
     return {
       requests: 1000,
       period: 'day',
-    };
+    }
   }
 
   /**
@@ -130,7 +133,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
     // });
     // return response.json().access_token;
 
-    throw new Error('OAuth token refresh not implemented');
+    throw new Error('OAuth token refresh not implemented')
   }
 
   /**
@@ -163,9 +166,9 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
     // return response.json();
 
     // Suppress unused warnings until API is implemented
-    void keywords;
-    void options;
+    void keywords
+    void options
 
-    throw new Error('Google Ads API call not implemented');
+    throw new Error('Google Ads API call not implemented')
   }
 }

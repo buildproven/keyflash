@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import type { KeywordData } from '@/types/keyword';
+import type { KeywordData } from '@/types/keyword'
 
 interface KeywordResultsTableProps {
-  data: KeywordData[];
-  onExport?: () => void;
+  data: KeywordData[]
+  onExport?: () => void
 }
 
 export function KeywordResultsTable({
@@ -16,7 +16,7 @@ export function KeywordResultsTable({
       <div className="rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
         <p className="text-gray-500 dark:text-gray-400">No results found</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -133,5 +133,5 @@ export function KeywordResultsTable({
         </table>
       </div>
     </div>
-  );
+  )
 }

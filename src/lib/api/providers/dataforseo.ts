@@ -3,8 +3,8 @@ import type {
   SearchOptions,
   RateLimit,
   ProviderConfig,
-} from '../types';
-import type { KeywordData } from '@/types/keyword';
+} from '../types'
+import type { KeywordData } from '@/types/keyword'
 
 /**
  * DataForSEO API Provider
@@ -20,28 +20,28 @@ import type { KeywordData } from '@/types/keyword';
  * Documentation: https://docs.dataforseo.com/v3/keywords_data/
  */
 export class DataForSEOProvider implements KeywordAPIProvider {
-  readonly name = 'DataForSEO';
+  readonly name = 'DataForSEO'
 
-  private config: Required<Pick<ProviderConfig, 'login' | 'password'>>;
+  private config: Required<Pick<ProviderConfig, 'login' | 'password'>>
 
   constructor() {
     this.config = {
       login: process.env.DATAFORSEO_API_LOGIN || '',
       password: process.env.DATAFORSEO_API_PASSWORD || '',
-    };
+    }
   }
 
   validateConfiguration(): void {
-    const missing: string[] = [];
+    const missing: string[] = []
 
-    if (!this.config.login) missing.push('DATAFORSEO_API_LOGIN');
-    if (!this.config.password) missing.push('DATAFORSEO_API_PASSWORD');
+    if (!this.config.login) missing.push('DATAFORSEO_API_LOGIN')
+    if (!this.config.password) missing.push('DATAFORSEO_API_PASSWORD')
 
     if (missing.length > 0) {
       throw new Error(
         `DataForSEO provider missing configuration: ${missing.join(', ')}. ` +
           'Please set these environment variables.'
-      );
+      )
     }
   }
 
@@ -49,7 +49,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     keywords: string[],
     options: SearchOptions
   ): Promise<KeywordData[]> {
-    this.validateConfiguration();
+    this.validateConfiguration()
 
     // TODO: Implement actual DataForSEO API call
     // For now, return mock data structure
@@ -59,13 +59,11 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     // 3. Handle API errors and rate limits
 
     // Suppress unused warning until API is implemented
-    void options;
+    void options
 
-    console.warn(
-      `[${this.name}] API integration pending. Returning mock data.`
-    );
+    console.warn(`[${this.name}] API integration pending. Returning mock data.`)
 
-    return keywords.map((keyword) => ({
+    return keywords.map(keyword => ({
       keyword,
       searchVolume: Math.floor(Math.random() * 100000),
       difficulty: Math.floor(Math.random() * 100),
@@ -73,22 +71,27 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       competition: (['low', 'medium', 'high'] as const)[
         Math.floor(Math.random() * 3)
       ],
-      intent: (['informational', 'commercial', 'transactional', 'navigational'] as const)[
-        Math.floor(Math.random() * 4)
-      ],
-    }));
+      intent: (
+        [
+          'informational',
+          'commercial',
+          'transactional',
+          'navigational',
+        ] as const
+      )[Math.floor(Math.random() * 4)],
+    }))
   }
 
   getBatchLimit(): number {
     // DataForSEO allows larger batches than Google Ads
-    return 10000;
+    return 10000
   }
 
   getRateLimit(): RateLimit {
     return {
       requests: 2000,
       period: 'day',
-    };
+    }
   }
 
   /**
@@ -97,8 +100,8 @@ export class DataForSEOProvider implements KeywordAPIProvider {
    */
   // @ts-ignore - Will be used when API is implemented
   private getAuthHeader(): string {
-    const credentials = `${this.config.login}:${this.config.password}`;
-    return `Basic ${Buffer.from(credentials).toString('base64')}`;
+    const credentials = `${this.config.login}:${this.config.password}`
+    return `Basic ${Buffer.from(credentials).toString('base64')}`
   }
 
   /**
@@ -110,7 +113,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     keywords: string[],
     options: SearchOptions
   ): Promise<unknown> {
-    const apiBaseUrl = 'https://api.dataforseo.com/v3';
+    const apiBaseUrl = 'https://api.dataforseo.com/v3'
 
     // TODO: Implement DataForSEO API call
     // const response = await fetch(
@@ -134,10 +137,10 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     // return response.json();
 
     // Suppress unused variable warnings until API is implemented
-    void apiBaseUrl;
-    void keywords;
-    void options;
+    void apiBaseUrl
+    void keywords
+    void options
 
-    throw new Error('DataForSEO API call not implemented');
+    throw new Error('DataForSEO API call not implemented')
   }
 }

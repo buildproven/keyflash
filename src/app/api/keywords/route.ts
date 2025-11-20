@@ -1,17 +1,17 @@
-import { NextRequest } from 'next/server';
-import { KeywordSearchSchema } from '@/lib/validation/schemas';
+import { NextRequest } from 'next/server'
+import { KeywordSearchSchema } from '@/lib/validation/schemas'
 import {
   handleAPIError,
   createSuccessResponse,
-} from '@/lib/utils/error-handler';
+} from '@/lib/utils/error-handler'
 import {
   checkRateLimit,
   getClientId,
   getRateLimitInfo,
-} from '@/lib/rate-limit/rate-limiter';
-import { getProvider } from '@/lib/api/factory';
-import { cache } from '@/lib/cache/redis';
-import type { KeywordSearchResponse } from '@/types/keyword';
+} from '@/lib/rate-limit/rate-limiter'
+import { getProvider } from '@/lib/api/factory'
+import { cache } from '@/lib/cache/redis'
+import type { KeywordSearchResponse } from '@/types/keyword'
 
 /**
  * Rate limit configuration from environment
@@ -22,7 +22,7 @@ const RATE_LIMIT_CONFIG = {
     10
   ),
   enabled: process.env.RATE_LIMIT_ENABLED !== 'false',
-};
+}
 
 /**
  * POST /api/keywords
@@ -31,18 +31,18 @@ const RATE_LIMIT_CONFIG = {
 export async function POST(request: NextRequest) {
   try {
     // Get client identifier for rate limiting
-    const clientId = getClientId(request);
+    const clientId = getClientId(request)
 
     // Check rate limit
     try {
-      checkRateLimit(clientId, RATE_LIMIT_CONFIG);
+      checkRateLimit(clientId, RATE_LIMIT_CONFIG)
     } catch (error) {
-      return handleAPIError(error);
+      return handleAPIError(error)
     }
 
     // Parse and validate request body
-    const body = await request.json();
-    const validated = KeywordSearchSchema.parse(body);
+    const body = await request.json()
+    const validated = KeywordSearchSchema.parse(body)
 
     // Generate cache key
     const cacheKey = cache.generateKey(
@@ -50,61 +50,59 @@ export async function POST(request: NextRequest) {
       validated.location,
       validated.language,
       validated.matchType
-    );
+    )
 
     // Try to get from cache first
-    const cachedData = await cache.get(cacheKey);
+    const cachedData = await cache.get(cacheKey)
 
-    let keywordData;
-    let isCached = false;
-    let provider;
+    let keywordData
+    let isCached = false
+    let provider
 
     if (cachedData) {
       // Cache hit - use cached data
-      keywordData = cachedData.data;
-      isCached = true;
+      keywordData = cachedData.data
+      isCached = true
       // eslint-disable-next-line no-console
-      console.log(`[Cache] HIT - ${cacheKey}`);
+      console.log(`[Cache] HIT - ${cacheKey}`)
     } else {
       // Cache miss - fetch from provider
       // eslint-disable-next-line no-console
-      console.log(`[Cache] MISS - ${cacheKey}`);
-      provider = getProvider();
+      console.log(`[Cache] MISS - ${cacheKey}`)
+      provider = getProvider()
       keywordData = await provider.getKeywordData(validated.keywords, {
         matchType: validated.matchType,
         location: validated.location,
         language: validated.language,
-      });
+      })
 
       // Store in cache (fire and forget - don't wait for completion)
-      cache
-        .set(cacheKey, keywordData, provider.name)
-        .catch((error) => {
-          // eslint-disable-next-line no-console
-          console.error('[Cache] Failed to cache data:', error);
-        });
+      cache.set(cacheKey, keywordData, provider.name).catch(error => {
+        // eslint-disable-next-line no-console
+        console.error('[Cache] Failed to cache data:', error)
+      })
     }
 
     const response: KeywordSearchResponse = {
       data: keywordData,
       cached: isCached,
       timestamp: new Date().toISOString(),
-    };
+    }
 
     // Get rate limit info for response headers
-    const rateLimitInfo = getRateLimitInfo(clientId, RATE_LIMIT_CONFIG);
+    const rateLimitInfo = getRateLimitInfo(clientId, RATE_LIMIT_CONFIG)
 
     // Return success response with rate limit headers
-    const successResponse = createSuccessResponse(response);
+    const successResponse = createSuccessResponse(response)
     successResponse.headers.set(
       'X-RateLimit-Remaining',
       rateLimitInfo.remaining.toString()
-    );
-    successResponse.headers.set('X-RateLimit-Reset', rateLimitInfo.resetAt);
+    )
+    successResponse.headers.set('X-RateLimit-Reset', rateLimitInfo.resetAt)
 
-    return successResponse;
+    return successResponse
   } catch (error) {
-    return handleAPIError(error);
+    return handleAPIError(error)
   }
 }
 
@@ -120,5 +118,5 @@ export async function GET() {
       supportedMethods: ['POST'],
     },
     405
-  );
+  )
 }

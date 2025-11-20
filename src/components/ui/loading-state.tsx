@@ -5,7 +5,9 @@ export function LoadingState() {
       <p className="text-lg text-gray-600 dark:text-gray-400">
         Fetching keyword data...
       </p>
-      <p className="text-sm text-gray-500">This should take less than 3 seconds</p>
+      <p className="text-sm text-gray-500">
+        This should take less than 3 seconds
+      </p>
     </div>
-  );
+  )
 }

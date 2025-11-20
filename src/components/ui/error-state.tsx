@@ -1,6 +1,6 @@
 interface ErrorStateProps {
-  error: string;
-  onRetry?: () => void;
+  error: string
+  onRetry?: () => void
 }
 
 export function ErrorState({ error, onRetry }: ErrorStateProps) {
@@ -26,9 +26,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
           <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
             Error
           </h3>
-          <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-            {error}
-          </p>
+          <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
           {onRetry && (
             <button
               onClick={onRetry}
@@ -40,5 +38,5 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

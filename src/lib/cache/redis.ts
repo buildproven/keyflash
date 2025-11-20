@@ -1,5 +1,5 @@
-import { Redis } from '@upstash/redis';
-import type { KeywordData } from '@/types/keyword';
+import { Redis } from '@upstash/redis'
+import type { KeywordData } from '@/types/keyword'
 
 /**
  * Redis Cache Client
@@ -12,49 +12,49 @@ import type { KeywordData } from '@/types/keyword';
  */
 
 export interface CacheConfig {
-  url?: string;
-  token?: string;
-  ttl?: number; // Default TTL in seconds
+  url?: string
+  token?: string
+  ttl?: number // Default TTL in seconds
 }
 
 export interface CacheMetadata {
-  cachedAt: string;
-  ttl: number;
-  provider: string;
+  cachedAt: string
+  ttl: number
+  provider: string
 }
 
 export interface CachedKeywordData {
-  data: KeywordData[];
-  metadata: CacheMetadata;
+  data: KeywordData[]
+  metadata: CacheMetadata
 }
 
 class RedisCache {
-  private client: Redis | null = null;
-  private isConfigured = false;
-  private defaultTTL = 7 * 24 * 60 * 60; // 7 days in seconds
+  private client: Redis | null = null
+  private isConfigured = false
+  private defaultTTL = 7 * 24 * 60 * 60 // 7 days in seconds
 
   constructor(config?: CacheConfig) {
-    const url = config?.url || process.env.UPSTASH_REDIS_REST_URL;
-    const token = config?.token || process.env.UPSTASH_REDIS_REST_TOKEN;
-    const ttl = config?.ttl || this.defaultTTL;
+    const url = config?.url || process.env.UPSTASH_REDIS_REST_URL
+    const token = config?.token || process.env.UPSTASH_REDIS_REST_TOKEN
+    const ttl = config?.ttl || this.defaultTTL
 
     if (url && token) {
       try {
         this.client = new Redis({
           url,
           token,
-        });
-        this.isConfigured = true;
-        this.defaultTTL = ttl;
+        })
+        this.isConfigured = true
+        this.defaultTTL = ttl
       } catch (error) {
-        console.error('[RedisCache] Failed to initialize Redis client:', error);
-        this.isConfigured = false;
+        console.error('[RedisCache] Failed to initialize Redis client:', error)
+        this.isConfigured = false
       }
     } else {
       console.warn(
         '[RedisCache] Redis not configured. Cache operations will be skipped. ' +
           'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to enable caching.'
-      );
+      )
     }
   }
 
@@ -62,7 +62,7 @@ class RedisCache {
    * Check if Redis cache is properly configured and available
    */
   isAvailable(): boolean {
-    return this.isConfigured && this.client !== null;
+    return this.isConfigured && this.client !== null
   }
 
   /**
@@ -76,23 +76,23 @@ class RedisCache {
     matchType: 'phrase' | 'exact' = 'phrase'
   ): string {
     // Sort keywords for consistent caching regardless of input order
-    const sortedKeywords = [...keywords].sort();
-    const keywordHash = this.simpleHash(sortedKeywords.join(','));
+    const sortedKeywords = [...keywords].sort()
+    const keywordHash = this.simpleHash(sortedKeywords.join(','))
 
-    return `kw:${location}:${language}:${matchType}:${keywordHash}`;
+    return `kw:${location}:${language}:${matchType}:${keywordHash}`
   }
 
   /**
    * Simple hash function for generating consistent cache keys
    */
   private simpleHash(str: string): string {
-    let hash = 0;
+    let hash = 0
     for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash; // Convert to 32-bit integer
+      const char = str.charCodeAt(i)
+      hash = (hash << 5) - hash + char
+      hash = hash & hash // Convert to 32-bit integer
     }
-    return Math.abs(hash).toString(36);
+    return Math.abs(hash).toString(36)
   }
 
   /**
@@ -101,15 +101,15 @@ class RedisCache {
    */
   async get(key: string): Promise<CachedKeywordData | null> {
     if (!this.isAvailable()) {
-      return null;
+      return null
     }
 
     try {
-      const cached = await this.client!.get<CachedKeywordData>(key);
-      return cached;
+      const cached = await this.client!.get<CachedKeywordData>(key)
+      return cached
     } catch (error) {
-      console.error('[RedisCache] Failed to get from cache:', error);
-      return null;
+      console.error('[RedisCache] Failed to get from cache:', error)
+      return null
     }
   }
 
@@ -127,10 +127,10 @@ class RedisCache {
     ttl?: number
   ): Promise<boolean> {
     if (!this.isAvailable()) {
-      return false;
+      return false
     }
 
-    const cacheTTL = ttl || this.defaultTTL;
+    const cacheTTL = ttl || this.defaultTTL
 
     const cacheData: CachedKeywordData = {
       data,
@@ -139,14 +139,14 @@ class RedisCache {
         ttl: cacheTTL,
         provider,
       },
-    };
+    }
 
     try {
-      await this.client!.set(key, cacheData, { ex: cacheTTL });
-      return true;
+      await this.client!.set(key, cacheData, { ex: cacheTTL })
+      return true
     } catch (error) {
-      console.error('[RedisCache] Failed to set cache:', error);
-      return false;
+      console.error('[RedisCache] Failed to set cache:', error)
+      return false
     }
   }
 
@@ -155,15 +155,15 @@ class RedisCache {
    */
   async delete(key: string): Promise<boolean> {
     if (!this.isAvailable()) {
-      return false;
+      return false
     }
 
     try {
-      await this.client!.del(key);
-      return true;
+      await this.client!.del(key)
+      return true
     } catch (error) {
-      console.error('[RedisCache] Failed to delete from cache:', error);
-      return false;
+      console.error('[RedisCache] Failed to delete from cache:', error)
+      return false
     }
   }
 
@@ -172,15 +172,15 @@ class RedisCache {
    */
   async flush(): Promise<boolean> {
     if (!this.isAvailable()) {
-      return false;
+      return false
     }
 
     try {
-      await this.client!.flushdb();
-      return true;
+      await this.client!.flushdb()
+      return true
     } catch (error) {
-      console.error('[RedisCache] Failed to flush cache:', error);
-      return false;
+      console.error('[RedisCache] Failed to flush cache:', error)
+      return false
     }
   }
 
@@ -189,21 +189,21 @@ class RedisCache {
    */
   async ping(): Promise<boolean> {
     if (!this.isAvailable()) {
-      return false;
+      return false
     }
 
     try {
-      const result = await this.client!.ping();
-      return result === 'PONG';
+      const result = await this.client!.ping()
+      return result === 'PONG'
     } catch (error) {
-      console.error('[RedisCache] Ping failed:', error);
-      return false;
+      console.error('[RedisCache] Ping failed:', error)
+      return false
     }
   }
 }
 
 // Export singleton instance
-export const cache = new RedisCache();
+export const cache = new RedisCache()
 
 // Export class for testing with custom config
-export { RedisCache };
+export { RedisCache }

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 /**
  * Schema for validating keyword search requests
@@ -12,7 +12,7 @@ export const KeywordSearchSchema = z.object({
   matchType: z.enum(['phrase', 'exact']),
   location: z.string().trim().max(100).optional(),
   language: z.string().trim().max(10).optional(),
-});
+})
 
 /**
  * Schema for validating keyword input text (before splitting)
@@ -25,7 +25,7 @@ export const KeywordInputSchema = z.object({
     .max(10000, 'Input too large'),
   matchType: z.enum(['phrase', 'exact']),
   location: z.string().trim().max(100).default('United States'),
-});
+})
 
-export type KeywordSearchInput = z.infer<typeof KeywordSearchSchema>;
-export type KeywordFormInput = z.infer<typeof KeywordInputSchema>;
+export type KeywordSearchInput = z.infer<typeof KeywordSearchSchema>
+export type KeywordFormInput = z.infer<typeof KeywordInputSchema>

@@ -523,7 +523,7 @@ When you start coding:
 
 ### Documentation
 
-- **create-quality-automation**: [GitHub](https://github.com/yourusername/create-quality-automation)
+- **create-quality-automation**: [GitHub](https://github.com/brettstark73/create-quality-automation)
 - **Prettier**: https://prettier.io/docs/en/
 - **ESLint**: https://eslint.org/docs/latest/
 - **Stylelint**: https://stylelint.io/

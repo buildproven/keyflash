@@ -32,9 +32,8 @@ export const KeywordSearchSchema = z.object({
   language: z
     .string()
     .trim()
-    // eslint-disable-next-line security/detect-unsafe-regex -- Language code regex is safe: bounded length, no nested quantifiers
     .regex(
-      /^[a-z]{2}(-[A-Z]{2})?$/,
+      /^[a-z]{2}(-[A-Z]{2})?$/, // eslint-disable-line security/detect-unsafe-regex -- Language code regex is safe: bounded length, no nested quantifiers
       'Language must be valid language code (e.g., en, en-US)'
     )
     .optional()

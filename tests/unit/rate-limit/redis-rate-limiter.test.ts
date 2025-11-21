@@ -11,7 +11,7 @@ const mockRedis = {
 }
 
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(function MockRedis() {
+  Redis: vi.fn().mockImplementation(function MockRedis() {
     return mockRedis
   }),
 }))

@@ -2,7 +2,7 @@
  * Global test setup for all test suites
  */
 
-import { beforeEach, afterEach } from 'vitest'
+import { afterEach } from 'vitest'
 
 // Global test timeout (increased for command execution tests)
 export const TEST_TIMEOUT = 30000 // 30 seconds

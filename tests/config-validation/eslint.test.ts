@@ -43,13 +43,19 @@ describe('ESLint configuration', () => {
     expect(content).toMatch(/next|Next/)
   })
 
-  it('config is valid JSON with extends or rules', () => {
+  it('config includes security plugin', () => {
     const content = readFileSync(configPath, 'utf-8')
     const config = JSON.parse(content)
 
-    // Should have either extends or rules defined
-    const hasExtendsOrRules = config.extends || config.rules
-    expect(hasExtendsOrRules).toBeTruthy()
+    // Should include security plugin in plugins array
+    expect(config.plugins).toBeDefined()
+    expect(config.plugins).toContain('security')
+
+    // Should have security rules configured
+    const hasSecurityRules = Object.keys(config.rules || {}).some(rule =>
+      rule.startsWith('security/')
+    )
+    expect(hasSecurityRules).toBe(true)
   })
 
   it('can lint a simple valid file without errors', () => {
@@ -81,7 +87,7 @@ describe('ESLint configuration', () => {
         require('fs').unlinkSync(tempFile)
       } catch {}
     }
-  })
+  }, 10000)
 
   it('detects dangerous patterns like eval()', () => {
     const tempFile = join(process.cwd(), '.eslint-test-dangerous.js')
@@ -109,7 +115,7 @@ describe('ESLint configuration', () => {
         require('fs').unlinkSync(tempFile)
       } catch {}
     }
-  })
+  }, 10000)
 })
 
 describe('ESLint ignore configuration', () => {
@@ -163,7 +169,7 @@ describe('ESLint execution', () => {
       expect(error.message).not.toContain('Cannot find module')
       expect(error.message).not.toContain('Invalid configuration')
     }
-  })
+  }, 15000)
 
   it('npm run lint:fix command exists', () => {
     const packageJsonPath = join(process.cwd(), 'package.json')

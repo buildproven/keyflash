@@ -6,7 +6,8 @@
  * misconfigured without being detected.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
+import { IsolatedTestEnv } from '../helpers/isolated-test-env'
 import { TEST_TIMEOUT } from '../helpers/test-setup'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
@@ -46,43 +47,203 @@ describe('pre-commit hook configuration', () => {
 })
 
 describe('pre-commit hook execution', () => {
-  // NOTE: These tests are complex because they require full Husky setup in isolated environments
-  // Skipping actual execution tests and focusing on configuration validation instead
+  // Skip these tests in CI - they're too slow due to dependency installation
+  // Run locally with: npm run test:quality
+  const shouldSkip = process.env.CI === 'true'
 
-  it.skip(
+  // NOTE: These tests are slow (30+ seconds) because they install npm packages
+  // They verify that pre-commit hooks actually execute, not just that config exists
+
+  it.skipIf(shouldSkip)(
     'prevents commit when linting fails',
     () => {
-      // This test requires Husky hooks to be fully initialized in isolated env
-      // Skipped because it's too complex for CI/CD
+      const env = new IsolatedTestEnv()
+      try {
+        env
+          .gitInit()
+          .copyPackageJson()
+          .copyConfigs(['.eslintrc.json', '.prettierrc', '.husky/pre-commit'])
+
+        // Install dependencies (slow)
+        env.exec('npm install --no-save husky@^9.1.7 lint-staged@^15.3.0')
+        env.exec('npm install --no-save prettier@^3.3.3 eslint@^8.57.1')
+
+        // Initialize Husky
+        env.exec('npx husky install')
+        env.exec('git config core.hooksPath .husky')
+        env.exec('chmod +x .husky/pre-commit')
+
+        // Create lint-staged config in separate file to avoid node_modules conflicts
+        const lintStagedConfig = {
+          '*.{js,ts,tsx}': ['eslint'],
+        }
+        env.writeFile(
+          '.lintstagedrc.json',
+          JSON.stringify(lintStagedConfig, null, 2)
+        )
+
+        // Create a file with linting errors
+        const badCode = `eval("alert('xss')")`
+        env.writeFile('test.js', badCode)
+
+        // Try to commit - should fail due to lint errors
+        env.exec('git add test.js')
+        const result = env.exec('git commit -m "test commit"', {
+          throwOnError: false,
+        })
+
+        // Commit should fail
+        expect(result.exitCode).not.toBe(0)
+      } finally {
+        env.destroy()
+      }
     },
-    TEST_TIMEOUT
+    60000
   )
 
-  it.skip(
+  it.skipIf(shouldSkip)(
     'allows commit when files are properly formatted',
     () => {
-      // This test requires Husky hooks to be fully initialized
-      // Skipped because it's too complex for CI/CD
+      const env = new IsolatedTestEnv()
+      try {
+        env
+          .gitInit()
+          .copyPackageJson()
+          .copyConfigs(['.eslintrc.json', '.prettierrc', '.husky/pre-commit'])
+
+        // Install dependencies (slow)
+        env.exec('npm install --no-save husky@^9.1.7 lint-staged@^15.3.0')
+        env.exec('npm install --no-save prettier@^3.3.3 eslint@^8.57.1')
+
+        // Initialize Husky
+        env.exec('npx husky install')
+        env.exec('git config core.hooksPath .husky')
+        env.exec('chmod +x .husky/pre-commit')
+
+        // Create lint-staged config in separate file to avoid node_modules conflicts
+        const lintStagedConfig = {
+          '*.{js,ts,tsx}': ['prettier --list-different'],
+        }
+        env.writeFile(
+          '.lintstagedrc.json',
+          JSON.stringify(lintStagedConfig, null, 2)
+        )
+
+        // Create a valid, properly formatted file
+        const goodCode = `export function add(a, b) {\n  return a + b\n}\n`
+        env.writeFile('test.js', goodCode)
+
+        // Commit should succeed
+        env.exec('git add test.js')
+        const result = env.exec('git commit -m "test commit"', {
+          throwOnError: false,
+        })
+
+        // Commit should succeed
+        expect(result.exitCode).toBe(0)
+      } finally {
+        env.destroy()
+      }
     },
-    TEST_TIMEOUT
+    60000
   )
 
-  it.skip(
+  it.skipIf(shouldSkip)(
     'auto-fixes formatting issues before commit',
     () => {
-      // This test requires Husky hooks to be fully initialized
-      // Skipped because it's too complex for CI/CD
+      const env = new IsolatedTestEnv()
+      try {
+        env
+          .gitInit()
+          .copyPackageJson()
+          .copyConfigs(['.prettierrc', '.husky/pre-commit'])
+
+        // Install dependencies (slow)
+        env.exec('npm install --no-save husky@^9.1.7 lint-staged@^15.3.0')
+        env.exec('npm install --no-save prettier@^3.3.3')
+
+        // Initialize Husky
+        env.exec('npx husky install')
+        env.exec('git config core.hooksPath .husky')
+        env.exec('chmod +x .husky/pre-commit')
+
+        // Create lint-staged config in separate file to avoid node_modules conflicts
+        const lintStagedConfig = {
+          '*.{js,ts,tsx}': ['prettier --write'],
+        }
+        env.writeFile(
+          '.lintstagedrc.json',
+          JSON.stringify(lintStagedConfig, null, 2)
+        )
+
+        // Create badly formatted file
+        const badlyFormatted = `const   x=1;const y=2;`
+        env.writeFile('test.js', badlyFormatted)
+
+        // Commit
+        env.exec('git add test.js')
+        env.exec('git commit -m "test commit"')
+
+        // File should be auto-formatted
+        const formatted = env.readFile('test.js')
+        expect(formatted).toContain('const x = 1')
+        expect(formatted).toContain('const y = 2')
+      } finally {
+        env.destroy()
+      }
     },
-    TEST_TIMEOUT
+    60000
   )
 
-  it.skip(
+  it.skipIf(shouldSkip)(
     'only processes staged files',
     () => {
-      // This test requires Husky hooks to be fully initialized
-      // Skipped because it's too complex for CI/CD
+      const env = new IsolatedTestEnv()
+      try {
+        env
+          .gitInit()
+          .copyPackageJson()
+          .copyConfigs(['.prettierrc', '.husky/pre-commit'])
+
+        // Install dependencies (slow)
+        env.exec('npm install --no-save husky@^9.1.7 lint-staged@^15.3.0')
+        env.exec('npm install --no-save prettier@^3.3.3')
+
+        // Initialize Husky
+        env.exec('npx husky install')
+        env.exec('git config core.hooksPath .husky')
+        env.exec('chmod +x .husky/pre-commit')
+
+        // Create lint-staged config in separate file to avoid node_modules conflicts
+        const lintStagedConfig = {
+          '*.js': ['prettier --write'],
+        }
+        env.writeFile(
+          '.lintstagedrc.json',
+          JSON.stringify(lintStagedConfig, null, 2)
+        )
+
+        // Create two files - only stage one
+        const badlyFormatted = `const   x=1;`
+        env.writeFile('staged.js', badlyFormatted)
+        env.writeFile('unstaged.js', badlyFormatted)
+
+        // Only stage one file
+        env.exec('git add staged.js')
+        env.exec('git commit -m "test commit"')
+
+        // Staged file should be formatted
+        const staged = env.readFile('staged.js')
+        expect(staged).toContain('const x = 1')
+
+        // Unstaged file should NOT be formatted
+        const unstaged = env.readFile('unstaged.js')
+        expect(unstaged).toBe(badlyFormatted)
+      } finally {
+        env.destroy()
+      }
     },
-    TEST_TIMEOUT
+    60000
   )
 })
 

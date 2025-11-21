@@ -6,6 +6,7 @@ vi.mock('@/lib/cache/redis', () => ({
     isAvailable: vi.fn(),
     set: vi.fn(),
     get: vi.fn(),
+    ping: vi.fn(),
   },
 }))
 
@@ -31,10 +32,10 @@ describe('/api/health', () => {
   describe('Redis health check', () => {
     it('returns healthy when Redis is available and responsive', async () => {
       // Setup: Mock Redis as available and responsive
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockResolvedValue(true)
-      mockCache.get.mockResolvedValue('ping')
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
       process.env.KEYWORD_API_PROVIDER = 'mock'
+      mockCache.ping.mockResolvedValue('PONG')
 
       const response = await GET()
       const data = await response.json()
@@ -45,27 +46,28 @@ describe('/api/health', () => {
       expect(data.checks.redis.responseTime).toBeTypeOf('number')
     })
 
-    it('returns unhealthy when Redis is not available', async () => {
-      // Setup: Mock Redis as not available
-      mockCache.isAvailable.mockReturnValue(false)
+    it('returns healthy when privacy mode is enabled', async () => {
+      // Setup: Privacy mode enabled (Redis caching disabled by design)
       process.env.KEYWORD_API_PROVIDER = 'mock'
       process.env.PRIVACY_MODE = 'true'
 
       const response = await GET()
       const data = await response.json()
 
-      expect(data.checks.redis.healthy).toBe(false)
-      expect(data.checks.redis.error).toContain(
-        'Redis not configured or privacy mode enabled'
-      )
+      // Privacy mode is expected behavior, so Redis check is healthy
+      expect(data.checks.redis.healthy).toBe(true)
       expect(data.checks.redis.details.privacyMode).toBe(true)
+      expect(data.checks.redis.details.status).toBe(
+        'disabled for privacy compliance'
+      )
     })
 
     it('handles Redis connection errors gracefully', async () => {
       // Setup: Mock Redis connection failure
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockRejectedValue(new Error('Connection timeout'))
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
       process.env.KEYWORD_API_PROVIDER = 'mock'
+      mockCache.ping.mockRejectedValue(new Error('Connection timeout'))
 
       const response = await GET()
       const data = await response.json()
@@ -77,10 +79,10 @@ describe('/api/health', () => {
 
   describe('Provider health check', () => {
     it('returns healthy for mock provider', async () => {
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockResolvedValue(true)
-      mockCache.get.mockResolvedValue('ping')
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
       process.env.KEYWORD_API_PROVIDER = 'mock'
+      mockCache.ping.mockResolvedValue('PONG')
 
       const response = await GET()
       const data = await response.json()
@@ -93,9 +95,9 @@ describe('/api/health', () => {
     })
 
     it('returns unhealthy when no provider is configured', async () => {
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockResolvedValue(true)
-      mockCache.get.mockResolvedValue('ping')
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
+      mockCache.ping.mockResolvedValue('PONG')
       delete process.env.KEYWORD_API_PROVIDER
 
       const response = await GET()
@@ -106,9 +108,9 @@ describe('/api/health', () => {
     })
 
     it('validates Google Ads provider configuration', async () => {
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockResolvedValue(true)
-      mockCache.get.mockResolvedValue('ping')
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
+      mockCache.ping.mockResolvedValue('PONG')
       process.env.KEYWORD_API_PROVIDER = 'google-ads'
       // Missing required environment variables
 
@@ -127,9 +129,9 @@ describe('/api/health', () => {
     })
 
     it('validates DataForSEO provider configuration', async () => {
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockResolvedValue(true)
-      mockCache.get.mockResolvedValue('ping')
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
+      mockCache.ping.mockResolvedValue('PONG')
       process.env.KEYWORD_API_PROVIDER = 'dataforseo'
       // Missing required environment variables
 
@@ -146,10 +148,10 @@ describe('/api/health', () => {
 
   describe('Overall health status', () => {
     it('returns healthy when all services are working', async () => {
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockResolvedValue(true)
-      mockCache.get.mockResolvedValue('ping')
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
       process.env.KEYWORD_API_PROVIDER = 'mock'
+      mockCache.ping.mockResolvedValue('PONG')
 
       const response = await GET()
       const data = await response.json()
@@ -161,8 +163,10 @@ describe('/api/health', () => {
     })
 
     it('returns degraded when some services are working', async () => {
-      mockCache.isAvailable.mockReturnValue(false) // Redis down
-      process.env.KEYWORD_API_PROVIDER = 'mock' // Provider OK
+      // Redis not configured, but provider OK
+      delete process.env.UPSTASH_REDIS_REST_URL
+      delete process.env.UPSTASH_REDIS_REST_TOKEN
+      process.env.KEYWORD_API_PROVIDER = 'mock'
 
       const response = await GET()
       const data = await response.json()
@@ -174,8 +178,10 @@ describe('/api/health', () => {
     })
 
     it('returns unhealthy when all services are down', async () => {
-      mockCache.isAvailable.mockReturnValue(false) // Redis down
-      delete process.env.KEYWORD_API_PROVIDER // No provider
+      // Redis not configured and no provider
+      delete process.env.UPSTASH_REDIS_REST_URL
+      delete process.env.UPSTASH_REDIS_REST_TOKEN
+      delete process.env.KEYWORD_API_PROVIDER
 
       const response = await GET()
       const data = await response.json()
@@ -187,10 +193,10 @@ describe('/api/health', () => {
     })
 
     it('includes response metadata', async () => {
-      mockCache.isAvailable.mockReturnValue(true)
-      mockCache.set.mockResolvedValue(true)
-      mockCache.get.mockResolvedValue('ping')
+      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
       process.env.KEYWORD_API_PROVIDER = 'mock'
+      mockCache.ping.mockResolvedValue('PONG')
 
       const response = await GET()
       const data = await response.json()

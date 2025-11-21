@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { KeywordData } from '@/types/keyword'
 
 interface KeywordResultsTableProps {
@@ -9,7 +10,7 @@ interface KeywordResultsTableProps {
   provider?: string
 }
 
-export function KeywordResultsTable({
+export const KeywordResultsTable = memo(function KeywordResultsTable({
   data,
   onExport,
   mockData = false,
@@ -183,4 +184,4 @@ export function KeywordResultsTable({
       </div>
     </div>
   )
-}
+})

@@ -3,8 +3,15 @@
  * Prevents tests from running against the main project context
  */
 
-import { mkdtempSync, rmSync, writeFileSync, readFileSync, cpSync } from 'fs'
-import { join } from 'path'
+import {
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+  readFileSync,
+  cpSync,
+  mkdirSync,
+} from 'fs'
+import { join, dirname } from 'path'
 import { tmpdir } from 'os'
 import { execSync } from 'child_process'
 
@@ -116,9 +123,15 @@ export class IsolatedTestEnv {
 
   /**
    * Write a file to the isolated environment
+   * Automatically creates parent directories if they don't exist
    */
   writeFile(relativePath: string, content: string): this {
     const filePath = join(this.path, relativePath)
+    const dir = dirname(filePath)
+
+    // Create parent directories if they don't exist
+    mkdirSync(dir, { recursive: true })
+
     writeFileSync(filePath, content, 'utf-8')
     return this
   }

@@ -4,7 +4,35 @@ import type {
   RateLimit,
   ProviderConfig,
 } from '../types'
-import type { KeywordData } from '@/types/keyword'
+import type { KeywordData, Competition } from '@/types/keyword'
+
+/**
+ * Google Ads API Response Types
+ */
+interface GoogleAdsOAuthResponse {
+  access_token: string
+  expires_in: number
+  token_type: string
+  scope: string
+}
+
+interface GoogleAdsKeywordMetrics {
+  avg_monthly_searches?: number
+  competition?: string
+  competition_index?: number
+  low_top_of_page_bid_micros?: number
+  high_top_of_page_bid_micros?: number
+}
+
+interface GoogleAdsKeywordResult {
+  results?: Array<{
+    keyword_plan_ad_group_keyword?: {
+      text?: string
+    }
+    keyword_plan_keyword_forecast_metrics?: GoogleAdsKeywordMetrics
+    keyword_plan_keyword_historical_metrics?: GoogleAdsKeywordMetrics
+  }>
+}
 
 /**
  * Google Ads Keyword Planner API Provider
@@ -70,36 +98,29 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
   ): Promise<KeywordData[]> {
     this.validateConfiguration()
 
-    // TODO: Implement actual Google Ads API call
-    // For now, return mock data structure
-    // When implementing:
-    // 1. Get OAuth access token using refresh token
-    // 2. Call Google Ads Keyword Planner API
-    // 3. Transform response to KeywordData format
-    // 4. Handle API errors and rate limits
+    try {
+      // Get fresh access token
+      const accessToken = await this.getAccessToken()
 
-    // Suppress unused warning until API is implemented
-    void options
+      // Call Google Ads Keyword Planner API
+      const response = await this.callKeywordPlannerAPI(
+        keywords,
+        options,
+        accessToken
+      )
 
-    console.warn(`[${this.name}] API integration pending. Returning mock data.`)
+      // Transform response to KeywordData format
+      return this.transformResponse(response, keywords)
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`[${this.name}] API error:`, error)
 
-    return keywords.map(keyword => ({
-      keyword,
-      searchVolume: Math.floor(Math.random() * 100000),
-      difficulty: Math.floor(Math.random() * 100),
-      cpc: Math.random() * 10,
-      competition: (['low', 'medium', 'high'] as const)[
-        Math.floor(Math.random() * 3)
-      ],
-      intent: (
-        [
-          'informational',
-          'commercial',
-          'transactional',
-          'navigational',
-        ] as const
-      )[Math.floor(Math.random() * 4)],
-    }))
+      // Re-throw with more context
+      if (error instanceof Error) {
+        throw new Error(`Google Ads API failed: ${error.message}`)
+      }
+      throw new Error('Google Ads API failed with unknown error')
+    }
   }
 
   getBatchLimit(): number {
@@ -118,57 +139,237 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
    * Get OAuth access token from refresh token
    * @private
    */
-  // @ts-ignore - Will be used when API is implemented
   private async getAccessToken(): Promise<string> {
-    // TODO: Implement OAuth token refresh
-    // const response = await fetch('https://oauth2.googleapis.com/token', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    //   body: new URLSearchParams({
-    //     client_id: this.config.clientId,
-    //     client_secret: this.config.clientSecret,
-    //     refresh_token: this.config.refreshToken,
-    //     grant_type: 'refresh_token',
-    //   }),
-    // });
-    // return response.json().access_token;
+    try {
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: this.config.clientId,
+          client_secret: this.config.clientSecret,
+          refresh_token: this.config.refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      })
 
-    throw new Error('OAuth token refresh not implemented')
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(
+          `OAuth token refresh failed (${response.status}): ${errorText}`
+        )
+      }
+
+      const data: GoogleAdsOAuthResponse = await response.json()
+      return data.access_token
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[Google Ads] OAuth token refresh error:', error)
+      throw new Error(
+        `Failed to refresh OAuth token: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+    }
   }
 
   /**
    * Call Google Ads Keyword Planner API
    * @private
    */
-  // @ts-ignore - Will be used when API is implemented
   private async callKeywordPlannerAPI(
     keywords: string[],
-    options: SearchOptions
-  ): Promise<unknown> {
-    // TODO: Implement Google Ads API call
-    // const accessToken = await this.getAccessToken();
-    //
-    // const response = await fetch(
-    //   `https://googleads.googleapis.com/v14/customers/${this.config.customerId}/googleAdsService:search`,
-    //   {
-    //     method: 'POST',
-    //     headers: {
-    //       'Authorization': `Bearer ${accessToken}`,
-    //       'developer-token': this.config.developerToken,
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({
-    //       query: `SELECT keyword_plan_keyword_metrics.avg_monthly_searches, ...`,
-    //     }),
-    //   }
-    // );
-    //
-    // return response.json();
+    options: SearchOptions,
+    accessToken: string
+  ): Promise<GoogleAdsKeywordResult> {
+    // Format customer ID (remove dashes if present)
+    const customerId = this.config.customerId.replace(/-/g, '')
 
-    // Suppress unused warnings until API is implemented
-    void keywords
-    void options
+    // Build location code (Google Ads uses geotarget constant IDs)
+    // Default to United States (2840)
+    const locationCode = this.getLocationCode(options.location)
 
-    throw new Error('Google Ads API call not implemented')
+    // Build GAQL (Google Ads Query Language) query
+    const query = `
+      SELECT
+        keyword_plan_keyword_forecast_metrics.avg_monthly_searches,
+        keyword_plan_keyword_historical_metrics.avg_monthly_searches,
+        keyword_plan_keyword_forecast_metrics.competition,
+        keyword_plan_keyword_forecast_metrics.competition_index,
+        keyword_plan_keyword_forecast_metrics.low_top_of_page_bid_micros,
+        keyword_plan_keyword_forecast_metrics.high_top_of_page_bid_micros
+      FROM keyword_plan_keyword
+      WHERE keyword_plan_keyword.text IN (${keywords.map(k => `'${k.replace(/'/g, "\\'")}'`).join(', ')})
+    `.trim()
+
+    try {
+      const response = await fetch(
+        `https://googleads.googleapis.com/v17/customers/${customerId}/googleAdsService:searchStream`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'developer-token': this.config.developerToken,
+            'Content-Type': 'application/json',
+            'login-customer-id': customerId,
+          },
+          body: JSON.stringify({
+            query,
+            customer_id: customerId,
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(
+          `Google Ads API request failed (${response.status}): ${errorText}`
+        )
+      }
+
+      const data: GoogleAdsKeywordResult = await response.json()
+      return data
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[Google Ads] API call error:', error)
+      throw new Error(
+        `Google Ads API call failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+    }
+  }
+
+  /**
+   * Transform Google Ads API response to KeywordData format
+   * @private
+   */
+  private transformResponse(
+    response: GoogleAdsKeywordResult,
+    requestedKeywords: string[]
+  ): KeywordData[] {
+    const results = response.results || []
+
+    // Create a map of results by keyword
+    const resultMap = new Map<string, GoogleAdsKeywordMetrics>()
+
+    results.forEach(result => {
+      const keyword = result.keyword_plan_ad_group_keyword?.text
+      const metrics =
+        result.keyword_plan_keyword_forecast_metrics ||
+        result.keyword_plan_keyword_historical_metrics
+
+      if (keyword && metrics) {
+        resultMap.set(keyword.toLowerCase(), metrics)
+      }
+    })
+
+    // Transform each requested keyword
+    return requestedKeywords.map(keyword => {
+      const metrics = resultMap.get(keyword.toLowerCase())
+
+      if (!metrics) {
+        // No data found for this keyword - return default values
+        return {
+          keyword,
+          searchVolume: 0,
+          difficulty: 50,
+          cpc: 0,
+          competition: 'low' as Competition,
+          intent: 'informational' as const,
+        }
+      }
+
+      // Extract metrics
+      const searchVolume = metrics.avg_monthly_searches || 0
+      const competitionIndex = metrics.competition_index || 50
+      const lowBidMicros = metrics.low_top_of_page_bid_micros || 0
+      const highBidMicros = metrics.high_top_of_page_bid_micros || 0
+
+      // Calculate average CPC (convert from micros to dollars)
+      const cpc = (lowBidMicros + highBidMicros) / 2 / 1_000_000
+
+      // Map competition level
+      const competition = this.mapCompetition(metrics.competition)
+
+      // Infer intent from metrics (heuristic approach)
+      const intent = this.inferIntent(searchVolume, cpc, competition)
+
+      return {
+        keyword,
+        searchVolume,
+        difficulty: competitionIndex,
+        cpc,
+        competition,
+        intent,
+      }
+    })
+  }
+
+  /**
+   * Map Google Ads competition string to our Competition type
+   * @private
+   */
+  private mapCompetition(competition?: string): Competition {
+    switch (competition?.toLowerCase()) {
+      case 'low':
+        return 'low'
+      case 'medium':
+        return 'medium'
+      case 'high':
+        return 'high'
+      default:
+        return 'medium'
+    }
+  }
+
+  /**
+   * Infer search intent from keyword metrics (heuristic approach)
+   * @private
+   */
+  private inferIntent(
+    searchVolume: number,
+    cpc: number,
+    competition: Competition
+  ): 'informational' | 'commercial' | 'transactional' | 'navigational' {
+    // High CPC + High competition = Commercial/Transactional
+    if (cpc > 5 && competition === 'high') {
+      return 'transactional'
+    }
+
+    // Medium CPC + Medium/High competition = Commercial
+    if (cpc > 2 && (competition === 'medium' || competition === 'high')) {
+      return 'commercial'
+    }
+
+    // Low CPC + Low competition + High volume = Informational
+    if (cpc < 1 && competition === 'low' && searchVolume > 10000) {
+      return 'informational'
+    }
+
+    // Low volume + brand-like keywords = Navigational
+    if (searchVolume < 1000) {
+      return 'navigational'
+    }
+
+    // Default to informational
+    return 'informational'
+  }
+
+  /**
+   * Get Google Ads geotarget constant ID for location
+   * @private
+   */
+  private getLocationCode(location?: string): number {
+    // Map of common location codes to Google Ads geotarget constant IDs
+    // Full list: https://developers.google.com/google-ads/api/data/geotargets
+    const locationMap: Record<string, number> = {
+      'United States': 2840,
+      'United Kingdom': 2826,
+      Canada: 2124,
+      Australia: 2036,
+      Germany: 2276,
+      France: 2250,
+      India: 2356,
+      Worldwide: 0, // Global targeting
+    }
+
+    // eslint-disable-next-line security/detect-object-injection -- location is validated input from options, locationMap is controlled object
+    return locationMap[location || 'United States'] || 2840
   }
 }

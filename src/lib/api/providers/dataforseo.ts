@@ -248,9 +248,8 @@ export class DataForSEOProvider implements KeywordAPIProvider {
           result.search_volume_info?.search_volume ||
           result.keyword_info?.monthly_searches?.[0]?.search_volume ||
           0,
-        competition: result.search_volume_info?.competition || 0,
-        competition_level:
-          result.search_volume_info?.competition_level || 'LOW',
+        competition: result.search_volume_info?.competition,
+        competition_level: result.search_volume_info?.competition_level,
         cpc: result.search_volume_info?.cpc || 0,
         low_top_of_page_bid:
           result.search_volume_info?.low_top_of_page_bid || 0,

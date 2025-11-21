@@ -50,11 +50,29 @@ jobs:
             npm audit signatures || echo "⚠️ Signature verification not available or failed"
           fi
 
+      - name: Validate configurations
+        run: npm run test:config
+
+      - name: Test command execution
+        run: npm run test:commands
+
+      - name: Test quality automation
+        run: npm run test:quality
+
       - name: Prettier check
         run: npm run format:check
 
       - name: Lint (ESLint + Stylelint)
         run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run smoke tests
+        run: npm run test:smoke
 
       - name: Build
         run: npm run build

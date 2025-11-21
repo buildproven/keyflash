@@ -27,18 +27,21 @@ KeyFlash currently **does not implement a traditional SQL/NoSQL database**. The 
 **Location**: `/home/user/keyflash/src/lib/cache/redis.ts`
 
 **What's Stored**:
+
 - Cached keyword search results (7-day TTL)
 - Rate limiting counters (1-hour TTL)
 
 **Configuration**:
+
 ```typescript
 // Environment Variables Required
-UPSTASH_REDIS_REST_URL     // REST endpoint for Upstash
-UPSTASH_REDIS_REST_TOKEN   // API authentication token
-PRIVACY_MODE               // Disables caching if 'true'
+UPSTASH_REDIS_REST_URL // REST endpoint for Upstash
+UPSTASH_REDIS_REST_TOKEN // API authentication token
+PRIVACY_MODE // Disables caching if 'true'
 ```
 
 **Key Characteristics**:
+
 - ✅ Serverless-friendly (REST API, no persistent connections)
 - ✅ Automatic TTL expiration
 - ✅ No user identification or personal data
@@ -49,6 +52,7 @@ PRIVACY_MODE               // Disables caching if 'true'
 **Location**: `/home/user/keyflash/src/lib/rate-limit/redis-rate-limiter.ts`
 
 **Data Stored**:
+
 - Per-IP rate limit counters
 - Reset timestamps
 - HMAC hash of user-agent (spoof-resistant)
@@ -56,10 +60,11 @@ PRIVACY_MODE               // Disables caching if 'true'
 **TTL**: 1 hour (automatic cleanup)
 
 **Format**:
+
 ```typescript
 interface RateLimitEntry {
-  count: number              // Number of requests in current window
-  resetTime: number          // Unix timestamp when window resets
+  count: number // Number of requests in current window
+  resetTime: number // Unix timestamp when window resets
 }
 
 // Redis key format: rate:{ip}:{user-agent-hash}
@@ -70,6 +75,7 @@ interface RateLimitEntry {
 **Current Status**: Not implemented
 
 **Future Plan** (documented in ARCHITECTURE.md):
+
 ```typescript
 // When user accounts are added (Post-MVP Phase):
 // - PostgreSQL via Neon or Supabase
@@ -88,25 +94,26 @@ interface RateLimitEntry {
 ```typescript
 // Main keyword data structure
 interface KeywordData {
-  keyword: string              // The searched keyword
-  searchVolume: number         // Monthly average search volume
-  difficulty: number           // 0-100 ranking difficulty score
-  cpc: number                  // Cost per click in USD
+  keyword: string // The searched keyword
+  searchVolume: number // Monthly average search volume
+  difficulty: number // 0-100 ranking difficulty score
+  cpc: number // Cost per click in USD
   competition: 'low' | 'medium' | 'high'
   intent: 'informational' | 'commercial' | 'transactional' | 'navigational'
 }
 
 // API response format
 interface KeywordSearchResponse {
-  data: KeywordData[]          // Array of keyword data
-  cached: boolean              // Was this from cache?
-  timestamp: string            // When was result generated
-  mockData?: boolean           // Is this from mock provider?
-  provider?: string            // Which API provider was used
+  data: KeywordData[] // Array of keyword data
+  cached: boolean // Was this from cache?
+  timestamp: string // When was result generated
+  mockData?: boolean // Is this from mock provider?
+  provider?: string // Which API provider was used
 }
 ```
 
 **Data Integrity Notes**:
+
 - All fields are required (no optional data)
 - Numeric fields enforced by TypeScript
 - Enum types for competition and intent (type-safe)
@@ -117,6 +124,7 @@ interface KeywordSearchResponse {
 **Location**: `/home/user/keyflash/src/lib/validation/schemas.ts`
 
 **Input Validation** (Zod):
+
 ```typescript
 KeywordSearchSchema = {
   keywords: z.array(string)
@@ -128,13 +136,13 @@ KeywordSearchSchema = {
         .max(100)
         .regex(/^[a-zA-Z0-9\s\-_]+$/)  // Only alphanumeric, spaces, hyphens, underscores
     )
-  
+
   matchType: z.enum(['phrase', 'exact'])  // Type-safe enum
-  
+
   location: z.string()
     .regex(/^([A-Z]{2}|GL)$/)  // 2-letter country code or 'GL' for global
     .optional()
-  
+
   language: z.string()
     .regex(/^[a-z]{2}(-[A-Z]{2})?$/)  // ISO language codes (e.g., 'en', 'en-US')
     .optional()
@@ -142,6 +150,7 @@ KeywordSearchSchema = {
 ```
 
 **Validation Results**:
+
 - ✅ **Strong input validation** - All user inputs are validated server-side
 - ✅ **Injection attack prevention** - Regex patterns prevent SQL/NoSQL/Command injection
 - ✅ **XSS prevention** - No HTML/dangerous characters allowed
@@ -153,14 +162,14 @@ KeywordSearchSchema = {
 
 ```typescript
 interface CachedKeywordData {
-  data: KeywordData[]          // The actual keyword data
-  metadata: CacheMetadata      // Cache metadata
+  data: KeywordData[] // The actual keyword data
+  metadata: CacheMetadata // Cache metadata
 }
 
 interface CacheMetadata {
-  cachedAt: string             // ISO timestamp when cached
-  ttl: number                  // Time to live in seconds
-  provider: string             // Which provider generated this data
+  cachedAt: string // ISO timestamp when cached
+  ttl: number // Time to live in seconds
+  provider: string // Which provider generated this data
 }
 
 // Cache Key Format:
@@ -169,6 +178,7 @@ interface CacheMetadata {
 ```
 
 **Privacy by Design**:
+
 - No user IP address stored in keyword cache
 - No user identification
 - Only keyword data and provider metadata
@@ -180,12 +190,12 @@ interface CacheMetadata {
 
 ### 3.1 Input Validation Strategy
 
-| Layer | Implementation | Coverage |
-|-------|-----------------|----------|
-| **Client** | HTML5 form attributes | Convenience only (not security) |
-| **Server** | Zod schema parsing | ✅ CRITICAL - All inputs validated |
-| **Type System** | TypeScript types | ✅ Compile-time validation |
-| **Sanitization** | String trim/length checks | ✅ Prevents injection |
+| Layer            | Implementation            | Coverage                           |
+| ---------------- | ------------------------- | ---------------------------------- |
+| **Client**       | HTML5 form attributes     | Convenience only (not security)    |
+| **Server**       | Zod schema parsing        | ✅ CRITICAL - All inputs validated |
+| **Type System**  | TypeScript types          | ✅ Compile-time validation         |
+| **Sanitization** | String trim/length checks | ✅ Prevents injection              |
 
 ### 3.2 Validation Enforcement
 
@@ -210,16 +220,20 @@ export async function POST(request: NextRequest) {
 ```
 
 **Error Handling**:
+
 ```typescript
 // Validation errors return 400 Bad Request with details
 // No information disclosure about internal errors
 function handleAPIError(error: unknown): NextResponse<APIError> {
   if (error instanceof ZodError) {
-    return NextResponse.json({
-      error: 'Validation Error',
-      message: error.issues.map(issue => issue.message).join(', '),
-      statusCode: 400
-    }, { status: 400 })
+    return NextResponse.json(
+      {
+        error: 'Validation Error',
+        message: error.issues.map(issue => issue.message).join(', '),
+        statusCode: 400,
+      },
+      { status: 400 }
+    )
   }
   // ... handle other error types
 }
@@ -244,6 +258,7 @@ API Response (KeywordSearchResponse)
 ```
 
 **Integrity Guarantees**:
+
 - Each layer enforces type requirements
 - No implicit type coercion
 - Errors caught early with clear messages
@@ -255,36 +270,37 @@ API Response (KeywordSearchResponse)
 
 ### 4.1 Keyword Data Constraints
 
-| Field | Constraint | Enforcement |
-|-------|-----------|------------|
-| `keyword` | 1-100 chars, alphanumeric + spaces/hyphens/underscores | Zod regex |
-| `searchVolume` | Non-negative integer | TypeScript number type |
-| `difficulty` | 0-100 range | Not enforced (API provider responsibility) |
-| `cpc` | Non-negative decimal | TypeScript number type |
-| `competition` | Enum: 'low' \| 'medium' \| 'high' | Zod enum |
-| `intent` | Enum: 4 specific values | Zod enum |
+| Field          | Constraint                                             | Enforcement                                |
+| -------------- | ------------------------------------------------------ | ------------------------------------------ |
+| `keyword`      | 1-100 chars, alphanumeric + spaces/hyphens/underscores | Zod regex                                  |
+| `searchVolume` | Non-negative integer                                   | TypeScript number type                     |
+| `difficulty`   | 0-100 range                                            | Not enforced (API provider responsibility) |
+| `cpc`          | Non-negative decimal                                   | TypeScript number type                     |
+| `competition`  | Enum: 'low' \| 'medium' \| 'high'                      | Zod enum                                   |
+| `intent`       | Enum: 4 specific values                                | Zod enum                                   |
 
 **Gap Identified**: No runtime validation of `difficulty` range (0-100). Recommend adding:
+
 ```typescript
 difficulty: z.number().min(0).max(100)
 ```
 
 ### 4.2 Request Constraints
 
-| Field | Min | Max | Notes |
-|-------|-----|-----|-------|
-| Keywords array | 1 | 200 | Batching limit per request |
-| Keyword length | 1 | 100 | Per keyword |
-| Location code | 2 | 2 | ISO country code |
-| Language code | 2 | 5 | ISO language code |
+| Field          | Min | Max | Notes                      |
+| -------------- | --- | --- | -------------------------- |
+| Keywords array | 1   | 200 | Batching limit per request |
+| Keyword length | 1   | 100 | Per keyword                |
+| Location code  | 2   | 2   | ISO country code           |
+| Language code  | 2   | 5   | ISO language code          |
 
 ### 4.3 Caching Constraints
 
-| Constraint | Value | Purpose |
-|-----------|-------|---------|
-| Cache TTL | 7 days | Keyword data rarely changes weekly |
-| Rate limit window | 1 hour | Per-IP rate limiting |
-| Max requests/hour | 10 (default) | Configurable via env var |
+| Constraint            | Value           | Purpose                                  |
+| --------------------- | --------------- | ---------------------------------------- |
+| Cache TTL             | 7 days          | Keyword data rarely changes weekly       |
+| Rate limit window     | 1 hour          | Per-IP rate limiting                     |
+| Max requests/hour     | 10 (default)    | Configurable via env var                 |
 | Cache key consistency | Sorted keywords | Same cache key regardless of input order |
 
 ---
@@ -303,6 +319,7 @@ difficulty: z.number().min(0).max(100)
 ### 5.2 What IS Stored (Minimal)
 
 ✅ **Redis Cache** (7-day TTL):
+
 ```typescript
 {
   keywords: ['seo', 'tools'],
@@ -313,6 +330,7 @@ difficulty: z.number().min(0).max(100)
 ```
 
 ✅ **Rate Limiting** (1-hour TTL):
+
 ```typescript
 {
   ip: '192.0.2.1',
@@ -327,6 +345,7 @@ difficulty: z.number().min(0).max(100)
 **Lawful Basis**: Legitimate interest (providing service)
 
 **Compliance Controls**:
+
 - ✅ Data minimization (only cache keyword data)
 - ✅ No personal data collection
 - ✅ Automatic expiration (7 days)
@@ -334,6 +353,7 @@ difficulty: z.number().min(0).max(100)
 - ✅ Privacy policy requirement (not yet implemented)
 
 **Future Requirements** (when user accounts added):
+
 - [ ] Right to Access
 - [ ] Right to Erasure (delete account/data)
 - [ ] Right to Rectification
@@ -362,6 +382,7 @@ if (process.env.PRIVACY_MODE === 'true') {
 ```
 
 **Use Cases**:
+
 - GDPR-restricted regions
 - Privacy-sensitive deployments
 - Testing privacy compliance
@@ -373,27 +394,29 @@ if (process.env.PRIVACY_MODE === 'true') {
 ### 6.1 Redis Fault Tolerance
 
 **Current Implementation**:
+
 ```typescript
 class RedisCache {
   private client: Redis | null = null
   private isConfigured = false
-  
+
   async get(key: string): Promise<CachedKeywordData | null> {
     if (!this.isAvailable()) return null
-    
+
     try {
       const cached = await this.client!.get<CachedKeywordData>(key)
       return cached
     } catch (error) {
       // Graceful degradation
       console.error('[RedisCache] Failed to get from cache:', error)
-      return null  // Fall through to API
+      return null // Fall through to API
     }
   }
 }
 ```
 
 **Fallback Behavior**:
+
 - If Redis unavailable → Fall back to live API call
 - No data loss (cache not critical for MVP)
 - Performance impact (slower without cache)
@@ -404,7 +427,7 @@ class RedisCache {
 class RedisRateLimiter {
   private redis: Redis | null = null
   private fallbackStore = new Map<string, RateLimitEntry>()
-  
+
   async checkRateLimit(request: Request, config: RateLimitConfig) {
     if (this.isRedisAvailable && this.redis) {
       // Use Redis for persistent rate limiting
@@ -417,18 +440,21 @@ class RedisRateLimiter {
 }
 ```
 
-**Issue Identified**: 
+**Issue Identified**:
+
 - ⚠️ In-memory fallback not suitable for multi-instance deployments
 - Recommendation: Require Redis in production
 
 ### 6.3 Data Type Safety
 
 **TypeScript Strict Mode** (tsconfig.json):
+
 - ✅ No implicit any
 - ✅ Strict null checks
 - ✅ Strict property initialization
 
 **Zod Runtime Validation**:
+
 - ✅ Prevents invalid data from entering system
 - ✅ Type guards for enum values
 - ✅ String format validation (regex patterns)
@@ -451,7 +477,7 @@ generateKey(
   // Sort keywords for consistent caching
   const sortedKeywords = [...keywords].sort()
   const keywordHash = this.simpleHash(sortedKeywords.join(','))
-  
+
   return `kw:${location}:${language}:${matchType}:${keywordHash}`
 }
 
@@ -460,6 +486,7 @@ generateKey(
 ```
 
 **Collision Analysis**:
+
 - Uses 32-bit hash function
 - Hash space: ~4 billion possible values
 - Collision probability: Low for reasonable keyword set
@@ -483,6 +510,7 @@ Redis lookup
 ```
 
 **Target Metrics**:
+
 - Cache hit rate: >70% (reduces API calls)
 - P95 latency with cache: <500ms
 - P95 latency without cache: <3 seconds
@@ -490,16 +518,19 @@ Redis lookup
 ### 7.3 Cache Invalidation Strategy
 
 **Current Strategy**: Time-based (TTL)
+
 - ✅ Simple and reliable
 - ✅ 7-day TTL (keyword data is stable)
 - ❌ No event-based invalidation
 
-**Missing**: 
+**Missing**:
+
 - [ ] Manual cache purge endpoint (for admin)
 - [ ] Keyword-specific invalidation
 - [ ] Cache versioning strategy
 
 **Recommended Addition**:
+
 ```typescript
 // Purge keyword cache (privacy/maintenance)
 async purgeKeywordCache(): Promise<number> {
@@ -522,7 +553,10 @@ async purgeKeywordCache(): Promise<number> {
 ```typescript
 interface KeywordAPIProvider {
   readonly name: string
-  getKeywordData(keywords: string[], options: SearchOptions): Promise<KeywordData[]>
+  getKeywordData(
+    keywords: string[],
+    options: SearchOptions
+  ): Promise<KeywordData[]>
   getBatchLimit(): number
   getRateLimit(): RateLimit
   validateConfiguration(): void
@@ -530,6 +564,7 @@ interface KeywordAPIProvider {
 ```
 
 **Implementations**:
+
 1. **MockProvider** (development)
    - Returns randomized data
    - No API credentials needed
@@ -554,6 +589,7 @@ KEYWORD_API_PROVIDER=google-ads  # or 'dataforseo' or 'mock'
 ```
 
 **Fallback Logic**:
+
 ```
 1. Check KEYWORD_API_PROVIDER env var
 2. If not set → Use 'mock'
@@ -570,6 +606,7 @@ KEYWORD_API_PROVIDER=google-ads  # or 'dataforseo' or 'mock'
 ### 9.1 Cache Key Queries
 
 **Pattern**: Prefix-based searches
+
 ```typescript
 // Get all keyword caches
 const keys = await redis.keys('kw:*')
@@ -579,17 +616,18 @@ const keys = await redis.keys('rate:*')
 ```
 
 **Performance**: O(N) - not ideal for large datasets
+
 - ⚠️ Acceptable for MVP (data volume low)
 - Recommendation: Add indexed queries for production
 
 ### 9.2 Optimization Opportunities
 
-| Optimization | Current | Recommended |
-|-------------|---------|------------|
-| Cache key hashing | 32-bit custom hash | SHA256 hash |
-| Batch queries | Individual Redis calls | Pipeline multiple commands |
-| Rate limiter | Per-IP window | Per-IP + optional per-user (future) |
-| Data expiration | TTL only | TTL + event-based invalidation |
+| Optimization      | Current                | Recommended                         |
+| ----------------- | ---------------------- | ----------------------------------- |
+| Cache key hashing | 32-bit custom hash     | SHA256 hash                         |
+| Batch queries     | Individual Redis calls | Pipeline multiple commands          |
+| Rate limiter      | Per-IP window          | Per-IP + optional per-user (future) |
+| Data expiration   | TTL only               | TTL + event-based invalidation      |
 
 ---
 
@@ -600,6 +638,7 @@ const keys = await redis.keys('rate:*')
 **Risk Assessment**: ✅ LOW
 
 **Reasoning**:
+
 - MVP stores no user data
 - Cache is ephemeral (7-day TTL)
 - Redis data can be rebuilt from API
@@ -607,12 +646,14 @@ const keys = await redis.keys('rate:*')
 
 ### 10.2 Redis Persistence
 
-**Upstash Redis**: 
+**Upstash Redis**:
+
 - Automatic daily backups (free tier)
 - Data replicated across regions
 - 30-day backup retention (paid tier)
 
 **Recommendation for Production**:
+
 - Enable point-in-time recovery
 - Configure daily snapshots
 - Test backup restoration
@@ -620,6 +661,7 @@ const keys = await redis.keys('rate:*')
 ### 10.3 Disaster Recovery Plan
 
 **Scenario 1: Redis Completely Lost**
+
 ```
 1. Fall back to live API calls (slower but functional)
 2. Notify users of performance degradation
@@ -629,6 +671,7 @@ Recovery time: Immediate (degraded) → 1 hour (full)
 ```
 
 **Scenario 2: API Provider Outage**
+
 ```
 1. Return cached data (up to 7 days old)
 2. Show "data may be outdated" warning
@@ -637,6 +680,7 @@ Recovery time: Depends on backup provider availability
 ```
 
 **Scenario 3: Entire Vercel Deployment Down**
+
 ```
 1. Deploy to Cloudflare Pages as backup
 2. Update DNS to point to backup
@@ -656,6 +700,7 @@ Recovery time: ~30 minutes
 ### 11.2 Rate Limiting Data
 
 **Data Stored** (per request):
+
 ```typescript
 {
   clientIp: '192.0.2.1',
@@ -666,6 +711,7 @@ Recovery time: ~30 minutes
 ```
 
 **Security Controls**:
+
 - ✅ IP address + user-agent hash (spoof-resistant)
 - ✅ HMAC key required in production
 - ✅ 1-hour window (limits information leakage)
@@ -673,12 +719,14 @@ Recovery time: ~30 minutes
 ### 11.3 Logging Strategy
 
 **What IS Logged**:
+
 - API response times
 - Cache hit/miss
 - Rate limit events
 - Provider errors (generic)
 
 **What IS NOT Logged**:
+
 - User keywords searched
 - User IP addresses
 - API provider credentials
@@ -690,22 +738,22 @@ Recovery time: ~30 minutes
 
 ### 12.1 Missing Validations
 
-| Gap | Severity | Recommendation |
-|-----|----------|-----------------|
-| Difficulty range (0-100) not validated | Medium | Add Zod validation: `difficulty: z.number().min(0).max(100)` |
-| Hash function collision risk | Low | Use SHA256 instead of 32-bit hash |
-| No cache warming | Low | Implement cache preloading for popular keywords |
-| No data versioning | Medium | Add schema version to cached data |
+| Gap                                    | Severity | Recommendation                                               |
+| -------------------------------------- | -------- | ------------------------------------------------------------ |
+| Difficulty range (0-100) not validated | Medium   | Add Zod validation: `difficulty: z.number().min(0).max(100)` |
+| Hash function collision risk           | Low      | Use SHA256 instead of 32-bit hash                            |
+| No cache warming                       | Low      | Implement cache preloading for popular keywords              |
+| No data versioning                     | Medium   | Add schema version to cached data                            |
 
 ### 12.2 Missing Features
 
-| Feature | Phase | Impact |
-|---------|-------|--------|
-| Manual cache purge endpoint | Post-MVP | Admin maintenance |
-| Cache invalidation by keyword | Post-MVP | Keyword freshness |
-| User account database | Post-MVP | Save searches, API usage tracking |
-| Search history | Post-MVP | User convenience |
-| Data retention policy | Post-MVP | Compliance/privacy |
+| Feature                       | Phase    | Impact                            |
+| ----------------------------- | -------- | --------------------------------- |
+| Manual cache purge endpoint   | Post-MVP | Admin maintenance                 |
+| Cache invalidation by keyword | Post-MVP | Keyword freshness                 |
+| User account database         | Post-MVP | Save searches, API usage tracking |
+| Search history                | Post-MVP | User convenience                  |
+| Data retention policy         | Post-MVP | Compliance/privacy                |
 
 ### 12.3 Production Readiness Checklist
 
@@ -727,12 +775,12 @@ Recovery time: ~30 minutes
 
 **Location**: `/home/user/keyflash/tests/unit/`
 
-| Test File | Coverage |
-|-----------|----------|
-| `cache/redis.test.ts` | ✅ Cache operations, key generation, error handling |
-| `cache/privacy-mode.test.ts` | ✅ Privacy mode enforcement |
-| `validation.test.ts` | ✅ Zod schema validation |
-| `rate-limit/redis-rate-limiter.test.ts` | ✅ Rate limiting logic |
+| Test File                               | Coverage                                            |
+| --------------------------------------- | --------------------------------------------------- |
+| `cache/redis.test.ts`                   | ✅ Cache operations, key generation, error handling |
+| `cache/privacy-mode.test.ts`            | ✅ Privacy mode enforcement                         |
+| `validation.test.ts`                    | ✅ Zod schema validation                            |
+| `rate-limit/redis-rate-limiter.test.ts` | ✅ Rate limiting logic                              |
 
 **Overall Coverage**: 60% minimum target (per TESTING_STRATEGY.md)
 
@@ -753,6 +801,7 @@ Recovery time: ~30 minutes
 **Trigger**: When implementing user accounts (Post-MVP)
 
 **Required Data Models**:
+
 ```typescript
 // User accounts
 interface User {
@@ -802,16 +851,19 @@ interface APIUsage {
 ### 14.3 Migration Strategy
 
 **Phase 1** (Current - MVP):
+
 - Redis only (caching)
 - No persistent user data
 - Stateless functions
 
 **Phase 2** (Add Authentication):
+
 - PostgreSQL for user accounts
 - Migrate from Redis to PostgreSQL for rate limiting?
 - Keep Redis for keyword cache
 
 **Phase 3** (Scale):
+
 - Database read replicas
 - Time-series DB for analytics (optional)
 - Cache warming strategies
@@ -822,15 +874,15 @@ interface APIUsage {
 
 ### 15.1 Current State Assessment
 
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| **Database Implementation** | ✅ Not needed for MVP | Upstash Redis sufficient |
-| **Data Validation** | ✅ Strong | Zod schemas enforce all inputs |
-| **Data Integrity** | ✅ Good | Type-safe through entire pipeline |
-| **Privacy Compliance** | ✅ Excellent | No user data collected |
-| **Backup Strategy** | ⚠️ Partial | Upstash provides, needs documented plan |
-| **Monitoring** | ⚠️ Missing | No production alerts configured |
-| **Documentation** | ✅ Excellent | SECURITY.md, ARCHITECTURE.md comprehensive |
+| Aspect                      | Status                | Notes                                      |
+| --------------------------- | --------------------- | ------------------------------------------ |
+| **Database Implementation** | ✅ Not needed for MVP | Upstash Redis sufficient                   |
+| **Data Validation**         | ✅ Strong             | Zod schemas enforce all inputs             |
+| **Data Integrity**          | ✅ Good               | Type-safe through entire pipeline          |
+| **Privacy Compliance**      | ✅ Excellent          | No user data collected                     |
+| **Backup Strategy**         | ⚠️ Partial            | Upstash provides, needs documented plan    |
+| **Monitoring**              | ⚠️ Missing            | No production alerts configured            |
+| **Documentation**           | ✅ Excellent          | SECURITY.md, ARCHITECTURE.md comprehensive |
 
 ### 15.2 Top 3 Priorities
 
@@ -863,22 +915,21 @@ interface APIUsage {
 
 ## Appendix: File References
 
-| Component | Files |
-|-----------|-------|
-| **Cache Layer** | `/home/user/keyflash/src/lib/cache/redis.ts` |
-| **Rate Limiting** | `/home/user/keyflash/src/lib/rate-limit/redis-rate-limiter.ts` |
-| **Validation** | `/home/user/keyflash/src/lib/validation/schemas.ts` |
-| **Data Types** | `/home/user/keyflash/src/types/keyword.ts`, `/home/user/keyflash/src/lib/api/types.ts` |
-| **API Route** | `/home/user/keyflash/src/app/api/keywords/route.ts` |
-| **Error Handler** | `/home/user/keyflash/src/lib/utils/error-handler.ts` |
-| **Env Validation** | `/home/user/keyflash/src/lib/config/env-validation.ts` |
-| **Tests** | `/home/user/keyflash/tests/unit/cache/`, `/home/user/keyflash/tests/unit/validation/` |
-| **Security Docs** | `/home/user/keyflash/docs/SECURITY.md` |
-| **Architecture Docs** | `/home/user/keyflash/docs/ARCHITECTURE.md` |
+| Component             | Files                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| **Cache Layer**       | `/home/user/keyflash/src/lib/cache/redis.ts`                                           |
+| **Rate Limiting**     | `/home/user/keyflash/src/lib/rate-limit/redis-rate-limiter.ts`                         |
+| **Validation**        | `/home/user/keyflash/src/lib/validation/schemas.ts`                                    |
+| **Data Types**        | `/home/user/keyflash/src/types/keyword.ts`, `/home/user/keyflash/src/lib/api/types.ts` |
+| **API Route**         | `/home/user/keyflash/src/app/api/keywords/route.ts`                                    |
+| **Error Handler**     | `/home/user/keyflash/src/lib/utils/error-handler.ts`                                   |
+| **Env Validation**    | `/home/user/keyflash/src/lib/config/env-validation.ts`                                 |
+| **Tests**             | `/home/user/keyflash/tests/unit/cache/`, `/home/user/keyflash/tests/unit/validation/`  |
+| **Security Docs**     | `/home/user/keyflash/docs/SECURITY.md`                                                 |
+| **Architecture Docs** | `/home/user/keyflash/docs/ARCHITECTURE.md`                                             |
 
 ---
 
 **Report Generated**: November 21, 2025
 **Analysis Methodology**: Code review, documentation analysis, test coverage assessment
 **Confidence Level**: High (comprehensive codebase review completed)
-

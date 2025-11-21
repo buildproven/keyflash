@@ -189,7 +189,7 @@ pnpm install  # or npm install
 cp .env.example .env.local
 
 # 4. Add your API keys to .env.local
-# See docs/API_INTEGRATION.md (to be created) for setup
+# See .env.example for detailed configuration instructions
 
 # 5. Run development server (when code is ready)
 pnpm dev  # http://localhost:3000

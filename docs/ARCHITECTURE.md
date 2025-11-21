@@ -287,8 +287,7 @@ keyflash/
 │   ├── REQUIREMENTS.md
 │   ├── ARCHITECTURE.md
 │   ├── SECURITY.md
-│   ├── TESTING_STRATEGY.md
-│   └── API_INTEGRATION.md
+│   └── TESTING_STRATEGY.md
 ├── public/
 │   ├── images/
 │   └── favicon.ico

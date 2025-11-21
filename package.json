@@ -44,7 +44,11 @@
     "validate:all": "npm run validate:comprehensive && npm run security:audit",
     "lint": "next lint && stylelint \"**/*.{css,scss,sass,less,pcss}\" --allow-empty-input",
     "lint:fix": "next lint --fix && stylelint \"**/*.{css,scss,sass,less,pcss}\" --fix --allow-empty-input",
-    "prepare": "husky"
+    "prepare": "husky",
+    "redis:start": "bash scripts/dev-redis.sh",
+    "redis:stop": "docker stop keyflash-redis || echo 'Redis container not running'",
+    "redis:clean": "docker stop keyflash-redis && docker rm keyflash-redis || echo 'Redis container not found'",
+    "redis:logs": "docker logs keyflash-redis || echo 'Redis container not found'"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
@@ -92,7 +96,7 @@
     ]
   },
   "engines": {
-    "node": ">=20.11.1 <21",
+    "node": ">=20.11.1 <=22",
     "npm": ">=10.2.4"
   },
   "volta": {

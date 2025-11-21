@@ -3,7 +3,7 @@ import { RedisCache } from '@/lib/cache/redis'
 
 // Mock the Redis client
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(function MockRedis() {
+  Redis: vi.fn().mockImplementation(function MockRedis() {
     return {
       get: vi.fn(),
       set: vi.fn(),

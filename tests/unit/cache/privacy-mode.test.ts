@@ -3,14 +3,16 @@ import { RedisCache } from '@/lib/cache/redis'
 
 // Mock the Redis client
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn().mockImplementation(() => ({
-    get: vi.fn(),
-    set: vi.fn(),
-    del: vi.fn(),
-    ping: vi.fn().mockResolvedValue('PONG'),
-    keys: vi.fn(),
-    flushdb: vi.fn(),
-  })),
+  Redis: vi.fn(function MockRedis() {
+    return {
+      get: vi.fn(),
+      set: vi.fn(),
+      del: vi.fn(),
+      ping: vi.fn().mockResolvedValue('PONG'),
+      keys: vi.fn(),
+      flushdb: vi.fn(),
+    }
+  }),
 }))
 
 describe('RedisCache Privacy Mode', () => {

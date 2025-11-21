@@ -22,6 +22,7 @@ An external testing strategy audit revealed a **critical gap**: projects often t
 **Problem**: We define npm scripts but never verify they execute successfully.
 
 **Current State** (TESTING_STRATEGY.md:790-803):
+
 ```json
 {
   "scripts": {
@@ -30,13 +31,14 @@ An external testing strategy audit revealed a **critical gap**: projects often t
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test",
     "lint": "eslint . && stylelint '**/*.css'",
-    "format": "prettier --write .",
+    "format": "prettier --write ."
     // ... 10+ more scripts
   }
 }
 ```
 
 **What's Missing**:
+
 - No tests that actually run `pnpm lint` and verify it works
 - No tests that run `pnpm format` and verify it formats correctly
 - No tests that run `pnpm test:unit` and verify it executes
@@ -51,16 +53,19 @@ ESLint could have deprecated flags (like in the audit example), and our tests wo
 **Problem**: Pre-commit hooks, GitHub Actions, and CI/CD workflows are defined but never executed in tests.
 
 **Current State**:
+
 - `.husky/pre-commit` exists but is never tested
 - `.github/workflows/quality.yml` exists but is never tested
 - ESLint/Prettier/Stylelint configs exist but actual execution is not verified
 
 **What's Missing**:
+
 - No tests that trigger pre-commit hooks in isolation
 - No tests that verify GitHub Actions workflow syntax is valid
 - No tests that verify linter configs actually work
 
 **Risk**:
+
 - Pre-commit hooks could fail silently
 - GitHub Actions could have syntax errors
 - Linter configs could have invalid rules
@@ -72,10 +77,12 @@ ESLint could have deprecated flags (like in the audit example), and our tests wo
 **Problem**: When we do add tests, they may run in the KeyFlash project context rather than in isolation.
 
 **Audit Finding**:
+
 > "Tests run in the current project context instead of in isolation. This means you're testing against the generator's own configuration rather than genuinely generated output."
 
 **KeyFlash Risk**:
 If we test `pnpm lint` from within the KeyFlash directory, we're testing:
+
 - Against KeyFlash's `node_modules`
 - Against KeyFlash's ESLint config
 - Against KeyFlash's installed dependencies
@@ -91,15 +98,18 @@ But users in a fresh project might get different results.
 **Problem**: Current strategy over-relies on mocking external services without real integration tests.
 
 **Current State** (TESTING_STRATEGY.md:165):
+
 > "MSW (Mock Service Worker) - Intercept network requests"
 
 **What's Good**: MSW is excellent for unit/integration tests
 **What's Missing**: No mention of real API integration tests in staging environment
 
 **Audit Recommendation**:
+
 > "Execute generated commands and validate output" - don't just mock everything
 
 **Proposed Balance**:
+
 - ✅ Unit/Integration: Mock with MSW (fast, reliable)
 - ✅ Staging E2E: Real API calls with test credentials (slow, realistic)
 - ✅ Pre-deployment: Smoke tests against production APIs (quota-limited)
@@ -111,11 +121,13 @@ But users in a fresh project might get different results.
 **Problem**: Config files are excluded from coverage and never validated for correctness.
 
 **Current State** (TESTING_STRATEGY.md:670):
+
 ```
 - Config files: 0% (not tested)
 ```
 
 **What's Risky**:
+
 - `vitest.config.ts` could have syntax errors
 - `playwright.config.ts` could have invalid options
 - `eslint.config.cjs` could have deprecated rules
@@ -130,11 +142,13 @@ But users in a fresh project might get different results.
 **Problem**: No quick smoke tests to verify basic functionality before deployment.
 
 **What's Missing**:
+
 - Pre-deployment health check
 - API endpoint smoke tests
 - Critical path validation (< 30 seconds)
 
 **Proposed**:
+
 ```bash
 pnpm smoke-test  # Runs before deployment
 # - Health endpoint returns 200
@@ -175,7 +189,7 @@ describe('npm scripts execution', () => {
     // Actually run the command
     const result = execSync('pnpm lint', {
       cwd: tempDir,
-      encoding: 'utf-8'
+      encoding: 'utf-8',
     })
 
     // Verify it ran without errors
@@ -206,7 +220,7 @@ describe('npm scripts execution', () => {
     // Run test command
     const output = execSync('pnpm test:unit', {
       cwd: tempDir,
-      encoding: 'utf-8'
+      encoding: 'utf-8',
     })
 
     // Verify Vitest ran and tests passed
@@ -302,8 +316,8 @@ describe('GitHub Actions workflow', () => {
     const workflow = readFileSync('.github/workflows/quality.yml', 'utf-8')
     const parsed = yaml.parse(workflow)
 
-    const nodeSetup = parsed.jobs.quality.steps.find(
-      s => s.uses?.startsWith('actions/setup-node')
+    const nodeSetup = parsed.jobs.quality.steps.find(s =>
+      s.uses?.startsWith('actions/setup-node')
     )
 
     expect(nodeSetup.with['node-version']).toBe('20')
@@ -411,36 +425,46 @@ describe('Google Ads API - Real Integration', () => {
   const isStaging = process.env.NODE_ENV === 'staging'
   const skipIfNotStaging = isStaging ? it : it.skip
 
-  skipIfNotStaging('fetches real keyword data', async () => {
-    const provider = new GoogleAdsProvider()
+  skipIfNotStaging(
+    'fetches real keyword data',
+    async () => {
+      const provider = new GoogleAdsProvider()
 
-    // Use test credentials from staging environment
-    const results = await provider.getKeywordData(
-      ['seo tools'],
-      { location: 'US', language: 'en' }
-    )
+      // Use test credentials from staging environment
+      const results = await provider.getKeywordData(['seo tools'], {
+        location: 'US',
+        language: 'en',
+      })
 
-    expect(results).toBeDefined()
-    expect(results.length).toBeGreaterThan(0)
-    expect(results[0]).toHaveProperty('searchVolume')
-    expect(results[0].searchVolume).toBeGreaterThan(0)
-  }, 30000) // 30s timeout for real API call
+      expect(results).toBeDefined()
+      expect(results.length).toBeGreaterThan(0)
+      expect(results[0]).toHaveProperty('searchVolume')
+      expect(results[0].searchVolume).toBeGreaterThan(0)
+    },
+    30000
+  ) // 30s timeout for real API call
 
-  skipIfNotStaging('handles API rate limiting', async () => {
-    const provider = new GoogleAdsProvider()
+  skipIfNotStaging(
+    'handles API rate limiting',
+    async () => {
+      const provider = new GoogleAdsProvider()
 
-    // Make multiple rapid requests
-    const promises = Array(5).fill(null).map(() =>
-      provider.getKeywordData(['test'], { location: 'US', language: 'en' })
-    )
+      // Make multiple rapid requests
+      const promises = Array(5)
+        .fill(null)
+        .map(() =>
+          provider.getKeywordData(['test'], { location: 'US', language: 'en' })
+        )
 
-    // Should not crash or timeout
-    const results = await Promise.allSettled(promises)
+      // Should not crash or timeout
+      const results = await Promise.allSettled(promises)
 
-    // At least some should succeed
-    const successful = results.filter(r => r.status === 'fulfilled')
-    expect(successful.length).toBeGreaterThan(0)
-  }, 60000)
+      // At least some should succeed
+      const successful = results.filter(r => r.status === 'fulfilled')
+      expect(successful.length).toBeGreaterThan(0)
+    },
+    60000
+  )
 
   skipIfNotStaging('handles invalid API credentials gracefully', async () => {
     // Temporarily use invalid credentials
@@ -526,6 +550,7 @@ Add new sections to `docs/TESTING_STRATEGY.md`:
 5. **Real API Integration Tests** (after line 391)
 
 Update test distribution to:
+
 ```
 50% Unit Tests (was 60%)
 25% Integration Tests (was 30%)
@@ -539,6 +564,7 @@ Update test distribution to:
 ## Implementation Roadmap
 
 ### Sprint 1 (Week 1-2) - Critical Fixes
+
 - [ ] Add command execution tests for all npm scripts
 - [ ] Add pre-commit hook tests
 - [ ] Add configuration validation tests
@@ -547,12 +573,14 @@ Update test distribution to:
 - [ ] Update `TESTING_STRATEGY.md`
 
 ### Sprint 2 (Week 3-4) - Integration Improvements
+
 - [ ] Add GitHub Actions workflow tests
 - [ ] Add real API integration tests (staging)
 - [ ] Set up staging environment
 - [ ] Add test data factories for isolated testing
 
 ### Sprint 3 (Week 5-6) - CI/CD Integration
+
 - [ ] Add smoke tests to CI/CD pipeline
 - [ ] Add command execution tests to CI/CD
 - [ ] Set up test result reporting
@@ -704,6 +732,7 @@ jobs:
 ## Success Metrics
 
 ### Before Implementation
+
 - ❌ 0 command execution tests
 - ❌ 0 quality automation tests
 - ❌ 0 configuration validation tests
@@ -711,6 +740,7 @@ jobs:
 - ⚠️ 100% reliance on mocked APIs
 
 ### After Implementation
+
 - ✅ 100% npm scripts tested for execution
 - ✅ 100% quality automation workflows tested
 - ✅ 100% configuration files validated
@@ -723,25 +753,33 @@ jobs:
 ## Risk Mitigation
 
 ### Risk: Tests are slow
+
 **Mitigation**:
+
 - Command execution tests run in parallel
 - Use test timeouts aggressively
 - Cache dependencies in CI/CD
 
 ### Risk: False positives in command tests
+
 **Mitigation**:
+
 - Use isolated temp directories
 - Clean up after each test
 - Use deterministic test data
 
 ### Risk: Real API tests are flaky
+
 **Mitigation**:
+
 - Run only in staging environment
 - Use retry logic (Playwright built-in)
 - Have fallback to mocked tests
 
 ### Risk: Increased maintenance burden
+
 **Mitigation**:
+
 - Test helpers and utilities
 - Shared test fixtures
 - Clear documentation

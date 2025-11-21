@@ -5,11 +5,15 @@ import type { KeywordData } from '@/types/keyword'
 interface KeywordResultsTableProps {
   data: KeywordData[]
   onExport?: () => void
+  mockData?: boolean
+  provider?: string
 }
 
 export function KeywordResultsTable({
   data,
   onExport,
+  mockData = false,
+  provider,
 }: KeywordResultsTableProps) {
   if (data.length === 0) {
     return (
@@ -20,7 +24,52 @@ export function KeywordResultsTable({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="keyword-results-table">
+      {/* Mock Data Banner */}
+      {mockData && (
+        <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-900/20">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-orange-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                Mock Data Warning
+              </h3>
+              <p className="mt-1 text-sm text-orange-700 dark:text-orange-300">
+                This data is generated for demonstration purposes only. To get
+                real keyword metrics,{' '}
+                <a
+                  href="https://github.com/brettstark73/keyflash#api-setup"
+                  className="underline hover:text-orange-600 dark:hover:text-orange-200"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  configure API credentials
+                </a>
+                .
+              </p>
+              {provider && (
+                <p className="mt-1 text-xs text-orange-600 dark:text-orange-400">
+                  Current provider: {provider}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with Export Button */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">

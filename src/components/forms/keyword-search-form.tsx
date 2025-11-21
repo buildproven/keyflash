@@ -5,6 +5,18 @@ import { ZodError } from 'zod'
 import type { KeywordSearchFormData } from '@/types/keyword'
 import { KeywordInputSchema } from '@/lib/validation/schemas'
 
+// Map display names to ISO country codes for validation
+const LOCATION_MAPPING: Record<string, string> = {
+  'United States': 'US',
+  'United Kingdom': 'GB',
+  Canada: 'CA',
+  Australia: 'AU',
+  Germany: 'DE',
+  France: 'FR',
+  India: 'IN',
+  Global: 'GL', // Special case - we'll handle this in validation
+}
+
 interface KeywordSearchFormProps {
   onSubmit: (data: KeywordSearchFormData) => void
   isLoading?: boolean
@@ -26,8 +38,19 @@ export function KeywordSearchForm({
     setErrors({})
 
     try {
+      // Map location display name to ISO code for validation
+      const locationCode = formData.location
+        ? LOCATION_MAPPING[formData.location] || formData.location
+        : formData.location
+
+      // Create validation payload with mapped location
+      const validationPayload = {
+        ...formData,
+        location: locationCode,
+      }
+
       // Validate form input
-      const validated = KeywordInputSchema.parse(formData)
+      const validated = KeywordInputSchema.parse(validationPayload)
 
       // Call the parent's onSubmit handler
       onSubmit(validated)
@@ -66,21 +89,34 @@ export function KeywordSearchForm({
             setFormData({ ...formData, keywordsInput: e.target.value })
           }
           disabled={isLoading}
+          aria-describedby={`keywords-help ${errors.keywordsInput ? 'keywords-error' : ''}`}
+          aria-invalid={errors.keywordsInput ? 'true' : 'false'}
+          required
         />
         {errors.keywordsInput && (
-          <p className="mt-1 text-sm text-red-600">{errors.keywordsInput}</p>
+          <p
+            id="keywords-error"
+            className="mt-1 text-sm text-red-600"
+            role="alert"
+          >
+            {errors.keywordsInput}
+          </p>
         )}
-        <p className="mt-1 text-sm text-gray-500">
+        <p id="keywords-help" className="mt-1 text-sm text-gray-500">
           Enter up to 200 keywords, separated by commas or new lines
         </p>
       </div>
 
       {/* Match Type */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <fieldset>
+        <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Match Type
-        </label>
-        <div className="mt-2 space-y-2">
+        </legend>
+        <div
+          className="mt-2 space-y-2"
+          role="radiogroup"
+          aria-labelledby="match-type-legend"
+        >
           <label className="flex items-center">
             <input
               type="radio"
@@ -95,10 +131,11 @@ export function KeywordSearchForm({
               }
               disabled={isLoading}
               className="mr-2 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+              aria-describedby="phrase-description"
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Phrase Match
-              <span className="ml-2 text-gray-500">
+              <span id="phrase-description" className="ml-2 text-gray-500">
                 (includes variations and related terms)
               </span>
             </span>
@@ -117,17 +154,22 @@ export function KeywordSearchForm({
               }
               disabled={isLoading}
               className="mr-2 h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+              aria-describedby="exact-description"
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Exact Match
-              <span className="ml-2 text-gray-500">(exact keyword only)</span>
+              <span id="exact-description" className="ml-2 text-gray-500">
+                (exact keyword only)
+              </span>
             </span>
           </label>
         </div>
         {errors.matchType && (
-          <p className="mt-1 text-sm text-red-600">{errors.matchType}</p>
+          <p className="mt-1 text-sm text-red-600" role="alert">
+            {errors.matchType}
+          </p>
         )}
-      </div>
+      </fieldset>
 
       {/* Location */}
       <div>
@@ -144,6 +186,8 @@ export function KeywordSearchForm({
           value={formData.location}
           onChange={e => setFormData({ ...formData, location: e.target.value })}
           disabled={isLoading}
+          aria-invalid={errors.location ? 'true' : 'false'}
+          aria-describedby={errors.location ? 'location-error' : undefined}
         >
           <option value="United States">United States</option>
           <option value="United Kingdom">United Kingdom</option>
@@ -155,7 +199,13 @@ export function KeywordSearchForm({
           <option value="Global">Global</option>
         </select>
         {errors.location && (
-          <p className="mt-1 text-sm text-red-600">{errors.location}</p>
+          <p
+            id="location-error"
+            className="mt-1 text-sm text-red-600"
+            role="alert"
+          >
+            {errors.location}
+          </p>
         )}
       </div>
 

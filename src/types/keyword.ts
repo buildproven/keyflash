@@ -46,6 +46,8 @@ export interface KeywordSearchResponse {
   data: KeywordData[]
   cached: boolean
   timestamp: string
+  mockData?: boolean // Indicates if data is from mock provider
+  provider?: string // Name of the provider used
 }
 
 /**

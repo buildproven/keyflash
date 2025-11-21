@@ -42,7 +42,7 @@ jobs:
 
           # Check for known vulnerabilities in dependencies
           echo "🔍 Checking for vulnerable dependencies..."
-          npm audit --audit-level=moderate || true
+          npm audit --audit-level=high --omit=dev
 
           # Verify npm package signatures (Node.js 16+)
           if command -v npm &> /dev/null; then

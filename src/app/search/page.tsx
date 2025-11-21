@@ -7,17 +7,25 @@ import { KeywordResultsTable } from '@/components/tables/keyword-results-table'
 import { LoadingState } from '@/components/ui/loading-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { exportToCSV } from '@/lib/utils/csv-export'
-import type { KeywordSearchFormData, KeywordData } from '@/types/keyword'
+import type {
+  KeywordSearchFormData,
+  KeywordData,
+  KeywordSearchResponse,
+} from '@/types/keyword'
 
 export default function SearchPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<KeywordData[]>([])
+  const [mockData, setMockData] = useState<boolean>(false)
+  const [provider, setProvider] = useState<string | undefined>()
 
   const handleSearch = async (formData: KeywordSearchFormData) => {
     setIsLoading(true)
     setError(null)
     setResults([])
+    setMockData(false)
+    setProvider(undefined)
 
     try {
       // Parse keywords from input (comma or newline separated)
@@ -52,8 +60,10 @@ export default function SearchPage() {
         throw new Error(errorData.message || 'Failed to fetch keyword data')
       }
 
-      const data = await response.json()
+      const data: KeywordSearchResponse = await response.json()
       setResults(data.data)
+      setMockData(data.mockData || false)
+      setProvider(data.provider)
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -75,55 +85,93 @@ export default function SearchPage() {
 
   return (
     <div className="container mx-auto px-6 py-12">
-      <div className="mb-8">
+      {/* Skip Link for Keyboard Navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-600 text-white px-4 py-2 rounded-md z-50"
+      >
+        Skip to main content
+      </a>
+
+      <nav className="mb-8" aria-label="Breadcrumb">
         <Link
           href="/"
           className="text-primary-600 hover:text-primary-700 hover:underline"
+          aria-label="Go back to home page"
         >
           ← Back to Home
         </Link>
-      </div>
+      </nav>
 
-      <div className="mx-auto max-w-6xl">
-        <h1 className="mb-6 text-4xl font-bold">Keyword Research</h1>
+      <main id="main-content" className="mx-auto max-w-6xl">
+        <header className="mb-6">
+          <h1 className="text-4xl font-bold">Keyword Research</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Research keyword search volume, difficulty, and competition data
+          </p>
+        </header>
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Search Form */}
-          <div className="lg:col-span-1">
+          <aside className="lg:col-span-1" aria-label="Keyword search form">
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <h2 className="sr-only">Search Parameters</h2>
               <KeywordSearchForm
                 onSubmit={handleSearch}
                 isLoading={isLoading}
               />
             </div>
-
-            {/* Mock Data Notice */}
-            <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-900/20">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                <strong>Note:</strong> API is functional with mock data. Real
-                keyword provider (Google Ads/DataForSEO) integration coming in
-                Phase 4.
-              </p>
-            </div>
-          </div>
+          </aside>
 
           {/* Results Area */}
-          <div className="lg:col-span-2">
-            {isLoading && <LoadingState />}
+          <section className="lg:col-span-2" aria-label="Search results">
+            {isLoading && (
+              <div
+                role="region"
+                aria-live="polite"
+                aria-label="Loading search results"
+              >
+                <LoadingState />
+              </div>
+            )}
 
-            {error && <ErrorState error={error} onRetry={handleRetry} />}
+            {error && (
+              <div
+                role="region"
+                aria-live="assertive"
+                aria-label="Search error"
+              >
+                <ErrorState error={error} onRetry={handleRetry} />
+              </div>
+            )}
 
             {!isLoading && !error && results.length > 0 && (
-              <KeywordResultsTable data={results} onExport={handleExport} />
+              <div
+                role="region"
+                aria-live="polite"
+                aria-label="Keyword search results"
+              >
+                <KeywordResultsTable
+                  data={results}
+                  onExport={handleExport}
+                  mockData={mockData}
+                  provider={provider}
+                />
+              </div>
             )}
 
             {!isLoading && !error && results.length === 0 && (
-              <div className="rounded-lg border border-gray-200 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-800">
+              <div
+                className="rounded-lg border border-gray-200 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-800"
+                role="region"
+                aria-label="No search results"
+              >
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -136,13 +184,13 @@ export default function SearchPage() {
                   No results yet
                 </h3>
                 <p className="mt-2 text-gray-500 dark:text-gray-400">
-                  Enter keywords in the form to get started
+                  Enter keywords in the form to get started with your research
                 </p>
               </div>
             )}
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

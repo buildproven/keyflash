@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+// Initialize application configuration at startup
+import '@/lib/config/startup'
+
 /**
  * Middleware for security and request validation
  * Runs before all requests

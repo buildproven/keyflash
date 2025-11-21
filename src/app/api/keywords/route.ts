@@ -4,14 +4,32 @@ import {
   handleAPIError,
   createSuccessResponse,
 } from '@/lib/utils/error-handler'
-import {
-  checkRateLimit,
-  getClientId,
-  getRateLimitInfo,
-} from '@/lib/rate-limit/rate-limiter'
+import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { getProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
 import type { KeywordSearchResponse } from '@/types/keyword'
+
+/**
+ * Normalize location codes for provider and cache compatibility
+ * UI uses ISO codes (US, GB, GL) but providers expect descriptive names
+ */
+export function normalizeLocationForProvider(location?: string): string {
+  if (!location) return 'United States' // Default fallback
+
+  const locationMap: Record<string, string> = {
+    US: 'United States',
+    GB: 'United Kingdom',
+    CA: 'Canada',
+    AU: 'Australia',
+    DE: 'Germany',
+    FR: 'France',
+    IN: 'India',
+    GL: 'Worldwide', // Global maps to provider-friendly term
+  }
+
+  // eslint-disable-next-line security/detect-object-injection -- location is validated input from API request, locationMap is controlled object
+  return locationMap[location] || location
+}
 
 /**
  * Rate limit configuration from environment
@@ -30,13 +48,22 @@ const RATE_LIMIT_CONFIG = {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get client identifier for rate limiting
-    const clientId = getClientId(request)
+    // Check rate limit with Redis-based limiter
+    const rateLimitResult = await rateLimiter.checkRateLimit(
+      request,
+      RATE_LIMIT_CONFIG
+    )
 
-    // Check rate limit
-    try {
-      checkRateLimit(clientId, RATE_LIMIT_CONFIG)
-    } catch (error) {
+    if (!rateLimitResult.allowed) {
+      const error = new Error(
+        `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds. Limit: ${RATE_LIMIT_CONFIG.requestsPerHour} requests/hour.`
+      )
+      ;(error as any).status = 429
+      ;(error as any).headers = {
+        'X-RateLimit-Remaining': '0',
+        'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+        'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
+      }
       return handleAPIError(error)
     }
 
@@ -44,10 +71,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = KeywordSearchSchema.parse(body)
 
+    // Normalize location codes for provider compatibility
+    // UI uses ISO codes (US, GB, GL) but providers expect descriptive names
+    const normalizedLocation = normalizeLocationForProvider(validated.location)
+
     // Generate cache key
     const cacheKey = cache.generateKey(
       validated.keywords,
-      validated.location,
+      normalizedLocation,
       validated.language,
       validated.matchType
     )
@@ -72,7 +103,7 @@ export async function POST(request: NextRequest) {
       provider = getProvider()
       keywordData = await provider.getKeywordData(validated.keywords, {
         matchType: validated.matchType,
-        location: validated.location,
+        location: normalizedLocation,
         language: validated.language,
       })
 
@@ -83,22 +114,29 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Determine provider name and mock status
+    const providerName =
+      provider?.name || (cachedData?.metadata.provider ?? 'Unknown')
+    const isMockData = providerName === 'Mock'
+
     const response: KeywordSearchResponse = {
       data: keywordData,
       cached: isCached,
       timestamp: new Date().toISOString(),
+      mockData: isMockData,
+      provider: providerName,
     }
-
-    // Get rate limit info for response headers
-    const rateLimitInfo = getRateLimitInfo(clientId, RATE_LIMIT_CONFIG)
 
     // Return success response with rate limit headers
     const successResponse = createSuccessResponse(response)
     successResponse.headers.set(
       'X-RateLimit-Remaining',
-      rateLimitInfo.remaining.toString()
+      rateLimitResult.remaining.toString()
     )
-    successResponse.headers.set('X-RateLimit-Reset', rateLimitInfo.resetAt)
+    successResponse.headers.set(
+      'X-RateLimit-Reset',
+      rateLimitResult.resetAt.toISOString()
+    )
 
     return successResponse
   } catch (error) {

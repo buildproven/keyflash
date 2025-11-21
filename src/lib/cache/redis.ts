@@ -31,12 +31,24 @@ export interface CachedKeywordData {
 class RedisCache {
   private client: Redis | null = null
   private isConfigured = false
+  private privacyMode = false
   private defaultTTL = 7 * 24 * 60 * 60 // 7 days in seconds
 
   constructor(config?: CacheConfig) {
     const url = config?.url || process.env.UPSTASH_REDIS_REST_URL
     const token = config?.token || process.env.UPSTASH_REDIS_REST_TOKEN
     const ttl = config?.ttl || this.defaultTTL
+
+    // Check privacy mode - when enabled, disable all caching to honor privacy promise
+    this.privacyMode = process.env.PRIVACY_MODE === 'true'
+
+    if (this.privacyMode) {
+      // eslint-disable-next-line no-console -- Important operational info about privacy mode
+      console.info(
+        '[RedisCache] Privacy mode enabled. Keyword caching is disabled to honor privacy promise.'
+      )
+      return
+    }
 
     if (url && token) {
       try {
@@ -60,8 +72,12 @@ class RedisCache {
 
   /**
    * Check if Redis cache is properly configured and available
+   * Returns false if privacy mode is enabled to disable caching
    */
   isAvailable(): boolean {
+    if (this.privacyMode) {
+      return false
+    }
     return this.isConfigured && this.client !== null
   }
 
@@ -181,6 +197,34 @@ class RedisCache {
     } catch (error) {
       console.error('[RedisCache] Failed to flush cache:', error)
       return false
+    }
+  }
+
+  /**
+   * Purge expired cache entries and optionally all keyword cache entries
+   * Useful for privacy compliance and maintenance
+   */
+  async purgeKeywordCache(): Promise<number> {
+    if (!this.isAvailable()) {
+      return 0
+    }
+
+    try {
+      // Find all keyword cache keys (pattern: kw:*)
+      const keys = await this.client!.keys('kw:*')
+
+      if (keys.length === 0) {
+        return 0
+      }
+
+      // Delete all keyword cache entries
+      await this.client!.del(...keys)
+      // eslint-disable-next-line no-console -- Important operational info about cache purging
+      console.info(`[RedisCache] Purged ${keys.length} keyword cache entries`)
+      return keys.length
+    } catch (error) {
+      console.error('[RedisCache] Failed to purge keyword cache:', error)
+      return 0
     }
   }
 

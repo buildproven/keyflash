@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { KeywordSearchForm } from '@/components/forms/keyword-search-form'
 import { KeywordResultsTable } from '@/components/tables/keyword-results-table'
 import { LoadingState } from '@/components/ui/loading-state'
@@ -20,7 +20,7 @@ export default function SearchPage() {
   const [mockData, setMockData] = useState<boolean>(false)
   const [provider, setProvider] = useState<string | undefined>()
 
-  const handleSearch = async (formData: KeywordSearchFormData) => {
+  const handleSearch = useCallback(async (formData: KeywordSearchFormData) => {
     setIsLoading(true)
     setError(null)
     setResults([])
@@ -71,17 +71,17 @@ export default function SearchPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     if (results.length > 0) {
       exportToCSV(results, 'keyflash-results.csv')
     }
-  }
+  }, [results])
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     setError(null)
-  }
+  }, [])
 
   return (
     <div className="container mx-auto px-6 py-12">

@@ -1,0 +1,16 @@
+# Auto-detect text files and normalize line endings to LF
+* text=auto eol=lf
+
+# Explicitly declare text files
+*.{js,jsx,ts,tsx,json,md,yml,yaml,css,scss,html} text eol=lf
+*.{sh,bash} text eol=lf
+
+# Binary files
+*.{png,jpg,jpeg,gif,webp,svg,ico,woff,woff2,ttf,eot} binary
+
+# Generated files (mark as linguist-generated for GitHub stats)
+package-lock.json linguist-generated=true
+.next/** linguist-generated=true
+dist/** linguist-generated=true
+build/** linguist-generated=true
+coverage/** linguist-generated=true

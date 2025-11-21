@@ -32,7 +32,7 @@ describe('/api/keywords', () => {
         body: JSON.stringify({
           keywords: ['seo tools', 'keyword research'],
           matchType: 'phrase',
-          location: 'United States',
+          location: 'US',
         }),
       })
 
@@ -221,7 +221,7 @@ describe('/api/keywords', () => {
 
       expect(cache.generateKey).toHaveBeenCalledWith(
         ['test'],
-        'US',
+        'United States',
         'en',
         'exact'
       )

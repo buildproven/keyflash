@@ -27,20 +27,24 @@ describe('KeywordSearchForm', () => {
     expect(onSubmit).toHaveBeenCalledWith({
       keywordsInput: 'seo tools\nkeyword research',
       matchType: 'phrase',
-      location: 'United States',
+      location: 'US', // ISO code after validation
     })
   })
 
-  it('should show validation error for empty input', async () => {
+  it('should prevent form submission with empty input', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()
     render(<KeywordSearchForm onSubmit={onSubmit} />)
 
+    const textarea = screen.getByLabelText(/keywords/i)
+
+    // Verify textarea has required attribute for browser validation
+    expect(textarea).toBeRequired()
+
+    // Try to submit empty form - browser validation should prevent it
     await user.click(screen.getByRole('button', { name: /get keyword data/i }))
 
-    expect(
-      await screen.findByText(/please enter at least one keyword/i)
-    ).toBeInTheDocument()
+    // onSubmit should not be called due to browser validation
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
@@ -77,7 +81,7 @@ describe('KeywordSearchForm', () => {
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
-        location: 'Canada',
+        location: 'CA', // ISO code after validation
       })
     )
   })

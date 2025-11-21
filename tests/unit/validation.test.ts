@@ -9,7 +9,7 @@ describe('KeywordSearchSchema', () => {
     const validData = {
       keywords: ['seo tools', 'keyword research'],
       matchType: 'phrase' as const,
-      location: 'United States',
+      location: 'US',
     }
 
     const result = KeywordSearchSchema.parse(validData)
@@ -59,7 +59,7 @@ describe('KeywordInputSchema', () => {
     const validData = {
       keywordsInput: 'seo tools\nkeyword research',
       matchType: 'phrase' as const,
-      location: 'United States',
+      location: 'US',
     }
 
     const result = KeywordInputSchema.parse(validData)
@@ -91,6 +91,6 @@ describe('KeywordInputSchema', () => {
     }
 
     const result = KeywordInputSchema.parse(data)
-    expect(result.location).toBe('United States')
+    expect(result.location).toBe('US')
   })
 })

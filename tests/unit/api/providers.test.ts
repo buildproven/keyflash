@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   createProvider,
   getProvider,
@@ -6,6 +6,9 @@ import {
 } from '@/lib/api/factory'
 import { GoogleAdsProvider } from '@/lib/api/providers/google-ads'
 import { DataForSEOProvider } from '@/lib/api/providers/dataforseo'
+
+// Mock fetch globally for provider tests
+global.fetch = vi.fn()
 
 describe('Provider Factory', () => {
   const originalEnv = process.env
@@ -173,6 +176,44 @@ describe('Provider Factory', () => {
       process.env.GOOGLE_ADS_REFRESH_TOKEN = 'test-refresh-token'
       process.env.GOOGLE_ADS_CUSTOMER_ID = 'test-customer-id'
 
+      // Mock OAuth token response
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'test-access-token',
+          expires_in: 3600,
+        }),
+      } as Response)
+
+      // Mock Google Ads API response
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [
+            {
+              keyword_plan_ad_group_keyword: { text: 'seo tools' },
+              keyword_plan_keyword_forecast_metrics: {
+                avg_monthly_searches: 12500,
+                competition: 'HIGH',
+                competition_index: 85,
+                low_top_of_page_bid_micros: 7500000,
+                high_top_of_page_bid_micros: 9500000,
+              },
+            },
+            {
+              keyword_plan_ad_group_keyword: { text: 'keyword research' },
+              keyword_plan_keyword_forecast_metrics: {
+                avg_monthly_searches: 8200,
+                competition: 'MEDIUM',
+                competition_index: 54,
+                low_top_of_page_bid_micros: 5000000,
+                high_top_of_page_bid_micros: 7000000,
+              },
+            },
+          ],
+        }),
+      } as Response)
+
       const provider = new GoogleAdsProvider()
       const keywords = ['seo tools', 'keyword research']
 
@@ -228,6 +269,53 @@ describe('Provider Factory', () => {
       process.env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test'
       process.env.GOOGLE_ADS_REFRESH_TOKEN = 'test'
       process.env.GOOGLE_ADS_CUSTOMER_ID = 'test'
+
+      // Mock OAuth token response
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'test-access-token',
+        }),
+      } as Response)
+
+      // Mock Google Ads API response with 3 keywords
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [
+            {
+              keyword_plan_ad_group_keyword: { text: 'test1' },
+              keyword_plan_keyword_forecast_metrics: {
+                avg_monthly_searches: 5000,
+                competition: 'MEDIUM',
+                competition_index: 50,
+                low_top_of_page_bid_micros: 2000000,
+                high_top_of_page_bid_micros: 4000000,
+              },
+            },
+            {
+              keyword_plan_ad_group_keyword: { text: 'test2' },
+              keyword_plan_keyword_forecast_metrics: {
+                avg_monthly_searches: 8000,
+                competition: 'HIGH',
+                competition_index: 75,
+                low_top_of_page_bid_micros: 5000000,
+                high_top_of_page_bid_micros: 7000000,
+              },
+            },
+            {
+              keyword_plan_ad_group_keyword: { text: 'test3' },
+              keyword_plan_keyword_forecast_metrics: {
+                avg_monthly_searches: 3000,
+                competition: 'LOW',
+                competition_index: 25,
+                low_top_of_page_bid_micros: 1000000,
+                high_top_of_page_bid_micros: 2000000,
+              },
+            },
+          ],
+        }),
+      } as Response)
 
       const provider = new GoogleAdsProvider()
       const keywords = ['test1', 'test2', 'test3']
@@ -293,6 +381,45 @@ describe('Provider Factory', () => {
       process.env.DATAFORSEO_API_LOGIN = 'test-login'
       process.env.DATAFORSEO_API_PASSWORD = 'test-password'
 
+      // Mock DataForSEO API response
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [
+            {
+              status_code: 20000,
+              result: [
+                {
+                  keyword: 'content marketing',
+                  search_volume_info: {
+                    search_volume: 9500,
+                    competition: 0.72,
+                    competition_level: 'HIGH',
+                    cpc: 5.75,
+                  },
+                  keyword_properties: {
+                    keyword_difficulty: 68,
+                  },
+                },
+                {
+                  keyword: 'digital strategy',
+                  search_volume_info: {
+                    search_volume: 6200,
+                    competition: 0.55,
+                    competition_level: 'MEDIUM',
+                    cpc: 4.2,
+                  },
+                  keyword_properties: {
+                    keyword_difficulty: 52,
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      } as Response)
+
       const provider = new DataForSEOProvider()
       const keywords = ['content marketing', 'digital strategy']
 
@@ -339,10 +466,36 @@ describe('Provider Factory', () => {
       process.env.DATAFORSEO_API_LOGIN = 'test'
       process.env.DATAFORSEO_API_PASSWORD = 'test'
 
-      const provider = new DataForSEOProvider()
       const keywords = Array(10)
         .fill(0)
         .map((_, i) => `keyword${i}`)
+
+      // Mock DataForSEO API response for 10 keywords
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [
+            {
+              status_code: 20000,
+              result: keywords.map((kw, i) => ({
+                keyword: kw,
+                search_volume_info: {
+                  search_volume: 1000 + i * 500,
+                  competition: 0.3 + i * 0.05,
+                  competition_level: ['LOW', 'MEDIUM', 'HIGH'][i % 3],
+                  cpc: 1.0 + i * 0.5,
+                },
+                keyword_properties: {
+                  keyword_difficulty: 20 + i * 5,
+                },
+              })),
+            },
+          ],
+        }),
+      } as Response)
+
+      const provider = new DataForSEOProvider()
 
       const data = await provider.getKeywordData(keywords, {
         matchType: 'phrase',

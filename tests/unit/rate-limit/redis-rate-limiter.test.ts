@@ -11,7 +11,9 @@ const mockRedis = {
 }
 
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(() => mockRedis),
+  Redis: vi.fn(function MockRedis() {
+    return mockRedis
+  }),
 }))
 
 // Mock crypto for consistent testing
@@ -63,9 +65,9 @@ describe('RedisRateLimiter', () => {
 
       await rateLimiter.checkRateLimit(request, config)
 
-      // Should use CF-Connecting-IP in the key
+      // Should use CF-Connecting-IP in the key (hash truncated to 8 chars)
       expect(mockRedis.set).toHaveBeenCalledWith(
-        expect.stringMatching(/^rate:1\.2\.3\.4:mockedhash$/),
+        expect.stringMatching(/^rate:1\.2\.3\.4:mockedha$/),
         expect.any(Object),
         expect.any(Object)
       )
@@ -85,9 +87,9 @@ describe('RedisRateLimiter', () => {
 
       await rateLimiter.checkRateLimit(request, config)
 
-      // Should use first IP from x-forwarded-for
+      // Should use first IP from x-forwarded-for (hash truncated to 8 chars)
       expect(mockRedis.set).toHaveBeenCalledWith(
-        expect.stringMatching(/^rate:5\.6\.7\.8:mockedhash$/),
+        expect.stringMatching(/^rate:5\.6\.7\.8:mockedha$/),
         expect.any(Object),
         expect.any(Object)
       )
@@ -106,9 +108,9 @@ describe('RedisRateLimiter', () => {
 
       await rateLimiter.checkRateLimit(request, config)
 
-      // Should include HMAC hash of user-agent
+      // Should include HMAC hash of user-agent (truncated to 8 chars)
       expect(mockRedis.set).toHaveBeenCalledWith(
-        'rate:1.2.3.4:mockedhash',
+        'rate:1.2.3.4:mockedha',
         expect.any(Object),
         expect.any(Object)
       )

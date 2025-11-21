@@ -49,7 +49,7 @@ KeyFlash is an open-source keyword research tool built for entrepreneurs, conten
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/keyflash.git
+git clone https://github.com/brettstark73/keyflash.git
 cd keyflash
 
 # Install dependencies
@@ -59,7 +59,7 @@ pnpm install
 cp .env.example .env.local
 
 # Add your API keys to .env.local
-# See docs/API_INTEGRATION.md for setup guide
+# See .env.example for detailed configuration instructions
 
 # Run development server
 pnpm dev
@@ -212,7 +212,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) (coming soon) for detailed guidelines.
 - [ ] Team workspaces
 - [ ] Mobile app
 
-Vote on features: [GitHub Discussions](https://github.com/yourusername/keyflash/discussions)
+Vote on features: [GitHub Discussions](https://github.com/brettstark73/keyflash/discussions)
 
 ## 💰 Business Model
 
@@ -286,15 +286,15 @@ Built with excellent open source tools:
 ## 📞 Support
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/keyflash/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/keyflash/discussions)
+- **Issues**: [GitHub Issues](https://github.com/brettstark73/keyflash/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/brettstark73/keyflash/discussions)
 - **Email**: support@keyflash.com (coming soon)
 
 ## 🌟 Star History
 
 If you find KeyFlash useful, please consider starring the repository!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/keyflash&type=Date)](https://star-history.com/#yourusername/keyflash&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=brettstark73/keyflash&type=Date)](https://star-history.com/#brettstark73/keyflash&Date)
 
 ---
 

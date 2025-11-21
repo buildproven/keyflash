@@ -6,7 +6,7 @@ Thank you for considering contributing to KeyFlash! We're building an open-sourc
 
 ### 🐛 Report Bugs
 
-Found a bug? Please [open an issue](https://github.com/yourusername/keyflash/issues/new) with:
+Found a bug? Please [open an issue](https://github.com/brettstark73/keyflash/issues/new) with:
 
 - **Clear title** describing the problem
 - **Steps to reproduce** the bug
@@ -16,7 +16,7 @@ Found a bug? Please [open an issue](https://github.com/yourusername/keyflash/iss
 
 ### 💡 Suggest Features
 
-Have an idea? [Start a discussion](https://github.com/yourusername/keyflash/discussions/new) with:
+Have an idea? [Start a discussion](https://github.com/brettstark73/keyflash/discussions/new) with:
 
 - **Problem statement**: What problem does this solve?
 - **Proposed solution**: How should it work?
@@ -433,8 +433,8 @@ Report issues to: conduct@keyflash.com
 
 ## Questions?
 
-- **General questions**: [GitHub Discussions](https://github.com/yourusername/keyflash/discussions)
-- **Bug reports**: [GitHub Issues](https://github.com/yourusername/keyflash/issues)
+- **General questions**: [GitHub Discussions](https://github.com/brettstark73/keyflash/discussions)
+- **Bug reports**: [GitHub Issues](https://github.com/brettstark73/keyflash/issues)
 - **Security issues**: security@keyflash.com (private disclosure)
 
 ---

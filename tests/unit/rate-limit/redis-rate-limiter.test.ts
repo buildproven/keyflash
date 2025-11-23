@@ -8,6 +8,10 @@ const mockRedis = {
   del: vi.fn(),
   ping: vi.fn().mockResolvedValue('PONG'),
   keys: vi.fn().mockResolvedValue([]),
+  // New atomic operations for race-condition-free rate limiting
+  ttl: vi.fn(),
+  incr: vi.fn(),
+  expire: vi.fn(),
 }
 
 vi.mock('@upstash/redis', () => ({
@@ -40,6 +44,12 @@ describe('RedisRateLimiter', () => {
     process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
     process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret'
 
+    // Set up default mock behaviors for atomic operations
+    // Default: key doesn't exist (new rate limit window)
+    mockRedis.ttl.mockResolvedValue(-2) // Key doesn't exist
+    mockRedis.incr.mockResolvedValue(1) // First increment returns 1
+    mockRedis.expire.mockResolvedValue(true) // Expiry set successfully
+
     rateLimiter = new RedisRateLimiter()
   })
 
@@ -66,10 +76,8 @@ describe('RedisRateLimiter', () => {
       await rateLimiter.checkRateLimit(request, config)
 
       // Should use CF-Connecting-IP in the key (hash truncated to 8 chars)
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        expect.stringMatching(/^rate:1\.2\.3\.4:mockedha$/),
-        expect.any(Object),
-        expect.any(Object)
+      expect(mockRedis.incr).toHaveBeenCalledWith(
+        expect.stringMatching(/^rate:1\.2\.3\.4:mockedha$/)
       )
     })
 
@@ -88,10 +96,8 @@ describe('RedisRateLimiter', () => {
       await rateLimiter.checkRateLimit(request, config)
 
       // Should use first IP from x-forwarded-for (hash truncated to 8 chars)
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        expect.stringMatching(/^rate:5\.6\.7\.8:mockedha$/),
-        expect.any(Object),
-        expect.any(Object)
+      expect(mockRedis.incr).toHaveBeenCalledWith(
+        expect.stringMatching(/^rate:5\.6\.7\.8:mockedha$/)
       )
     })
 
@@ -109,11 +115,7 @@ describe('RedisRateLimiter', () => {
       await rateLimiter.checkRateLimit(request, config)
 
       // Should include HMAC hash of user-agent (truncated to 8 chars)
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        'rate:1.2.3.4:mockedha',
-        expect.any(Object),
-        expect.any(Object)
-      )
+      expect(mockRedis.incr).toHaveBeenCalledWith('rate:1.2.3.4:mockedha')
     })
   })
 
@@ -133,7 +135,7 @@ describe('RedisRateLimiter', () => {
 
       expect(result.allowed).toBe(true)
       expect(result.remaining).toBe(9)
-      expect(mockRedis.set).toHaveBeenCalled()
+      expect(mockRedis.incr).toHaveBeenCalled()
     })
 
     it('tracks subsequent requests correctly', async () => {
@@ -146,21 +148,15 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 10, enabled: true }
 
-      // Mock existing entry with 3 requests
-      mockRedis.get.mockResolvedValueOnce({
-        count: 3,
-        resetTime: Date.now() + 60 * 60 * 1000,
-      })
+      // Mock existing entry with TTL and 4th request
+      mockRedis.ttl.mockResolvedValueOnce(3500) // Key exists with TTL
+      mockRedis.incr.mockResolvedValueOnce(4) // 3 existing + 1 current = 4
 
       const result = await rateLimiter.checkRateLimit(request, config)
 
       expect(result.allowed).toBe(true)
-      expect(result.remaining).toBe(6) // 10 - 4 (3 existing + 1 current)
-      expect(mockRedis.set).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ count: 4 }),
-        expect.any(Object)
-      )
+      expect(result.remaining).toBe(6) // 10 - 4
+      expect(mockRedis.incr).toHaveBeenCalled()
     })
 
     it('blocks requests when limit exceeded', async () => {
@@ -172,23 +168,20 @@ describe('RedisRateLimiter', () => {
       })
 
       const config = { requestsPerHour: 5, enabled: true }
-      const futureTime = Date.now() + 60 * 60 * 1000
 
-      // Mock existing entry at limit
-      mockRedis.get.mockResolvedValueOnce({
-        count: 5,
-        resetTime: futureTime,
-      })
+      // Mock existing entry with TTL, increment exceeds limit
+      mockRedis.ttl.mockResolvedValueOnce(3500) // Key exists with TTL
+      mockRedis.incr.mockResolvedValueOnce(6) // Exceeds limit of 5
 
       const result = await rateLimiter.checkRateLimit(request, config)
 
       expect(result.allowed).toBe(false)
       expect(result.remaining).toBe(0)
       expect(result.retryAfter).toBeGreaterThan(0)
-      expect(mockRedis.set).not.toHaveBeenCalled()
+      expect(mockRedis.incr).toHaveBeenCalled()
     })
 
-    it('cleans up expired entries', async () => {
+    it('handles expired entries automatically via TTL', async () => {
       const request = new Request('https://example.com', {
         headers: {
           'cf-connecting-ip': '1.2.3.4',
@@ -198,17 +191,16 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 10, enabled: true }
 
-      // Mock expired entry
-      mockRedis.get.mockResolvedValueOnce({
-        count: 5,
-        resetTime: Date.now() - 1000, // Expired 1 second ago
-      })
+      // Mock expired key - TTL returns -2 (key doesn't exist)
+      mockRedis.ttl.mockResolvedValueOnce(-2) // Key expired/doesn't exist
+      mockRedis.incr.mockResolvedValueOnce(1) // First request in new window
 
       const result = await rateLimiter.checkRateLimit(request, config)
 
       expect(result.allowed).toBe(true)
       expect(result.remaining).toBe(9) // Should be treated as new client
-      expect(mockRedis.del).toHaveBeenCalled()
+      expect(mockRedis.incr).toHaveBeenCalled()
+      expect(mockRedis.expire).toHaveBeenCalled() // Set new TTL
     })
 
     it('bypasses rate limiting when disabled', async () => {
@@ -305,15 +297,15 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 10, enabled: true }
 
-      // Mock different responses for different keys
-      mockRedis.get.mockResolvedValueOnce(null) // First request
-      mockRedis.get.mockResolvedValueOnce(null) // Second request
+      // Mock new keys for both requests (different user agents = different hashes)
+      mockRedis.ttl.mockResolvedValue(-2) // Key doesn't exist for both
+      mockRedis.incr.mockResolvedValue(1) // First request for each key
 
       await rateLimiter.checkRateLimit(request1, config)
       await rateLimiter.checkRateLimit(request2, config)
 
       // Both should be treated as separate clients due to different user-agent hashes
-      expect(mockRedis.set).toHaveBeenCalledTimes(2)
+      expect(mockRedis.incr).toHaveBeenCalledTimes(2)
     })
   })
 })

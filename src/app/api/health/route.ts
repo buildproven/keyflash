@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server'
 import { cache } from '@/lib/cache/redis'
+import { createProvider, type ProviderName } from '@/lib/api/factory'
+
+// Route segment config for security
+export const runtime = 'nodejs'
+export const maxDuration = 10 // 10 second timeout for health checks
+export const dynamic = 'force-dynamic'
 
 /**
  * Health check results for a dependency
@@ -102,64 +108,32 @@ async function checkProvider(): Promise<HealthCheckResult> {
   const start = Date.now()
 
   try {
-    const provider = process.env.KEYWORD_API_PROVIDER
+    // Use same logic as API factory - defaults to mock provider
+    const providerName = (
+      process.env.KEYWORD_API_PROVIDER || 'mock'
+    ).toLowerCase() as ProviderName
 
-    if (!provider) {
-      return {
-        healthy: false,
-        responseTime: Date.now() - start,
-        error: 'No provider configured',
-        details: {
-          configured: false,
-        },
-      }
+    // Create provider to check if it's available
+    const provider = createProvider()
+    const details: Record<string, any> = {
+      provider: providerName,
+      name: provider.name,
     }
 
-    // Check provider-specific configuration
+    // Use provider's built-in validation - same logic as API
     let configured = false
-    const details: Record<string, any> = { provider }
-
-    switch (provider) {
-      case 'google-ads':
-        configured = !!(
-          process.env.GOOGLE_ADS_CLIENT_ID &&
-          process.env.GOOGLE_ADS_CLIENT_SECRET &&
-          process.env.GOOGLE_ADS_DEVELOPER_TOKEN &&
-          process.env.GOOGLE_ADS_REFRESH_TOKEN &&
-          process.env.GOOGLE_ADS_CUSTOMER_ID
-        )
-        details.requiredVars = [
-          'GOOGLE_ADS_CLIENT_ID',
-          'GOOGLE_ADS_CLIENT_SECRET',
-          'GOOGLE_ADS_DEVELOPER_TOKEN',
-          'GOOGLE_ADS_REFRESH_TOKEN',
-          'GOOGLE_ADS_CUSTOMER_ID',
-        ]
-        break
-
-      case 'dataforseo':
-        configured = !!(
-          process.env.DATAFORSEO_API_LOGIN &&
-          process.env.DATAFORSEO_API_PASSWORD
-        )
-        details.requiredVars = [
-          'DATAFORSEO_API_LOGIN',
-          'DATAFORSEO_API_PASSWORD',
-        ]
-        break
-
-      case 'mock':
-        configured = true // Mock provider doesn't need credentials
+    try {
+      provider.validateConfiguration()
+      configured = true
+      if (providerName === 'mock') {
         details.note = 'Mock provider active - for development/testing only'
-        break
-
-      default:
-        return {
-          healthy: false,
-          responseTime: Date.now() - start,
-          error: `Unknown provider: ${provider}`,
-          details,
-        }
+      }
+    } catch (error) {
+      configured = false
+      details.configError =
+        error instanceof Error
+          ? error.message
+          : 'Configuration validation failed'
     }
 
     return {

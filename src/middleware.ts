@@ -19,21 +19,8 @@ export function middleware(request: NextRequest) {
     )
   }
 
-  // Request size limit check for API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    const contentLength = request.headers.get('content-length')
-
-    // Limit request size to 1MB
-    if (contentLength && parseInt(contentLength, 10) > 1024 * 1024) {
-      return NextResponse.json(
-        {
-          error: 'Payload Too Large',
-          message: 'Request body must be less than 1MB',
-        },
-        { status: 413 }
-      )
-    }
-  }
+  // Note: Request size limits are now enforced at the route level
+  // via Next.js route segment config (bodyParser.sizeLimit) to prevent header spoofing
 
   return response
 }

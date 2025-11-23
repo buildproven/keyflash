@@ -10,6 +10,7 @@ export interface RateLimitConfig {
   requestsPerHour: number
   enabled: boolean
   windowSizeMs?: number
+  failSafe?: 'open' | 'closed' // How to handle Redis failures - defaults to 'closed' in production
 }
 
 export interface RateLimitResult {
@@ -116,65 +117,55 @@ export class RedisRateLimiter {
     const resetTime = now + windowMs
 
     try {
-      let entry: RateLimitEntry | null
-
       if (this.isRedisAvailable && this.redis) {
-        // Use Redis for persistent rate limiting
-        entry = await this.getFromRedis(clientId)
+        // Use atomic Redis operations to prevent race conditions
+        return await this.checkRateLimitAtomically(
+          clientId,
+          config,
+          windowMs,
+          now,
+          resetTime
+        )
       } else {
-        // Fallback to in-memory for development
-        entry = this.getFromMemory(clientId)
-      }
-
-      // Clean up expired entry
-      if (entry && now > entry.resetTime) {
-        await this.deleteEntry(clientId)
-        entry = null
-      }
-
-      if (!entry) {
-        // First request from this client
-        const newEntry: RateLimitEntry = {
-          count: 1,
-          resetTime,
-        }
-        await this.setEntry(clientId, newEntry, windowMs)
-
-        return {
-          allowed: true,
-          remaining: config.requestsPerHour - 1,
-          resetAt: new Date(resetTime),
-        }
-      }
-
-      // Check if limit exceeded
-      if (entry.count >= config.requestsPerHour) {
-        const retryAfter = Math.ceil((entry.resetTime - now) / 1000)
-        return {
-          allowed: false,
-          remaining: 0,
-          resetAt: new Date(entry.resetTime),
-          retryAfter,
-        }
-      }
-
-      // Increment count
-      entry.count += 1
-      await this.setEntry(clientId, entry, windowMs)
-
-      return {
-        allowed: true,
-        remaining: config.requestsPerHour - entry.count,
-        resetAt: new Date(entry.resetTime),
+        // Fallback to in-memory for development (single-threaded, so no race condition)
+        return await this.checkRateLimitInMemory(
+          clientId,
+          config,
+          windowMs,
+          now,
+          resetTime
+        )
       }
     } catch (error) {
       console.error('[RedisRateLimiter] Error checking rate limit:', error)
 
-      // On error, allow the request but log for monitoring
-      return {
-        allowed: true,
-        remaining: config.requestsPerHour,
-        resetAt: new Date(resetTime),
+      // Determine fail-safe behavior - default to closed in production for security
+      const failOpen =
+        config.failSafe === 'open' ||
+        (config.failSafe === undefined &&
+          process.env.NODE_ENV === 'development')
+
+      if (failOpen) {
+        // Fail open - allow request but log warning
+        console.warn(
+          '[RedisRateLimiter] Rate limiter failed, allowing request (fail-open mode)'
+        )
+        return {
+          allowed: true,
+          remaining: config.requestsPerHour,
+          resetAt: new Date(resetTime),
+        }
+      } else {
+        // Fail closed - deny request for security
+        console.error(
+          '[RedisRateLimiter] Rate limiter failed, denying request (fail-closed mode)'
+        )
+        return {
+          allowed: false,
+          remaining: 0,
+          resetAt: new Date(resetTime),
+          retryAfter: 60, // Try again in 60 seconds
+        }
       }
     }
   }
@@ -257,6 +248,118 @@ export class RedisRateLimiter {
       }
     }
     this.fallbackStore.clear()
+  }
+
+  /**
+   * Atomic rate limiting using Redis INCR operations to prevent race conditions
+   * Uses individual atomic operations since Upstash doesn't support pipeline()
+   */
+  private async checkRateLimitAtomically(
+    clientId: string,
+    config: RateLimitConfig,
+    windowMs: number,
+    now: number,
+    resetTime: number
+  ): Promise<RateLimitResult> {
+    const key = `rate:${clientId}`
+
+    try {
+      // Get current TTL to check if key exists
+      const ttl = await this.redis!.ttl(key)
+
+      // If TTL is -2 (key doesn't exist) or -1 (no expiry), it's a new window
+      if (ttl <= 0) {
+        // First request in window - atomically increment and set expiration
+        const newCount = await this.redis!.incr(key)
+        if (newCount === 1) {
+          // Only set expiration if this is truly the first increment
+          await this.redis!.expire(key, Math.ceil(windowMs / 1000))
+        }
+
+        return {
+          allowed: true,
+          remaining: Math.max(0, config.requestsPerHour - newCount),
+          resetAt: new Date(resetTime),
+        }
+      }
+
+      // Key exists with TTL - atomically increment
+      const newCount = await this.redis!.incr(key)
+
+      // Check if limit exceeded after increment
+      if (newCount > config.requestsPerHour) {
+        return {
+          allowed: false,
+          remaining: 0,
+          resetAt: new Date(now + ttl * 1000),
+          retryAfter: ttl,
+        }
+      }
+
+      return {
+        allowed: true,
+        remaining: config.requestsPerHour - newCount,
+        resetAt: new Date(now + ttl * 1000),
+      }
+    } catch (error) {
+      // If Redis operations fail, bubble up to main error handler
+      throw error
+    }
+  }
+
+  /**
+   * In-memory rate limiting (for development/fallback)
+   */
+  private async checkRateLimitInMemory(
+    clientId: string,
+    config: RateLimitConfig,
+    windowMs: number,
+    now: number,
+    resetTime: number
+  ): Promise<RateLimitResult> {
+    let entry = this.getFromMemory(clientId)
+
+    // Clean up expired entry
+    if (entry && now > entry.resetTime) {
+      this.fallbackStore.delete(clientId)
+      entry = null
+    }
+
+    if (!entry) {
+      // First request from this client
+      const newEntry: RateLimitEntry = {
+        count: 1,
+        resetTime,
+      }
+      this.fallbackStore.set(clientId, newEntry)
+
+      return {
+        allowed: true,
+        remaining: config.requestsPerHour - 1,
+        resetAt: new Date(resetTime),
+      }
+    }
+
+    // Check if limit exceeded
+    if (entry.count >= config.requestsPerHour) {
+      const retryAfter = Math.ceil((entry.resetTime - now) / 1000)
+      return {
+        allowed: false,
+        remaining: 0,
+        resetAt: new Date(entry.resetTime),
+        retryAfter,
+      }
+    }
+
+    // Increment count
+    entry.count += 1
+    this.fallbackStore.set(clientId, entry)
+
+    return {
+      allowed: true,
+      remaining: config.requestsPerHour - entry.count,
+      resetAt: new Date(entry.resetTime),
+    }
   }
 }
 

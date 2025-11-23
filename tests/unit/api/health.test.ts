@@ -94,7 +94,7 @@ describe('/api/health', () => {
       )
     })
 
-    it('returns unhealthy when no provider is configured', async () => {
+    it('returns healthy with mock provider when no provider is configured', async () => {
       process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
       process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
       mockCache.ping.mockResolvedValue('PONG')
@@ -103,8 +103,11 @@ describe('/api/health', () => {
       const response = await GET()
       const data = await response.json()
 
-      expect(data.checks.provider.healthy).toBe(false)
-      expect(data.checks.provider.error).toBe('No provider configured')
+      expect(data.checks.provider.healthy).toBe(true)
+      expect(data.checks.provider.details.note).toBe(
+        'Mock provider active - for development/testing only'
+      )
+      expect(data.checks.provider.details.provider).toBe('mock')
     })
 
     it('validates Google Ads provider configuration', async () => {
@@ -119,13 +122,10 @@ describe('/api/health', () => {
 
       expect(data.checks.provider.healthy).toBe(false)
       expect(data.checks.provider.error).toContain('not properly configured')
-      expect(data.checks.provider.details.requiredVars).toEqual([
-        'GOOGLE_ADS_CLIENT_ID',
-        'GOOGLE_ADS_CLIENT_SECRET',
-        'GOOGLE_ADS_DEVELOPER_TOKEN',
-        'GOOGLE_ADS_REFRESH_TOKEN',
-        'GOOGLE_ADS_CUSTOMER_ID',
-      ])
+      expect(data.checks.provider.details.configError).toContain(
+        'missing configuration'
+      )
+      expect(data.checks.provider.details.provider).toBe('google-ads')
     })
 
     it('validates DataForSEO provider configuration', async () => {
@@ -139,10 +139,10 @@ describe('/api/health', () => {
       const data = await response.json()
 
       expect(data.checks.provider.healthy).toBe(false)
-      expect(data.checks.provider.details.requiredVars).toEqual([
-        'DATAFORSEO_API_LOGIN',
-        'DATAFORSEO_API_PASSWORD',
-      ])
+      expect(data.checks.provider.details.configError).toContain(
+        'missing configuration'
+      )
+      expect(data.checks.provider.details.provider).toBe('dataforseo')
     })
   })
 
@@ -177,19 +177,19 @@ describe('/api/health', () => {
       expect(data.checks.provider.healthy).toBe(true)
     })
 
-    it('returns unhealthy when all services are down', async () => {
-      // Redis not configured and no provider
+    it('returns partial health when only redis is down', async () => {
+      // Redis not configured but mock provider is available
       delete process.env.UPSTASH_REDIS_REST_URL
       delete process.env.UPSTASH_REDIS_REST_TOKEN
-      delete process.env.KEYWORD_API_PROVIDER
+      delete process.env.KEYWORD_API_PROVIDER // Defaults to mock
 
       const response = await GET()
       const data = await response.json()
 
-      expect(response.status).toBe(503) // Service Unavailable
-      expect(data.status).toBe('unhealthy')
+      expect(response.status).toBe(207) // Multi-status (partial health)
+      expect(data.status).toBe('degraded')
       expect(data.checks.redis.healthy).toBe(false)
-      expect(data.checks.provider.healthy).toBe(false)
+      expect(data.checks.provider.healthy).toBe(true) // Mock provider
     })
 
     it('includes response metadata', async () => {

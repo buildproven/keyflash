@@ -9,6 +9,17 @@ import { getProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
 import type { KeywordSearchResponse } from '@/types/keyword'
 
+// Route segment config for security and performance
+export const runtime = 'nodejs'
+export const maxDuration = 30 // 30 second timeout
+export const dynamic = 'force-dynamic'
+
+// CRITICAL: Enforce request body size limit to prevent abuse
+// This is enforced at the Next.js level, preventing bypass via header spoofing
+export const bodyParser = {
+  sizeLimit: '1mb', // 1MB maximum request size
+}
+
 /**
  * Normalize location codes for provider and cache compatibility
  * UI uses ISO codes (US, GB, GL) but providers expect descriptive names

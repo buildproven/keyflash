@@ -222,7 +222,7 @@ describe('GitHub Actions workflow validation', () => {
       }
 
       // Check for missing colon after key
-      if (line.match(/^  [a-zA-Z_-]+\s*$/) && !line.includes(':')) {
+      if (line.match(/^ {2}[a-zA-Z_-]+\s*$/) && !line.includes(':')) {
         // This might be a multiline string, so just warn
         console.warn(`Line ${i + 1} might be missing a colon`)
       }

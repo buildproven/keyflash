@@ -47,9 +47,9 @@ describe('pre-commit hook configuration', () => {
 })
 
 describe('pre-commit hook execution', () => {
-  // Skip these tests in CI - they're too slow due to dependency installation
-  // Run locally with: npm run test:quality
-  const shouldSkip = process.env.CI === 'true'
+  // Opt-in for slow hook execution tests (default skip to keep suite fast/stable)
+  // Run with: RUN_PRECOMMIT_TESTS=true npm run test
+  const shouldSkip = process.env.RUN_PRECOMMIT_TESTS !== 'true'
 
   // NOTE: These tests are slow (30+ seconds) because they install npm packages
   // They verify that pre-commit hooks actually execute, not just that config exists

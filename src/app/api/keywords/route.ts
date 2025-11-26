@@ -9,6 +9,11 @@ import { getProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
 import type { KeywordSearchResponse } from '@/types/keyword'
 
+type HttpError = Error & {
+  status?: number
+  headers?: Record<string, string>
+}
+
 // Route segment config for security and performance
 export const runtime = 'nodejs'
 export const maxDuration = 30 // 30 second timeout
@@ -43,15 +48,92 @@ export function normalizeLocationForProvider(location?: string): string {
 }
 
 /**
+ * Safely read and parse JSON body with an explicit size cap.
+ * Next.js App Router doesn't enforce the legacy bodyParser.sizeLimit config,
+ * so we guard against oversized payloads here.
+ */
+async function readJsonWithLimit(
+  request: NextRequest,
+  maxBytes: number = 1_000_000 // 1 MB
+): Promise<unknown> {
+  const contentLength = request.headers.get('content-length')
+  if (contentLength && Number(contentLength) > maxBytes) {
+    const error: HttpError = new Error(
+      `Request body too large. Limit is ${Math.floor(maxBytes / 1024)} KB.`
+    )
+    error.status = 413
+    error.headers = {
+      'Content-Length': contentLength,
+    }
+    throw error
+  }
+
+  const reader = request.body?.getReader()
+  if (!reader) {
+    return {}
+  }
+
+  const chunks: Uint8Array[] = []
+  let received = 0
+
+  // eslint-disable-next-line no-constant-condition -- intentional streaming loop
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    if (value) {
+      received += value.byteLength
+      if (received > maxBytes) {
+        const error: HttpError = new Error(
+          `Request body too large. Limit is ${Math.floor(maxBytes / 1024)} KB.`
+        )
+        error.status = 413
+        throw error
+      }
+      chunks.push(value)
+    }
+  }
+
+  // Combine chunks without Buffer to keep compatibility with edge/node runtimes
+  const combined = new Uint8Array(received)
+  let offset = 0
+  for (const chunk of chunks) {
+    combined.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+
+  const decoder = new TextDecoder()
+  const jsonString = decoder.decode(combined)
+  try {
+    return JSON.parse(jsonString || '{}')
+  } catch {
+    const error: HttpError = new Error('Invalid JSON payload')
+    error.status = 400
+    throw error
+  }
+}
+
+/**
  * Rate limit configuration from environment
  */
-const RATE_LIMIT_CONFIG = {
-  requestsPerHour: parseInt(
-    process.env.RATE_LIMIT_REQUESTS_PER_HOUR || '10',
-    10
-  ),
-  enabled: process.env.RATE_LIMIT_ENABLED !== 'false',
-}
+const RATE_LIMIT_CONFIG = (() => {
+  const raw = process.env.RATE_LIMIT_REQUESTS_PER_HOUR
+  const parsed = Number(raw)
+  const safeValue =
+    Number.isFinite(parsed) && parsed > 0 ? Math.min(10000, parsed) : 10 // default fallback
+
+  if (!Number.isFinite(parsed) && raw) {
+    // eslint-disable-next-line no-console -- warn ops about misconfiguration
+    console.warn(
+      `[RateLimit] Invalid RATE_LIMIT_REQUESTS_PER_HOUR="${raw}", falling back to ${safeValue}`
+    )
+  }
+
+  return {
+    requestsPerHour: safeValue,
+    enabled: process.env.RATE_LIMIT_ENABLED !== 'false',
+    failSafe: process.env.RATE_LIMIT_FAIL_SAFE === 'open' ? 'open' : 'closed',
+  }
+})()
 
 /**
  * POST /api/keywords
@@ -66,11 +148,11 @@ export async function POST(request: NextRequest) {
     )
 
     if (!rateLimitResult.allowed) {
-      const error = new Error(
+      const error: HttpError = new Error(
         `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter} seconds. Limit: ${RATE_LIMIT_CONFIG.requestsPerHour} requests/hour.`
       )
-      ;(error as any).status = 429
-      ;(error as any).headers = {
+      error.status = 429
+      error.headers = {
         'X-RateLimit-Remaining': '0',
         'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
         'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
@@ -79,7 +161,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate request body
-    const body = await request.json()
+    const body = await readJsonWithLimit(request)
     const validated = KeywordSearchSchema.parse(body)
 
     // Normalize location codes for provider compatibility
@@ -118,8 +200,17 @@ export async function POST(request: NextRequest) {
         language: validated.language,
       })
 
-      // Store in cache (fire and forget - don't wait for completion)
-      cache.set(cacheKey, keywordData, provider.name).catch(error => {
+      // Store in cache with short timeout to avoid hanging request
+      const cacheWrite = cache.set(cacheKey, keywordData, provider.name)
+      const timeout = new Promise(resolve =>
+        setTimeout(() => {
+          console.warn(
+            `[Cache] Cache write taking too long for key ${cacheKey}`
+          )
+          resolve(null)
+        }, 150)
+      )
+      await Promise.race([cacheWrite, timeout]).catch(error => {
         // eslint-disable-next-line no-console
         console.error('[Cache] Failed to cache data:', error)
       })

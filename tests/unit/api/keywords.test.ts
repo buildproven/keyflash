@@ -13,9 +13,21 @@ vi.mock('@/lib/cache/redis', () => ({
   },
 }))
 
+// Mock rate limiter to control responses
+vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
+  rateLimiter: {
+    checkRateLimit: vi.fn(() => ({
+      allowed: true,
+      remaining: 10,
+      resetAt: new Date(),
+    })),
+  },
+}))
+
 // Import after mock is defined
 import { POST, GET } from '@/app/api/keywords/route'
 import { cache } from '@/lib/cache/redis'
+import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 
 describe('/api/keywords', () => {
   beforeEach(() => {
@@ -252,6 +264,53 @@ describe('/api/keywords', () => {
 
       // Should return error status (400 or 500)
       expect(response.status).toBeGreaterThanOrEqual(400)
+    })
+
+    it('should include retry headers when rate limit exceeded', async () => {
+      const resetAt = new Date(Date.now() + 60_000)
+      vi.mocked(rateLimiter.checkRateLimit).mockResolvedValueOnce({
+        allowed: false,
+        remaining: 0,
+        resetAt,
+        retryAfter: 60,
+      })
+
+      const request = new NextRequest('http://localhost:3000/api/keywords', {
+        method: 'POST',
+        body: JSON.stringify({
+          keywords: ['test'],
+          matchType: 'phrase',
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(429)
+      expect(response.headers.get('Retry-After')).toBe('60')
+      expect(response.headers.get('X-RateLimit-Reset')).toBe(
+        resetAt.toISOString()
+      )
+      expect(response.headers.get('X-RateLimit-Remaining')).toBe('0')
+      expect(data.error).toBe('Rate Limit Exceeded')
+    })
+
+    it('should reject bodies larger than 1MB', async () => {
+      const largePayload = 'a'.repeat(1_100_000) // ~1.1MB
+      const request = new NextRequest('http://localhost:3000/api/keywords', {
+        method: 'POST',
+        body: largePayload,
+        headers: {
+          'content-type': 'application/json',
+          'content-length': largePayload.length.toString(),
+        },
+      })
+
+      const response = await POST(request)
+      expect(response.status).toBe(413)
     })
   })
 

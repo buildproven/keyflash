@@ -98,6 +98,22 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
   ): Promise<KeywordData[]> {
     this.validateConfiguration()
 
+    const MAX_KEYWORDS = 200 // align with public API input cap
+    const MAX_QUERY_CHARS = 8000 // conservative GAQL payload budget
+
+    if (keywords.length > MAX_KEYWORDS) {
+      throw new Error(
+        `Too many keywords for Google Ads batch (${keywords.length}). Limit to ${MAX_KEYWORDS} or fewer.`
+      )
+    }
+
+    const estimatedQuerySize = keywords.join(',').length
+    if (estimatedQuerySize > MAX_QUERY_CHARS) {
+      throw new Error(
+        `Keyword batch too large for Google Ads query (size ≈ ${estimatedQuerySize} chars). Reduce keyword lengths or batch size.`
+      )
+    }
+
     try {
       // Get fresh access token
       const accessToken = await this.getAccessToken()
@@ -184,7 +200,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
 
     // Build location code (Google Ads uses geotarget constant IDs)
     // Default to United States (2840)
-    const locationCode = this.getLocationCode(options.location)
+    this.getLocationCode(options.location)
 
     // Build GAQL (Google Ads Query Language) query
     const query = `

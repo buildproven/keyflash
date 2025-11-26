@@ -18,32 +18,53 @@ export interface APIError {
  */
 export function handleAPIError(error: unknown): NextResponse<APIError> {
   const timestamp = new Date().toISOString()
+  let status = 500
+  const headers = new Headers()
+  type ErrorWithMeta = Error & {
+    status?: number
+    headers?: Record<string, string>
+  }
 
   // Zod validation errors
   if (error instanceof ZodError) {
+    status = 400
     return NextResponse.json(
       {
         error: 'Validation Error',
         message: error.issues.map(issue => issue.message).join(', '),
-        statusCode: 400,
+        statusCode: status,
         timestamp,
       },
-      { status: 400 }
+      { status, headers }
     )
   }
 
   // Standard Error objects
   if (error instanceof Error) {
+    const meta = error as ErrorWithMeta
+    const maybeStatus = meta.status
+    if (typeof maybeStatus === 'number') {
+      status = maybeStatus
+    }
+
+    const maybeHeaders = meta.headers
+    if (maybeHeaders && typeof maybeHeaders === 'object') {
+      Object.entries(maybeHeaders).forEach(([key, value]) => {
+        if (typeof value === 'string') headers.set(key, value)
+      })
+    }
+
     // Rate limit errors
-    if (error.message.includes('rate limit')) {
+    if (error.message.toLowerCase().includes('rate limit')) {
+      const statusCode = status === 500 ? 429 : status
       return NextResponse.json(
         {
           error: 'Rate Limit Exceeded',
           message: error.message,
-          statusCode: 429,
+          statusCode: statusCode,
           timestamp,
         },
-        { status: 429 }
+        { status: statusCode, headers }
       )
     }
 
@@ -52,10 +73,10 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
       {
         error: 'Internal Server Error',
         message: error.message,
-        statusCode: 500,
+        statusCode: status,
         timestamp,
       },
-      { status: 500 }
+      { status, headers }
     )
   }
 
@@ -67,7 +88,7 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
       statusCode: 500,
       timestamp,
     },
-    { status: 500 }
+    { status: 500, headers }
   )
 }
 

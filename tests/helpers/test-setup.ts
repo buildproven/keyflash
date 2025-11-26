@@ -4,8 +4,8 @@
 
 import { afterEach } from 'vitest'
 
-// Global test timeout (increased for command execution tests)
-export const TEST_TIMEOUT = 30000 // 30 seconds
+// Global test timeout (increased for command execution tests and npm installs)
+export const TEST_TIMEOUT = 120000 // 120 seconds
 
 // Cleanup tracking for isolated test environments
 const cleanupCallbacks: Array<() => void> = []

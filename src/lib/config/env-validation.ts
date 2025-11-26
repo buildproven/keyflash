@@ -47,6 +47,7 @@ const envSchema = z.object({
     .default(10)
     .refine(val => !isNaN(val), 'Must be a valid number'),
   RATE_LIMIT_HMAC_SECRET: z.string().min(16).optional(),
+  RATE_LIMIT_FAIL_SAFE: z.enum(['open', 'closed']).default('closed'),
 
   // Package version for health checks
   npm_package_version: z.string().optional(),

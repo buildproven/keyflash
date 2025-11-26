@@ -1,8 +1,29 @@
 #!/bin/bash
 # Smart Test Strategy - keyflash
+# Generated pattern from create-quality-automation
+# https://www.aibuilderlab.com/cqa
 set -e
 
 echo "🧠 Analyzing changes for optimal test strategy..."
+
+# Environment variable overrides
+if [[ "$SKIP_SMART" == "1" ]]; then
+  echo "⚠️  SKIP_SMART=1 - Running comprehensive tests"
+  npm run test:all 2>/dev/null || npm run test
+  exit 0
+fi
+
+if [[ "$FORCE_COMPREHENSIVE" == "1" ]]; then
+  echo "🔴 FORCE_COMPREHENSIVE=1 - Running all tests"
+  npm run test:all 2>/dev/null || npm run test
+  exit 0
+fi
+
+if [[ "$FORCE_MINIMAL" == "1" ]]; then
+  echo "⚪ FORCE_MINIMAL=1 - Running lint only"
+  npm run lint && npm run format:check
+  exit 0
+fi
 
 # Collect metrics
 CHANGED_FILES=$(git diff --name-only HEAD~1..HEAD 2>/dev/null | wc -l | tr -d ' ')

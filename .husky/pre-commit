@@ -1,5 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-# Run lint-staged on staged files
-npx --no -- lint-staged
+# Run lint-staged on staged files (uses local devDependency)
+npm run lint-staged

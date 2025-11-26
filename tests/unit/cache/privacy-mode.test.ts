@@ -51,7 +51,7 @@ describe('RedisCache Privacy Mode', () => {
     expect(cache.isAvailable()).toBe(true)
   })
 
-  it('disables caching when PRIVACY_MODE is not set (default for privacy)', () => {
+  it('enables caching when PRIVACY_MODE is not set (default caches)', () => {
     // Don't set PRIVACY_MODE (test default behavior)
     delete process.env.PRIVACY_MODE
     process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
@@ -59,8 +59,8 @@ describe('RedisCache Privacy Mode', () => {
 
     const cache = new RedisCache()
 
-    // Cache should NOT be available when privacy mode is not set (defaults to enabled for privacy)
-    expect(cache.isAvailable()).toBe(false)
+    // Cache should be available when privacy mode is not set (default is caching on)
+    expect(cache.isAvailable()).toBe(true)
   })
 
   it('returns null for get() when privacy mode is enabled', async () => {

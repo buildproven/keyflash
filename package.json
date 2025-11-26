@@ -50,7 +50,12 @@
     "redis:stop": "docker stop keyflash-redis || echo 'Redis container not running'",
     "redis:clean": "docker stop keyflash-redis && docker rm keyflash-redis || echo 'Redis container not found'",
     "redis:logs": "docker logs keyflash-redis || echo 'Redis container not found'",
-    "validate:pre-push": "npm run test:patterns --if-present && npm run lint && npm run format:check && npm run test:commands --if-present && npm test --if-present"
+    "validate:pre-push": "npm run test:patterns --if-present && npm run lint && npm run format:check && npm run test:commands --if-present && npm test --if-present",
+    "type-check": "tsc --noEmit",
+    "type-check:tests": "tsc --noEmit --project tests/tsconfig.json",
+    "type-check:all": "npm run type-check && npm run type-check:tests",
+    "quality:check": "npm run type-check:all && npm run lint && npm run test",
+    "quality:ci": "npm run quality:check && npm run security:audit"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
@@ -105,6 +110,20 @@
     ],
     "src/**/*.{css,scss,sass,less,pcss}": [
       "stylelint --fix",
+      "prettier --write"
+    ],
+    "**/*.{js,jsx,mjs,cjs,html}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{ts,tsx}": [
+      "tsc --noEmit --skipLibCheck",
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "tests/**/*.{ts,tsx,js,jsx}": [
+      "tsc --noEmit --project tests/tsconfig.json",
+      "eslint --fix",
       "prettier --write"
     ]
   },

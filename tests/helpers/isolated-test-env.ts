@@ -156,10 +156,15 @@ export class IsolatedTestEnv {
     exitCode: number
   } {
     try {
+      const env = {
+        ...process.env,
+        npm_config_cache: join(this.path, '.npm-cache'),
+      }
       const stdout = execSync(command, {
         cwd: this.path,
         encoding: 'utf-8',
         stdio: 'pipe',
+        env,
       })
       return { stdout, stderr: '', exitCode: 0 }
     } catch (error: any) {

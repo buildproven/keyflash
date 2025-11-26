@@ -91,25 +91,39 @@ git checkout -b fix/bug-description
 ### 4. Test Your Changes
 
 ```bash
-# Run linter
-pnpm lint
+# Run linter (eslint + stylelint)
+npm run lint
 
-# Run type checker
-pnpm type-check
+# Run formatter check
+npm run format:check
 
 # Run all tests
-pnpm test
+npm test
 
 # Run specific test suites
-pnpm test:unit
-pnpm test:integration
-pnpm test:e2e
+npm run test:unit
+npm run test:integration
+npm run test:e2e
 
 # Check test coverage
-pnpm test:coverage
+npm run test:coverage
 ```
 
 All checks must pass before submitting PR.
+
+### 5. Pre-commit Hooks
+
+We use Husky + lint-staged. Hooks run automatically on commit:
+
+- `lint-staged` applies `eslint`/`prettier`/`stylelint` to staged files.
+- To skip hooks (not recommended): `HUSKY=0 git commit ...`
+
+Install hooks locally after cloning:
+
+```bash
+npm install
+npm run prepare   # sets up Husky hooks
+```
 
 ### 5. Commit
 

@@ -168,12 +168,12 @@ describe('Keywords API Integration', () => {
 
       const response = await POST(request)
 
-      expect(response.status).toBe(500)
+      expect(response.status).toBe(400)
 
       const data = await response.json()
       expect(data).toHaveProperty('error')
       expect(data).toHaveProperty('message')
-      // JSON parsing errors are treated as generic server errors
+      expect(data.message).toContain('Invalid JSON')
     })
 
     it('rejects requests with no keywords', async () => {

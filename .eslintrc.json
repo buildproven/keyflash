@@ -1,4 +1,5 @@
 {
+  "root": true,
   "extends": ["next/core-web-vitals"],
   "plugins": ["security"],
   "rules": {
@@ -15,5 +16,15 @@
     "security/detect-object-injection": "warn",
     "security/detect-possible-timing-attacks": "warn",
     "security/detect-pseudoRandomBytes": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.{ts,tsx,js,jsx}"],
+      "rules": {
+        "security/detect-object-injection": "off",
+        "security/detect-non-literal-fs-filename": "off",
+        "security/detect-non-literal-regexp": "off"
+      }
+    }
+  ]
 }

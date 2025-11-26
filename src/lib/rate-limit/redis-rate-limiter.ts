@@ -29,6 +29,17 @@ export class RedisRateLimiter {
   private redis: Redis | null = null
   private fallbackStore = new Map<string, RateLimitEntry>()
   private isRedisAvailable = false
+  // Keep a typed error helper for attaching HTTP-friendly metadata
+  private createConfigError(
+    message: string,
+    status = 500
+  ): Error & {
+    status?: number
+  } {
+    const err: Error & { status?: number } = new Error(message)
+    err.status = status
+    return err
+  }
 
   constructor() {
     const redisUrl = process.env.UPSTASH_REDIS_REST_URL
@@ -79,9 +90,8 @@ export class RedisRateLimiter {
 
     // In production, require HMAC secret for security
     if (process.env.NODE_ENV === 'production' && !hmacKey) {
-      throw new Error(
-        'RATE_LIMIT_HMAC_SECRET is required in production for secure rate limiting. ' +
-          'Set a random string (minimum 16 characters) to prevent bypass attacks.'
+      throw this.createConfigError(
+        'RATE_LIMIT_HMAC_SECRET missing in production; rate limiting cannot safely identify clients.'
       )
     }
 
@@ -263,47 +273,42 @@ export class RedisRateLimiter {
   ): Promise<RateLimitResult> {
     const key = `rate:${clientId}`
 
-    try {
-      // Get current TTL to check if key exists
-      const ttl = await this.redis!.ttl(key)
+    // Get current TTL to check if key exists
+    const ttl = await this.redis!.ttl(key)
 
-      // If TTL is -2 (key doesn't exist) or -1 (no expiry), it's a new window
-      if (ttl <= 0) {
-        // First request in window - atomically increment and set expiration
-        const newCount = await this.redis!.incr(key)
-        if (newCount === 1) {
-          // Only set expiration if this is truly the first increment
-          await this.redis!.expire(key, Math.ceil(windowMs / 1000))
-        }
-
-        return {
-          allowed: true,
-          remaining: Math.max(0, config.requestsPerHour - newCount),
-          resetAt: new Date(resetTime),
-        }
-      }
-
-      // Key exists with TTL - atomically increment
+    // If TTL is -2 (key doesn't exist) or -1 (no expiry), it's a new window
+    if (ttl <= 0) {
+      // First request in window - atomically increment and set expiration
       const newCount = await this.redis!.incr(key)
-
-      // Check if limit exceeded after increment
-      if (newCount > config.requestsPerHour) {
-        return {
-          allowed: false,
-          remaining: 0,
-          resetAt: new Date(now + ttl * 1000),
-          retryAfter: ttl,
-        }
+      if (newCount === 1) {
+        // Only set expiration if this is truly the first increment
+        await this.redis!.expire(key, Math.ceil(windowMs / 1000))
       }
 
       return {
         allowed: true,
-        remaining: config.requestsPerHour - newCount,
-        resetAt: new Date(now + ttl * 1000),
+        remaining: Math.max(0, config.requestsPerHour - newCount),
+        resetAt: new Date(resetTime),
       }
-    } catch (error) {
-      // If Redis operations fail, bubble up to main error handler
-      throw error
+    }
+
+    // Key exists with TTL - atomically increment
+    const newCount = await this.redis!.incr(key)
+
+    // Check if limit exceeded after increment
+    if (newCount > config.requestsPerHour) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetAt: new Date(now + ttl * 1000),
+        retryAfter: ttl,
+      }
+    }
+
+    return {
+      allowed: true,
+      remaining: config.requestsPerHour - newCount,
+      resetAt: new Date(now + ttl * 1000),
     }
   }
 

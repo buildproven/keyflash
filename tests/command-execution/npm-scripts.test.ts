@@ -96,7 +96,7 @@ baz:123
 
       // Install dependencies
       env.exec(
-        'npm install --no-save eslint@^8.57.1 eslint-config-next@^14.2.33'
+        'npm install --no-save eslint@^8.57.1 eslint-config-next@^14.2.33 stylelint@^16.8.0 stylelint-config-standard@^37.0.0'
       )
 
       // Run lint command
@@ -126,7 +126,7 @@ eval("alert('test')")
 
       // Install dependencies
       env.exec(
-        'npm install --no-save eslint@^8.57.1 eslint-plugin-security@^3.0.1'
+        'npm install --no-save eslint@^8.57.1 eslint-plugin-security@^3.0.1 stylelint@^16.8.0 stylelint-config-standard@^37.0.0'
       )
 
       // Run lint command - should fail or warn
@@ -156,7 +156,7 @@ export { x, y }
 
       // Install dependencies
       env.exec(
-        'npm install --no-save eslint@^8.57.1 eslint-config-next@^14.2.33'
+        'npm install --no-save eslint@^8.57.1 eslint-config-next@^14.2.33 stylelint@^16.8.0 stylelint-config-standard@^37.0.0'
       )
 
       // Run lint:fix

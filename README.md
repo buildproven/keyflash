@@ -74,6 +74,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - [**Security**](docs/SECURITY.md) - Security measures and best practices
 - [**Testing**](docs/TESTING_STRATEGY.md) - Testing approach and coverage
 
+### Privacy & Caching
+
+By default, KeyFlash caches keyword results in Redis for 7 days (`PRIVACY_MODE=false`). Set `PRIVACY_MODE=true` in your environment to disable keyword caching entirely if your privacy promise requires no storage of search terms.
+
 ### API Setup Guides
 
 Coming soon:

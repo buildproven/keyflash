@@ -14,7 +14,7 @@ interface HealthCheckResult {
   healthy: boolean
   responseTime?: number
   error?: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 }
 
 /**
@@ -115,7 +115,7 @@ async function checkProvider(): Promise<HealthCheckResult> {
 
     // Create provider to check if it's available
     const provider = createProvider()
-    const details: Record<string, any> = {
+    const details: Record<string, unknown> = {
       provider: providerName,
       name: provider.name,
     }

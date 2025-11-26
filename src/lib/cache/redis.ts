@@ -31,7 +31,7 @@ export interface CachedKeywordData {
 class RedisCache {
   private client: Redis | null = null
   private isConfigured = false
-  private privacyMode = true // Default to privacy mode to honor marketing promise
+  private privacyMode = false // Default to caching unless explicitly disabled
   private defaultTTL = 7 * 24 * 60 * 60 // 7 days in seconds
 
   constructor(config?: CacheConfig) {
@@ -39,9 +39,9 @@ class RedisCache {
     const token = config?.token || process.env.UPSTASH_REDIS_REST_TOKEN
     const ttl = config?.ttl || this.defaultTTL
 
-    // Check privacy mode - defaults to true to honor "we don't store your searches" promise
-    // Set PRIVACY_MODE=false to explicitly enable keyword caching for performance
-    this.privacyMode = process.env.PRIVACY_MODE !== 'false'
+    // Check privacy mode - defaults to false; set PRIVACY_MODE=true to disable caching
+    const privacyEnv = process.env.PRIVACY_MODE
+    this.privacyMode = privacyEnv === 'true'
 
     if (this.privacyMode) {
       // eslint-disable-next-line no-console -- Important operational info about privacy mode

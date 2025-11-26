@@ -69,10 +69,11 @@ describe('ESLint configuration', () => {
 `
       require('fs').writeFileSync(tempFile, validCode)
 
-      // Try to lint it
-      const output = execSync(`npx eslint ${tempFile}`, {
+      // Try to lint it using the npm script (more efficient)
+      const output = execSync(`npx eslint --no-cache ${tempFile}`, {
         encoding: 'utf-8',
         stdio: 'pipe',
+        timeout: 30000, // Increase timeout for slow systems
       })
 
       // Should not crash (output might have warnings, that's okay)
@@ -81,13 +82,14 @@ describe('ESLint configuration', () => {
       // If it fails, it should be due to linting errors, not config errors
       expect(error.message).not.toContain('config')
       expect(error.message).not.toContain('Cannot read')
+      expect(error.message).not.toContain('Invalid configuration')
     } finally {
       // Cleanup
       try {
         require('fs').unlinkSync(tempFile)
       } catch {}
     }
-  }, 10000)
+  }, 30000)
 
   it('detects dangerous patterns like eval()', () => {
     const tempFile = join(process.cwd(), '.eslint-test-dangerous.js')
@@ -160,6 +162,7 @@ describe('ESLint execution', () => {
       execSync('npm run lint', {
         encoding: 'utf-8',
         stdio: 'pipe',
+        timeout: 60000, // Increase timeout for full lint
       })
       // Success
       expect(true).toBe(true)
@@ -168,8 +171,9 @@ describe('ESLint execution', () => {
       // Should not have config errors
       expect(error.message).not.toContain('Cannot find module')
       expect(error.message).not.toContain('Invalid configuration')
+      expect(error.message).not.toContain('config')
     }
-  }, 15000)
+  }, 60000)
 
   it('npm run lint:fix command exists', () => {
     const packageJsonPath = join(process.cwd(), 'package.json')

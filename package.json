@@ -66,12 +66,15 @@
     "@types/node": "^20.19.25",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^8.9.0",
+    "@typescript-eslint/parser": "^8.9.0",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.10",
     "autoprefixer": "^10.4.22",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.6",
     "eslint-plugin-security": "^3.0.1",
+    "globals": "^15.9.0",
     "happy-dom": "^20.0.10",
     "husky": "^9.1.4",
     "lint-staged": "^15.2.10",
@@ -84,10 +87,7 @@
     "stylelint-config-standard": "^37.0.0",
     "tailwindcss": "^3.4.18",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.10",
-    "globals": "^15.9.0",
-    "@typescript-eslint/eslint-plugin": "^8.9.0",
-    "@typescript-eslint/parser": "^8.9.0"
+    "vitest": "^4.0.10"
   },
   "lint-staged": {
     "package.json": [
@@ -117,12 +117,12 @@
       "prettier --write"
     ],
     "**/*.{ts,tsx}": [
-      "tsc --noEmit --skipLibCheck",
+      "bash -c 'tsc --noEmit --skipLibCheck'",
       "eslint --fix",
       "prettier --write"
     ],
     "tests/**/*.{ts,tsx,js,jsx}": [
-      "tsc --noEmit --project tests/tsconfig.json",
+      "bash -c 'tsc --noEmit --project tests/tsconfig.json'",
       "eslint --fix",
       "prettier --write"
     ]
@@ -137,6 +137,8 @@
   },
   "dependencies": {
     "@upstash/redis": "^1.35.6",
+    "pino": "^10.1.0",
+    "pino-pretty": "^13.1.2",
     "zod": "^4.1.12"
   }
 }

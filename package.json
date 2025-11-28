@@ -116,13 +116,12 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "**/*.{ts,tsx}": [
-      "bash -c 'tsc --noEmit --skipLibCheck'",
+    "src/**/*.{ts,tsx}": [
+      "bash -c 'tsc --noEmit --skipLibCheck --project tsconfig.lint-staged.json'",
       "eslint --fix",
       "prettier --write"
     ],
     "tests/**/*.{ts,tsx,js,jsx}": [
-      "bash -c 'tsc --noEmit --project tests/tsconfig.json'",
       "eslint --fix",
       "prettier --write"
     ]

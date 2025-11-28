@@ -131,7 +131,10 @@ const RATE_LIMIT_CONFIG = (() => {
   return {
     requestsPerHour: safeValue,
     enabled: process.env.RATE_LIMIT_ENABLED !== 'false',
-    failSafe: process.env.RATE_LIMIT_FAIL_SAFE === 'open' ? 'open' : 'closed',
+    failSafe:
+      process.env.RATE_LIMIT_FAIL_SAFE === 'open'
+        ? ('open' as const)
+        : ('closed' as const),
   }
 })()
 

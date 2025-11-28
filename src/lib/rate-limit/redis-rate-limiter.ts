@@ -180,51 +180,8 @@ export class RedisRateLimiter {
     }
   }
 
-  private async getFromRedis(clientId: string): Promise<RateLimitEntry | null> {
-    if (!this.redis) return null
-
-    try {
-      const data = await this.redis.get<RateLimitEntry>(`rate:${clientId}`)
-      return data
-    } catch (error) {
-      console.error('[RedisRateLimiter] Error getting from Redis:', error)
-      return null
-    }
-  }
-
   private getFromMemory(clientId: string): RateLimitEntry | null {
     return this.fallbackStore.get(clientId) || null
-  }
-
-  private async setEntry(
-    clientId: string,
-    entry: RateLimitEntry,
-    ttlMs: number
-  ): Promise<void> {
-    if (this.isRedisAvailable && this.redis) {
-      try {
-        await this.redis.set(`rate:${clientId}`, entry, {
-          ex: Math.ceil(ttlMs / 1000),
-        })
-      } catch (error) {
-        console.error('[RedisRateLimiter] Error setting in Redis:', error)
-        // Fallback to memory
-        this.fallbackStore.set(clientId, entry)
-      }
-    } else {
-      this.fallbackStore.set(clientId, entry)
-    }
-  }
-
-  private async deleteEntry(clientId: string): Promise<void> {
-    if (this.isRedisAvailable && this.redis) {
-      try {
-        await this.redis.del(`rate:${clientId}`)
-      } catch (error) {
-        console.error('[RedisRateLimiter] Error deleting from Redis:', error)
-      }
-    }
-    this.fallbackStore.delete(clientId)
   }
 
   /**
@@ -318,7 +275,7 @@ export class RedisRateLimiter {
   private async checkRateLimitInMemory(
     clientId: string,
     config: RateLimitConfig,
-    windowMs: number,
+    _windowMs: number,
     now: number,
     resetTime: number
   ): Promise<RateLimitResult> {

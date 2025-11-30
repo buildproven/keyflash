@@ -765,13 +765,13 @@ if (apiKeyMissing) {
 
 ```yaml
 P0_Incidents:
-  - Admin: [Your contact]
+  - Admin: security@vibebuildlab.com
   - Vercel Support: support@vercel.com
-  - API Provider Support: [Provider contact]
+  - API Provider Support: (see provider documentation)
 
 P1_Incidents:
-  - Security Lead: [Your contact]
-  - Dev Team: [Team contact]
+  - Security Lead: security@vibebuildlab.com
+  - Dev Team: support@vibebuildlab.com
 ```
 
 ## Security Resources

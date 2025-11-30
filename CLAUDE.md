@@ -4,7 +4,7 @@
 
 **Last Updated**: 2025-11-19
 **Repository**: https://github.com/brettstark73/keyflash
-**License**: AGPL-3.0
+**License**: Commercial (See LICENSE file)
 
 ---
 

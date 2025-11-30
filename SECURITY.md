@@ -56,7 +56,7 @@ npm run security:report
 If you discover a security vulnerability:
 
 1. **DO NOT** create a public GitHub issue
-2. Email security reports to: [Your security email]
+2. Email security reports to: support@northwestregisteredagent.com
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -82,9 +82,20 @@ If you discover a security vulnerability:
 
 ## Security Contact
 
-For security-related questions: [Your contact information]
+For security-related questions: support@northwestregisteredagent.com
 
 ## Policy Updates
 
 This security policy is reviewed and updated quarterly.
-Last updated: [Current date]
+Last updated: November 29, 2025
+
+---
+
+## Legal
+
+- [Privacy Policy](https://vibebuildlab.com/privacy-policy)
+- [Terms of Service](https://vibebuildlab.com/terms)
+
+---
+
+> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)

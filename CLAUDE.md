@@ -27,13 +27,15 @@
 
 ### What is KeyFlash?
 
-KeyFlash is an **open-source keyword research tool** designed to be:
+KeyFlash is a **keyword research tool** designed to be:
 
 - **Fast**: Results in <3 seconds
 - **Simple**: Maximum 3 clicks from landing to results
 - **Affordable**: 10x cheaper than competitors (Ahrefs, SEMrush, Moz)
 
-**Business Model**: Public open-source repository + Hosted SaaS with free/paid tiers
+**Product Role**: Free Entry Point / Funnel Product for Vibe Build Lab ecosystem
+
+**Business Model**: Free tier (limited searches) drives awareness → Pro features via Vibe Lab Pro membership
 
 ### Core Value Proposition
 

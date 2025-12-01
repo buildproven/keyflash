@@ -35,20 +35,14 @@ This project uses multiple layers of automated security scanning:
 ## Manual Security Commands
 
 ```bash
-# Run all security checks
-npm run security:check
-
-# Check for secrets
-npm run security:secrets
-
-# Check dependencies
+# Check dependencies for vulnerabilities
 npm run security:audit
 
-# Fix dependency issues
-npm run security:audit:fix
+# Scan for hardcoded secrets
+npm run security:secrets
 
-# Generate security report
-npm run security:report
+# Validate security configuration
+npm run security:config
 ```
 
 ## Reporting Security Issues
@@ -56,7 +50,7 @@ npm run security:report
 If you discover a security vulnerability:
 
 1. **DO NOT** create a public GitHub issue
-2. Email security reports to: support@northwestregisteredagent.com
+2. Email security reports to: security@vibebuildlab.com
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -69,7 +63,7 @@ If you discover a security vulnerability:
 
 - Never commit secrets, API keys, or passwords
 - Use environment variables for sensitive configuration
-- Run `npm run security:check` before pushing
+- Run `npm run security:audit` before pushing
 - Keep dependencies updated
 - Review security scanner output carefully
 
@@ -82,7 +76,7 @@ If you discover a security vulnerability:
 
 ## Security Contact
 
-For security-related questions: support@northwestregisteredagent.com
+For security-related questions: security@vibebuildlab.com
 
 ## Policy Updates
 

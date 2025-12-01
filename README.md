@@ -44,12 +44,6 @@ AI-powered keyword and content research tool. Get keyword data in under 3 second
 | **Free** | $0                                | 5 searches/day, 50/month                         |
 | **Pro**  | Included in Vibe Lab Pro ($49/mo) | Unlimited searches, up to 200 keywords per batch |
 
-### Legacy Users
-
-Early adopters at $10/mo are grandfathered at their current rate.
-
-**Migration path**: $29/mo × 3 months → $49/mo Vibe Lab Pro
-
 ### Pro Access
 
 Full KeyFlash access is included in [Vibe Lab Pro](https://vibebuildlab.com/pro) membership:

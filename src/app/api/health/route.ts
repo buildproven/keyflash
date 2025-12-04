@@ -1,11 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { cache } from '@/lib/cache/redis'
 import { createProvider, type ProviderName } from '@/lib/api/factory'
+import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 
 // Route segment config for security
 export const runtime = 'nodejs'
 export const maxDuration = 10 // 10 second timeout for health checks
 export const dynamic = 'force-dynamic'
+
+// Rate limit config for health endpoint (more lenient than keywords)
+const HEALTH_RATE_LIMIT_CONFIG = {
+  requestsPerHour: 60, // Allow more health checks than keyword searches
+  enabled: process.env.RATE_LIMIT_ENABLED !== 'false',
+  failSafe: (process.env.RATE_LIMIT_FAIL_SAFE || 'closed') as 'open' | 'closed',
+}
 
 /**
  * Health check results for a dependency
@@ -157,7 +165,28 @@ async function checkProvider(): Promise<HealthCheckResult> {
  * GET /api/health
  * Enhanced health check endpoint for monitoring system dependencies
  */
-export async function GET(): Promise<NextResponse<HealthStatus>> {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<HealthStatus | { error: string }>> {
+  // Rate limit health checks to prevent DoS
+  const rateLimitResult = await rateLimiter.checkRateLimit(
+    request,
+    HEALTH_RATE_LIMIT_CONFIG
+  )
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimitResult.retryAfter || 60),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+        },
+      }
+    ) as NextResponse<{ error: string }>
+  }
+
   const start = Date.now()
 
   // Run health checks in parallel for better performance

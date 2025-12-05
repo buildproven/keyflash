@@ -77,10 +77,6 @@ keyflash/
 │   └── workflows/
 │       └── quality.yml         # CI/CD quality checks
 │
-├── claudedocs/                 # Claude-specific documentation
-│   ├── PROJECT_SETUP_SUMMARY.md
-│   └── QUALITY_AUTOMATION_SETUP.md
-│
 ├── docs/                       # Main project documentation
 │   ├── REQUIREMENTS.md         # Product requirements & features
 │   ├── ARCHITECTURE.md         # Tech stack & system design
@@ -149,7 +145,6 @@ keyflash/
 ├── .prettierrc               # Prettier config
 ├── .prettierignore           # Prettier ignore patterns
 ├── .stylelintrc.json         # Stylelint config
-├── CONTRIBUTING.md           # Contribution guidelines
 ├── LICENSE                   # AGPL-3.0 license
 ├── README.md                 # Project overview
 ├── eslint.config.cjs         # ESLint flat config
@@ -166,7 +161,6 @@ Before making changes, read these files in order:
 3. **docs/ARCHITECTURE.md** - Tech stack rationale, system design, scaling strategy
 4. **docs/SECURITY.md** - Security threats, controls, compliance (CRITICAL)
 5. **docs/TESTING_STRATEGY.md** - Testing pyramid, coverage goals, frameworks
-6. **CONTRIBUTING.md** - Code style, naming conventions, workflow
 
 ---
 
@@ -728,7 +722,6 @@ RATE_LIMIT_ENABLED=true
 | `docs/ARCHITECTURE.md`     | Tech stack, system design     | Architecture changes          |
 | `docs/SECURITY.md`         | Security measures             | Security controls change      |
 | `docs/TESTING_STRATEGY.md` | Testing approach              | Test patterns change          |
-| `CONTRIBUTING.md`          | Contribution guidelines       | Workflow changes              |
 | `CLAUDE.md`                | This file                     | AI assistant guidance changes |
 
 ### Code Documentation (JSDoc)
@@ -940,7 +933,6 @@ git commit -m "chore(deps): update dependencies"
 3. **docs/ARCHITECTURE.md** - How it's built
 4. **docs/SECURITY.md** - Security requirements
 5. **docs/TESTING_STRATEGY.md** - Testing approach
-6. **CONTRIBUTING.md** - Contribution workflow
 
 ### Contact
 

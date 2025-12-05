@@ -847,7 +847,6 @@ All targets met or exceeded! 🎉
 - **docs/ARCHITECTURE.md** - System architecture
 - **docs/SECURITY.md** - Security controls
 - **docs/TESTING_STRATEGY.md** - Testing approach
-- **CONTRIBUTING.md** - Contribution guidelines
 - **CLAUDE.md** - AI assistant guide
 
 ### External Resources

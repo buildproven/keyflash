@@ -38,7 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `docs/SECURITY.md` - Security strategy and compliance
   - `docs/TESTING_STRATEGY.md` - Testing approach and coverage goals
   - `CLAUDE.md` - AI assistant guide
-  - `CONTRIBUTING.md` - Contribution guidelines
 - Comprehensive codebase analysis reports (10 specialized agents):
   - Security Analysis
   - Code Quality Analysis

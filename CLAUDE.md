@@ -1,25 +1,10 @@
-# CLAUDE.md - AI Assistant Guide for KeyFlash
+# KeyFlash - Claude Development Guide
 
-> **Purpose**: This document helps AI assistants understand the KeyFlash codebase, development workflows, and conventions to follow when making contributions.
+> **AI-powered keyword research tool** - Fast, simple, and affordable keyword data for entrepreneurs and marketers.
 
-**Last Updated**: 2025-11-19
-**Repository**: https://github.com/brettstark73/keyflash
-**License**: Commercial (See LICENSE file)
-
----
-
-## Table of Contents
-
-1. [Project Overview](#project-overview)
-2. [Codebase Structure](#codebase-structure)
-3. [Development Workflow](#development-workflow)
-4. [Code Conventions](#code-conventions)
-5. [Testing Requirements](#testing-requirements)
-6. [Security Guidelines](#security-guidelines)
-7. [Quality Automation](#quality-automation)
-8. [API Integration Patterns](#api-integration-patterns)
-9. [Documentation Standards](#documentation-standards)
-10. [Common Tasks](#common-tasks)
+**Last Updated**: 2025-12-05
+**Status**: Early Development (MVP Phase)
+**License**: AGPL-3.0
 
 ---
 
@@ -27,462 +12,309 @@
 
 ### What is KeyFlash?
 
-KeyFlash is a **keyword research tool** designed to be:
+KeyFlash is a keyword research tool designed to be **10x cheaper** and **10x faster** than enterprise tools like Ahrefs, SEMrush, and Moz.
 
-- **Fast**: Results in <3 seconds
-- **Simple**: Maximum 3 clicks from landing to results
-- **Affordable**: 10x cheaper than competitors (Ahrefs, SEMrush, Moz)
+**Core Value Proposition**:
 
-**Product Role**: Free Entry Point / Funnel Product for Vibe Build Lab ecosystem
+- Results in <3 seconds
+- Maximum 3 clicks from landing to results
+- Privacy-first (no search data stored)
+- Open source with hosted SaaS option
 
-**Business Model**: Free tier (limited searches) drives awareness → Pro features via Vibe Lab Pro membership
+**Target Users**:
 
-### Core Value Proposition
+- Solo entrepreneurs validating content ideas
+- Content creators researching blog/video topics
+- Small marketing teams who don't need enterprise tools
+- SEO beginners learning keyword research
 
-KeyFlash solves a single problem exceptionally well: **fast, affordable keyword research** for entrepreneurs, content creators, and small marketing teams who don't need expensive enterprise SEO tools.
+**Business Model**:
 
-### Technology Stack
-
-```
-Frontend:  Next.js 14+ (App Router), React 18, Tailwind CSS
-Backend:   Next.js API Routes (serverless)
-Language:  TypeScript 5+
-Caching:   Upstash Redis
-APIs:      Google Ads API → DataForSEO (scale)
-Hosting:   Vercel
-Testing:   Vitest + Playwright
-Quality:   ESLint, Prettier, Stylelint, Husky, lint-staged
-```
-
-### Project Status
-
-**Current Phase**: Post-Setup, Pre-MVP Development
-
-- ✅ Project structure created
-- ✅ Comprehensive documentation written
-- ✅ Quality automation configured
-- ⏳ UI/UX implementation (next step)
-- ⏳ API integration (pending)
-- ⏳ Core functionality (pending)
+- Free tier: 5 searches/day, 50/month
+- Pro tier: Included in Vibe Lab Pro membership ($49/mo)
 
 ---
 
-## Codebase Structure
+## Tech Stack
 
-### Directory Organization
+| Layer         | Technology                          |
+| ------------- | ----------------------------------- |
+| **Framework** | Next.js 16 (App Router)             |
+| **Language**  | TypeScript 5+                       |
+| **Runtime**   | Node.js 20+                         |
+| **Styling**   | Tailwind CSS                        |
+| **Caching**   | Upstash Redis                       |
+| **APIs**      | Google Ads API → DataForSEO (scale) |
+| **Testing**   | Vitest + Playwright                 |
+| **Hosting**   | Vercel                              |
+| **Linting**   | ESLint + Prettier + Stylelint       |
+| **Quality**   | Husky, lint-staged                  |
+
+---
+
+## Key Commands
+
+### Development
+
+```bash
+npm run dev              # Start dev server (http://localhost:3000)
+npm run build            # Build for production
+npm start                # Start production server
+```
+
+### Testing
+
+```bash
+npm test                 # Run all unit/integration tests
+npm run test:watch       # Run tests in watch mode
+npm run test:coverage    # Generate coverage report
+npm run test:unit        # Unit tests only
+npm run test:integration # Integration tests only
+npm run test:e2e         # End-to-end tests (Playwright)
+npm run test:e2e:ui      # E2E tests with UI
+npm run test:all         # All tests (unit + integration + e2e)
+npm run test:ci          # CI test suite
+```
+
+### Code Quality
+
+```bash
+npm run lint             # Lint TypeScript + CSS
+npm run lint:fix         # Auto-fix linting issues
+npm run format           # Format all files with Prettier
+npm run format:check     # Check formatting (CI)
+npm run type-check       # TypeScript type checking
+npm run type-check:all   # Type check src + tests
+npm run quality:check    # Full quality check (types + lint + test)
+```
+
+### Security
+
+```bash
+npm run security:audit   # Check for vulnerabilities
+npm run security:secrets # Scan for hardcoded secrets
+npm run validate:all     # Comprehensive validation + security
+```
+
+### Redis (Development)
+
+```bash
+npm run redis:start      # Start local Redis via Docker
+npm run redis:stop       # Stop Redis container
+npm run redis:clean      # Remove Redis container
+npm run redis:logs       # View Redis logs
+```
+
+---
+
+## Project Structure
 
 ```
 keyflash/
-├── .github/
-│   └── workflows/
-│       └── quality.yml         # CI/CD quality checks
+├── docs/                           # Project documentation
+│   ├── REQUIREMENTS.md            # Product requirements (READ FIRST)
+│   ├── ARCHITECTURE.md            # Tech stack & design decisions
+│   ├── SECURITY.md                # Security strategy (CRITICAL)
+│   └── TESTING_STRATEGY.md        # Testing approach
 │
-├── docs/                       # Main project documentation
-│   ├── REQUIREMENTS.md         # Product requirements & features
-│   ├── ARCHITECTURE.md         # Tech stack & system design
-│   ├── SECURITY.md            # Security strategy (CRITICAL - read this!)
-│   └── TESTING_STRATEGY.md    # Testing approach & coverage
-│
-├── public/                     # Static assets (future)
-│   ├── images/
-│   └── favicon.ico
-│
-├── src/                        # Source code (to be created)
-│   ├── app/                   # Next.js App Router
+├── src/
+│   ├── app/                       # Next.js App Router
+│   │   ├── layout.tsx            # Root layout
+│   │   ├── page.tsx              # Landing page
+│   │   └── globals.css           # Global styles
+│   │
+│   ├── lib/                       # Core business logic
 │   │   ├── api/
-│   │   │   ├── keywords/      # Keyword search API route
-│   │   │   │   └── route.ts
-│   │   │   └── health/        # Health check endpoint
-│   │   │       └── route.ts
-│   │   ├── layout.tsx         # Root layout
-│   │   ├── page.tsx           # Landing page
-│   │   └── search/            # Keyword search UI
-│   │       └── page.tsx
-│   │
-│   ├── components/
-│   │   ├── ui/                # Reusable UI components
-│   │   ├── forms/             # Form components
-│   │   └── tables/            # Keyword results table
-│   │
-│   ├── lib/
-│   │   ├── api/
-│   │   │   ├── providers/     # API provider implementations
-│   │   │   │   ├── google-ads.ts
-│   │   │   │   └── dataforseo.ts
-│   │   │   ├── factory.ts     # Provider factory pattern
-│   │   │   └── types.ts       # Shared API types
+│   │   │   ├── factory.ts        # Provider factory (Google Ads/DataForSEO/Mock)
+│   │   │   ├── types.ts          # API interfaces
+│   │   │   └── providers/        # API provider implementations
+│   │   │       ├── google-ads.ts
+│   │   │       └── dataforseo.ts
 │   │   │
-│   │   ├── cache/
-│   │   │   └── redis.ts       # Redis cache client
-│   │   │
-│   │   ├── validation/
-│   │   │   └── schemas.ts     # Zod validation schemas
-│   │   │
-│   │   └── utils/
-│   │       ├── rate-limit.ts
-│   │       └── error-handler.ts
+│   │   └── rate-limit/
+│   │       └── rate-limiter.ts   # In-memory rate limiting
 │   │
-│   ├── hooks/                 # React custom hooks
-│   ├── types/                 # TypeScript type definitions
-│   └── config/
-│       └── constants.ts       # App constants
+│   └── types/                     # TypeScript type definitions
 │
-├── tests/                     # Testing (to be created)
-│   ├── unit/                  # Unit tests (60% coverage target)
-│   ├── integration/           # Integration tests (30%)
-│   └── e2e/                   # E2E tests (10%)
+├── tests/
+│   ├── unit/                      # Unit tests (60% coverage target)
+│   ├── integration/               # Integration tests (30%)
+│   ├── e2e/                       # End-to-end tests (10%)
+│   └── setup.ts                   # Test configuration
 │
-├── scripts/
-│   └── setup-env.sh           # Environment setup helper
-│
-├── .env.example               # Environment variable template
-├── .eslintignore              # ESLint ignore patterns
-├── .gitignore                 # Git ignore patterns
-├── .husky/                    # Git hooks
-│   └── pre-commit            # Pre-commit hook
-├── .lighthouserc.js          # Lighthouse CI config
-├── .nvmrc                     # Node version (20)
-├── .prettierrc               # Prettier config
-├── .prettierignore           # Prettier ignore patterns
-├── .stylelintrc.json         # Stylelint config
-├── LICENSE                   # AGPL-3.0 license
-├── README.md                 # Project overview
-├── eslint.config.cjs         # ESLint flat config
-├── package.json              # Dependencies & scripts
-└── package-lock.json         # Locked dependencies
-```
-
-### Key Files to Understand
-
-Before making changes, read these files in order:
-
-1. **README.md** - High-level project overview
-2. **docs/REQUIREMENTS.md** - Product requirements, features, out-of-scope items
-3. **docs/ARCHITECTURE.md** - Tech stack rationale, system design, scaling strategy
-4. **docs/SECURITY.md** - Security threats, controls, compliance (CRITICAL)
-5. **docs/TESTING_STRATEGY.md** - Testing pyramid, coverage goals, frameworks
-
----
-
-## Development Workflow
-
-### Setting Up Development Environment
-
-```bash
-# Prerequisites
-# - Node.js 20+
-# - pnpm 8+ (or npm/yarn)
-# - Git
-
-# 1. Clone the repository
-git clone https://github.com/brettstark73/keyflash.git
-cd keyflash
-
-# 2. Install dependencies
-pnpm install  # or npm install
-
-# 3. Copy environment variables
-cp .env.example .env.local
-
-# 4. Add your API keys to .env.local
-# See .env.example for detailed configuration instructions
-
-# 5. Run development server (when code is ready)
-pnpm dev  # http://localhost:3000
-```
-
-### Git Workflow
-
-```bash
-# 1. Create feature branch
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/bug-description
-
-# 2. Make changes
-# - Write code
-# - Add tests
-# - Update documentation
-
-# 3. Pre-commit hook runs automatically on git commit
-# - Prettier formatting
-# - ESLint linting
-# - Stylelint validation
-# - Only checks staged files
-
-# 4. Commit with Conventional Commits format
-git commit -m "feat(api): add DataForSEO provider support"
-git commit -m "fix(ui): correct keyword input validation"
-git commit -m "docs(readme): update installation instructions"
-
-# 5. Push to remote
-git push origin feature/your-feature-name
-
-# 6. Create Pull Request on GitHub
-# - Fill in PR template
-# - CI/CD quality checks run automatically
-```
-
-### Branch Naming Conventions
-
-- `feature/*` - New features
-- `fix/*` - Bug fixes
-- `docs/*` - Documentation only
-- `refactor/*` - Code refactoring
-- `test/*` - Adding tests
-- `chore/*` - Maintenance tasks
-
-### Commit Message Format
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>(<scope>): <subject>
-
-Types:
-- feat:     New feature
-- fix:      Bug fix
-- docs:     Documentation
-- style:    Code style (formatting, no logic change)
-- refactor: Code refactoring
-- test:     Adding/updating tests
-- chore:    Maintenance tasks
-
-Examples:
-feat(api): add keyword search endpoint
-fix(validation): prevent injection attacks
-docs(security): update API key management guide
-test(api): add rate limiting tests
+├── .env.example                   # Environment variable template
+├── eslint.config.cjs              # ESLint configuration
+├── next.config.js                 # Next.js + security headers
+├── tailwind.config.js             # Tailwind CSS config
+├── tsconfig.json                  # TypeScript config
+├── vitest.config.ts               # Vitest config
+└── playwright.config.ts           # Playwright E2E config
 ```
 
 ---
 
-## Code Conventions
+## Architecture & Patterns
 
-### TypeScript
+### API Provider Pattern
 
-**Always use TypeScript with strict type checking**
-
-```typescript
-// ✅ GOOD - Explicit types, clear interfaces
-interface KeywordData {
-  keyword: string
-  searchVolume: number
-  difficulty: number
-  cpc: number
-  intent: 'informational' | 'commercial' | 'transactional' | 'navigational'
-}
-
-async function fetchKeywords(
-  keywords: string[],
-  options: SearchOptions
-): Promise<KeywordData[]> {
-  // Implementation
-}
-
-// ❌ AVOID - No types, unclear function signature
-function getKeywords(kws, opts) {
-  // No type safety
-}
-```
-
-### React Components
+KeyFlash uses a **factory pattern** to support multiple keyword APIs:
 
 ```typescript
-// ✅ GOOD - Function components with TypeScript
-interface ButtonProps {
-  onClick: () => void;
-  children: React.ReactNode;
-  variant?: 'primary' | 'secondary';
-  disabled?: boolean;
-}
+// lib/api/factory.ts
+export function createProvider(): KeywordAPIProvider {
+  const provider = process.env.KEYWORD_API_PROVIDER || 'mock'
 
-export function Button({
-  onClick,
-  children,
-  variant = 'primary',
-  disabled = false
-}: ButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`btn btn-${variant}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-// ❌ AVOID - Class components, no types
-export class Button extends React.Component {
-  render() {
-    return <button onClick={this.props.onClick}>{this.props.children}</button>
+  switch (provider) {
+    case 'google-ads':
+      return new GoogleAdsProvider()
+    case 'dataforseo':
+      return new DataForSEOProvider()
+    case 'mock':
+      return new MockProvider() // For development
   }
 }
 ```
 
-### Naming Conventions
-
-| Type             | Convention         | Example                   |
-| ---------------- | ------------------ | ------------------------- |
-| Files            | `kebab-case.tsx`   | `keyword-search-form.tsx` |
-| Components       | `PascalCase`       | `KeywordSearchForm`       |
-| Functions        | `camelCase`        | `fetchKeywordData`        |
-| Constants        | `UPPER_SNAKE_CASE` | `MAX_KEYWORDS`            |
-| Types/Interfaces | `PascalCase`       | `KeywordData`             |
-| CSS Classes      | `kebab-case`       | `keyword-result-row`      |
-
-### File Organization
+**All providers implement**:
 
 ```typescript
-// Import order: React → Third-party → Internal → Types
-
-// 1. React imports
-import { useState, useEffect } from 'react'
-
-// 2. Third-party libraries
-import { z } from 'zod'
-
-// 3. Internal imports (absolute paths)
-import { fetchKeywords } from '@/lib/api'
-import { Button } from '@/components/ui/Button'
-import { KeywordTable } from '@/components/tables/KeywordTable'
-
-// 4. Type imports
-import type { KeywordData } from '@/types'
-
-// Component code...
+interface KeywordAPIProvider {
+  name: string
+  getKeywordData(
+    keywords: string[],
+    options: SearchOptions
+  ): Promise<KeywordData[]>
+  getBatchLimit(): number
+  getRateLimit(): RateLimit
+  validateConfiguration(): void
+}
 ```
 
-### Code Comments
+### Caching Strategy
 
 ```typescript
-// ✅ GOOD - Explain WHY, not WHAT
-// Cache for 7 days because keyword data rarely changes weekly
-const CACHE_TTL = 7 * 24 * 60 * 60
+// Cache key structure
+cache_key = `kw:${location}:${language}:${matchType}:${hash(keywords)}`
 
-// Sanitize input to prevent XSS attacks (OWASP Top 10)
-function sanitizeKeyword(keyword: string): string {
-  return keyword.replace(/[<>"'&]/g, '')
-}
-
-// ❌ AVOID - Stating the obvious
-// Set cache TTL to 7 days
-const CACHE_TTL = 7 * 24 * 60 * 60
-
-// Remove characters
-function sanitizeKeyword(keyword: string): string {
-  return keyword.replace(/[<>"'&]/g, '')
-}
+// Flow:
+1. Check Redis cache
+2. If HIT: return cached data (instant)
+3. If MISS: fetch from API, cache for 7 days, return data
 ```
+
+**Cache TTL**: 7 days (keyword data rarely changes weekly)
+
+### Rate Limiting
+
+**In-memory rate limiter** (MVP):
+
+- Default: 10 requests/hour per IP
+- Tracks by `x-forwarded-for` or `x-real-ip` headers
+- Auto-cleanup of expired entries
+
+**Future**: Redis-based distributed rate limiting for production scale
 
 ---
 
-## Testing Requirements
+## Important Conventions
 
-### Testing Pyramid
+### Code Style
 
-**Target Coverage**: 70% overall
+**File Naming**:
 
-- **60%** Unit tests
-- **30%** Integration tests
-- **10%** E2E tests
+- Components: `PascalCase.tsx`
+- Utilities: `kebab-case.ts`
+- CSS: `kebab-case.css`
 
-### Test Structure
+**Import Order**:
 
 ```typescript
-// ✅ GOOD - Clear, descriptive test with Arrange-Act-Assert
-describe('KeywordSearchForm', () => {
-  it('submits form with valid input', async () => {
-    // Arrange
-    const onSubmit = vi.fn();
-    const user = userEvent.setup();
-    render(<KeywordSearchForm onSubmit={onSubmit} />);
+// 1. React
+import { useState } from 'react'
 
-    // Act
-    await user.type(screen.getByLabelText(/keywords/i), 'seo tools');
-    await user.click(screen.getByRole('button', { name: /search/i }));
+// 2. Third-party
+import { z } from 'zod'
 
-    // Assert
-    expect(onSubmit).toHaveBeenCalledWith({
-      keywords: ['seo tools'],
-      matchType: 'phrase',
-    });
-  });
-});
-
-// ❌ AVOID - Vague test, no structure
-test('form works', () => {
-  render(<Form />);
-  // Some assertions
-});
+// 3. Internal (use @ alias)
+import { createProvider } from '@/lib/api/factory'
+import type { KeywordData } from '@/types/keyword'
 ```
 
-### What to Test
+**TypeScript**:
 
-**DO Test** ✅:
+- Always use strict types (no `any`)
+- Use `interface` for public APIs
+- Use `type` for unions/intersections
+- Prefer `const` over `let`
 
-- User interactions
-- Edge cases (empty input, max length, special characters)
-- Error states
-- Critical business logic
-- API integrations (with mocks)
-- Input validation and sanitization
+### Testing
 
-**DON'T Test** ❌:
+**Testing Pyramid** (70% overall coverage target):
 
-- Third-party libraries
-- Implementation details
-- Styling/visual appearance
-- Private methods
+- 60% Unit tests
+- 30% Integration tests
+- 10% E2E tests
 
-### Testing Commands
+**Test Structure**:
+
+```typescript
+describe('FeatureName', () => {
+  it('does something specific', () => {
+    // Arrange
+    const input = setupTest()
+
+    // Act
+    const result = functionUnderTest(input)
+
+    // Assert
+    expect(result).toBe(expected)
+  })
+})
+```
+
+### Git Workflow
+
+**Branch Naming**:
+
+- `feature/*` - New features
+- `fix/*` - Bug fixes
+- `docs/*` - Documentation
+- `refactor/*` - Code refactoring
+- `test/*` - Adding tests
+
+**Commit Messages** (Conventional Commits):
 
 ```bash
-# Run all tests
-pnpm test
-
-# Unit tests only
-pnpm test:unit
-
-# Integration tests
-pnpm test:integration
-
-# E2E tests
-pnpm test:e2e
-
-# Coverage report
-pnpm test:coverage
-
-# Watch mode (development)
-pnpm test:watch
+feat(api): add DataForSEO provider support
+fix(ui): correct keyword input validation
+docs(readme): update installation instructions
+test(api): add rate limiting tests
 ```
 
 ---
 
 ## Security Guidelines
 
-⚠️ **CRITICAL**: Read `docs/SECURITY.md` in full before writing any code.
+⚠️ **CRITICAL**: Read `docs/SECURITY.md` before writing any code.
 
-### Security Principles
+### Non-Negotiable Rules
 
-1. **Never commit API keys or secrets**
+1. **NEVER commit secrets**
    - Use `.env.local` only
+   - Pre-commit hook scans for hardcoded secrets
    - Verify `.gitignore` includes `.env*.local`
-   - Pre-commit hook checks for hardcoded secrets
 
-2. **Always validate and sanitize user input**
+2. **ALWAYS validate user input**
    - Use Zod schemas for validation
    - Sanitize before processing
    - Never trust client-side data
 
 3. **Prevent injection attacks**
    - No `eval()`, `Function()`, or `innerHTML` with user input
-   - Use parameterized queries (when DB is added)
+   - Use parameterized queries
    - Escape output properly
 
-4. **Rate limiting**
+4. **Rate limiting required**
    - Implement per-IP rate limiting
    - Default: 10 requests/hour per IP
    - Configurable via environment variables
@@ -492,191 +324,23 @@ pnpm test:watch
    - Minimal data collection
    - GDPR/CCPA compliant
 
-### Security Patterns
+### Security Checks (CI/CD)
 
-```typescript
-// ✅ GOOD - Proper input validation
-import { z } from 'zod'
-
-const KeywordSchema = z.object({
-  keywords: z.array(z.string().min(1).max(100)).max(200),
-  matchType: z.enum(['phrase', 'exact']),
-  location: z.string().optional(),
-})
-
-export async function POST(request: Request) {
-  const body = await request.json()
-  const validated = KeywordSchema.parse(body) // Throws if invalid
-
-  // Process validated data
-}
-
-// ❌ AVOID - No validation
-export async function POST(request: Request) {
-  const { keywords } = await request.json()
-  // Directly using unvalidated user input - DANGEROUS!
-}
-```
-
-### Security Checks in CI/CD
-
-The GitHub Actions workflow automatically checks for:
+Automated security scanning checks for:
 
 - Hardcoded secrets
-- XSS vulnerability patterns (`innerHTML`, `eval`, `document.write` with interpolation)
+- XSS vulnerability patterns (`innerHTML`, `eval`, `document.write`)
 - Unvalidated user inputs
 - npm security vulnerabilities
 - Configuration security issues
 
 ---
 
-## Quality Automation
-
-### Pre-commit Hooks
-
-**Automatic on `git commit`**:
-
-- Prettier formatting (auto-fix)
-- ESLint linting (auto-fix)
-- Stylelint validation (auto-fix)
-- Only checks staged files (fast!)
-
-### Available Scripts
+## Environment Variables
 
 ```bash
-# Code Quality
-pnpm format              # Format all files with Prettier
-pnpm format:check        # Check if files are formatted (CI)
-pnpm lint                # Lint JavaScript/TypeScript + CSS
-pnpm lint:fix            # Lint with auto-fix
-
-# Security
-pnpm security:audit      # Check for vulnerabilities
-pnpm security:secrets    # Scan for hardcoded secrets
-pnpm security:config     # Check configuration security
-
-# Performance & SEO
-pnpm lighthouse:ci       # Run Lighthouse CI checks
-
-# Validation
-pnpm validate:docs       # Validate documentation accuracy
-pnpm validate:comprehensive  # Run comprehensive validation
-pnpm validate:all        # Full validation + security audit
-```
-
-### CI/CD Quality Checks
-
-**GitHub Actions** runs on every push and PR:
-
-- ✅ Prettier formatting validation
-- ✅ ESLint (zero warnings policy)
-- ✅ Stylelint validation
-- ✅ Security audit (npm audit)
-- ✅ Hardcoded secrets detection
-- ✅ XSS vulnerability scanning
-- ✅ Input validation analysis
-- ✅ Lighthouse CI (SEO minimum 90%)
-
-### Lighthouse CI Thresholds
-
-```javascript
-{
-  performance: 80% minimum,
-  seo: 90% minimum (blocks deployment if fails),
-  accessibility: 80% minimum,
-  'first-contentful-paint': 2000ms max,
-  'largest-contentful-paint': 4000ms max
-}
-```
-
----
-
-## API Integration Patterns
-
-### API Abstraction Layer
-
-KeyFlash uses a **provider pattern** to support multiple keyword APIs:
-
-```typescript
-// lib/api/types.ts
-export interface KeywordAPIProvider {
-  getKeywordData(
-    keywords: string[],
-    options: SearchOptions
-  ): Promise<KeywordData[]>
-  getBatchLimit(): number
-  getRateLimit(): RateLimit
-}
-
-// lib/api/providers/google-ads.ts
-export class GoogleAdsProvider implements KeywordAPIProvider {
-  async getKeywordData(
-    keywords: string[],
-    options: SearchOptions
-  ): Promise<KeywordData[]> {
-    // Google Ads API implementation
-  }
-
-  getBatchLimit(): number {
-    return 1000 // Google Ads allows up to 1000 keywords per request
-  }
-
-  getRateLimit(): RateLimit {
-    return { requests: 1000, period: 'day' }
-  }
-}
-
-// lib/api/providers/dataforseo.ts
-export class DataForSEOProvider implements KeywordAPIProvider {
-  async getKeywordData(
-    keywords: string[],
-    options: SearchOptions
-  ): Promise<KeywordData[]> {
-    // DataForSEO API implementation
-  }
-
-  getBatchLimit(): number {
-    return 10000 // DataForSEO allows larger batches
-  }
-
-  getRateLimit(): RateLimit {
-    return { requests: 2000, period: 'day' }
-  }
-}
-
-// lib/api/factory.ts
-export function createProvider(providerName: string): KeywordAPIProvider {
-  switch (providerName) {
-    case 'google-ads':
-      return new GoogleAdsProvider()
-    case 'dataforseo':
-      return new DataForSEOProvider()
-    default:
-      throw new Error(`Unknown provider: ${providerName}`)
-  }
-}
-```
-
-### Caching Strategy
-
-```typescript
-// Cache key structure
-const cacheKey = `kw:${location}:${language}:${matchType}:${hash(keywords)}`;
-
-// Cache flow
-1. Check Redis cache with key
-2. If HIT: return cached data (instant)
-3. If MISS: fetch from API, store in cache with 7-day TTL, return data
-
-// Cache TTL: 7 days (keyword data rarely changes weekly)
-const CACHE_TTL = 7 * 24 * 60 * 60; // 604800 seconds
-```
-
-### Environment Variables
-
-```bash
-# Choose ONE provider to start
-KEYWORD_API_PROVIDER=google-ads  # or 'dataforseo'
+# API Provider Selection
+KEYWORD_API_PROVIDER=mock  # or 'google-ads' | 'dataforseo'
 
 # Google Ads API (Phase 1 - MVP)
 GOOGLE_ADS_CLIENT_ID=
@@ -698,59 +362,71 @@ RATE_LIMIT_REQUESTS_PER_HOUR=10
 RATE_LIMIT_ENABLED=true
 ```
 
+**Setup**:
+
+```bash
+cp .env.example .env.local
+# Edit .env.local with your credentials
+# NEVER commit .env.local
+```
+
 ---
 
-## Documentation Standards
+## Development Workflow
 
-### When to Update Documentation
+### 1. Setup
 
-**Always update documentation when**:
+```bash
+# Clone and install
+git clone https://github.com/brettstark73/keyflash.git
+cd keyflash
+npm install
 
-- Adding new features
-- Changing API behavior
-- Modifying environment variables
-- Updating dependencies with breaking changes
-- Adding new testing patterns
-- Changing security controls
+# Configure environment
+cp .env.example .env.local
+# Edit .env.local with API keys
 
-### Documentation Files
+# Start development server
+npm run dev
+```
 
-| File                       | Purpose                       | Update When                   |
-| -------------------------- | ----------------------------- | ----------------------------- |
-| `README.md`                | Project overview, quick start | Major features, setup changes |
-| `docs/REQUIREMENTS.md`     | Product requirements          | Feature scope changes         |
-| `docs/ARCHITECTURE.md`     | Tech stack, system design     | Architecture changes          |
-| `docs/SECURITY.md`         | Security measures             | Security controls change      |
-| `docs/TESTING_STRATEGY.md` | Testing approach              | Test patterns change          |
-| `CLAUDE.md`                | This file                     | AI assistant guidance changes |
+### 2. Making Changes
 
-### Code Documentation (JSDoc)
+```bash
+# Create feature branch
+git checkout -b feature/your-feature
 
-Use JSDoc for complex functions:
+# Write code + tests
+# Pre-commit hook automatically runs:
+# - Prettier formatting
+# - ESLint linting
+# - Stylelint validation
+# - TypeScript type checking (staged files only)
 
-````typescript
-/**
- * Calculates keyword difficulty score (0-100) based on competition metrics
- *
- * @param competition - Competition level from API ('low' | 'medium' | 'high')
- * @param cpc - Cost per click in USD
- * @param searchVolume - Monthly search volume
- * @returns Difficulty score (0 = easy to rank, 100 = very hard)
- *
- * @example
- * ```typescript
- * const difficulty = calculateDifficulty('high', 5.50, 10000);
- * console.log(difficulty); // 85
- * ```
- */
-function calculateDifficulty(
-  competition: Competition,
-  cpc: number,
-  searchVolume: number
-): number {
-  // Implementation
-}
-````
+# Commit
+git commit -m "feat(scope): description"
+
+# Push and create PR
+git push origin feature/your-feature
+```
+
+### 3. Quality Checks
+
+Before pushing:
+
+```bash
+npm run quality:check     # Type check + lint + test
+npm run test:coverage     # Verify test coverage
+npm run security:audit    # Check for vulnerabilities
+```
+
+### 4. Deployment
+
+**Auto-deploy on merge to `main`**:
+
+- Vercel builds and deploys automatically
+- Preview deployments for PRs
+- Zero-downtime deployments
 
 ---
 
@@ -759,148 +435,344 @@ function calculateDifficulty(
 ### Adding a New Feature
 
 1. **Check requirements** - Ensure feature aligns with `docs/REQUIREMENTS.md`
-2. **Check out-of-scope** - Verify feature is not listed as out-of-scope for MVP
-3. **Create feature branch** - `git checkout -b feature/feature-name`
-4. **Write tests first** (TDD approach recommended)
+2. **Check out-of-scope** - Verify not listed as out-of-scope for MVP
+3. **Create branch** - `git checkout -b feature/feature-name`
+4. **Write tests first** (TDD recommended)
 5. **Implement feature**
 6. **Update documentation**
-7. **Run quality checks** - `pnpm lint && pnpm test`
-8. **Commit with conventional format** - `git commit -m "feat(scope): description"`
-9. **Push and create PR**
-
-### Fixing a Bug
-
-1. **Create bug fix branch** - `git checkout -b fix/bug-description`
-2. **Write failing test** - Reproduce the bug in a test
-3. **Fix the bug**
-4. **Verify test passes**
-5. **Run quality checks** - `pnpm lint && pnpm test`
-6. **Commit** - `git commit -m "fix(scope): description"`
-7. **Push and create PR**
+7. **Run quality checks** - `npm run quality:check`
+8. **Commit and PR**
 
 ### Adding a New API Provider
 
-1. **Create provider class** - `lib/api/providers/provider-name.ts`
-2. **Implement `KeywordAPIProvider` interface**
-3. **Add provider to factory** - `lib/api/factory.ts`
-4. **Write unit tests** - Mock API responses
-5. **Write integration tests** - Test with real API (if possible)
-6. **Update `.env.example`** - Add required environment variables
-7. **Update `docs/ARCHITECTURE.md`** - Document new provider
-8. **Update `README.md`** - Add setup instructions
+1. Create provider class: `src/lib/api/providers/provider-name.ts`
+2. Implement `KeywordAPIProvider` interface
+3. Add to factory: `src/lib/api/factory.ts`
+4. Write unit tests with mocked API responses
+5. Write integration tests (if possible with real API)
+6. Update `.env.example` with required variables
+7. Update `docs/ARCHITECTURE.md` with provider documentation
 
-### Adding a New Component
+### Fixing a Bug
+
+1. Create branch: `git checkout -b fix/bug-description`
+2. Write failing test that reproduces bug
+3. Fix the bug
+4. Verify test passes
+5. Run quality checks
+6. Commit: `git commit -m "fix(scope): description"`
+7. Push and create PR
+
+---
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
 
 ```bash
-# 1. Create component file
-# src/components/ui/ComponentName.tsx
-
-# 2. Create component with TypeScript
-interface ComponentNameProps {
-  // Props definition
-}
-
-export function ComponentName({ /* props */ }: ComponentNameProps) {
-  // Implementation
-}
-
-# 3. Create test file
-# tests/unit/components/ComponentName.test.tsx
-
-# 4. Write tests
-# 5. Import and use component
-# 6. Update Storybook (if added later)
+npm run test:unit        # Run unit tests
+npm run test:watch       # Watch mode
+npm run test:coverage    # Generate coverage report
 ```
 
-### Updating Dependencies
+**What to test**:
+
+- Pure functions and utilities
+- React components (user interactions)
+- API provider implementations (mocked)
+- Input validation and sanitization
+- Error handling
+
+### Integration Tests (Vitest)
 
 ```bash
-# 1. Check for outdated packages
-pnpm outdated
+npm run test:integration
+```
 
-# 2. Update package.json
-pnpm update
+**What to test**:
 
-# 3. Test thoroughly
-pnpm test
+- API routes end-to-end
+- Cache integration (Redis)
+- Provider factory with real providers
+- Rate limiting behavior
 
-# 4. Run quality checks
-pnpm lint
+### E2E Tests (Playwright)
 
-# 5. Check for security vulnerabilities
-pnpm security:audit
+```bash
+npm run test:e2e         # Headless
+npm run test:e2e:ui      # With UI
+npm run test:e2e:headed  # See browser
+npm run test:e2e:debug   # Debug mode
+```
 
-# 6. Commit
-git commit -m "chore(deps): update dependencies"
+**What to test**:
+
+- User flows (landing → search → results)
+- Keyword search submission
+- CSV export functionality
+- Error states and messaging
+
+### Coverage Goals
+
+**Overall**: 70% minimum
+
+- Unit: 60%
+- Integration: 30%
+- E2E: 10%
+
+**Run coverage report**:
+
+```bash
+npm run test:coverage
+open coverage/index.html
 ```
 
 ---
 
-## AI Assistant Best Practices
+## Deployment
+
+### Environments
+
+**Development**:
+
+- Local: `npm run dev` (http://localhost:3000)
+- Uses `.env.local` for API keys
+- Hot reload enabled
+
+**Preview**:
+
+- Auto-deployed by Vercel on PR creation
+- Unique URL: `keyflash-pr-123.vercel.app`
+- Uses staging API keys
+- Deleted when PR closed
+
+**Production**:
+
+- Domain: TBD (waiting for domain purchase)
+- Auto-deployed on merge to `main`
+- Uses production API keys
+- Zero-downtime deployments
+
+### Pre-Deployment Checklist
+
+```bash
+✅ All tests passing (npm test)
+✅ No TypeScript errors (npm run type-check)
+✅ No ESLint errors (npm run lint)
+✅ No security vulnerabilities (npm run security:audit)
+✅ Environment variables configured
+✅ Redis connection tested
+✅ API credentials validated
+```
+
+### Post-Deployment Verification
+
+```bash
+✅ Health check endpoint returns 200
+✅ Can complete a keyword search
+✅ Cache is working (check Redis)
+✅ Rate limiting active
+✅ Error tracking active (future: Sentry)
+```
+
+---
+
+## Performance Targets
+
+### Bundle Size
+
+- First Load JS: <200KB
+- Total page size: <500KB
+- Largest Contentful Paint: <2.5s
+
+### API Response
+
+- <3 seconds for batches up to 50 keywords
+- <8 seconds for 100-200 keyword batches
+- Cache hit rate: >70%
+
+### Lighthouse CI
+
+Minimum thresholds:
+
+- Performance: 80%
+- SEO: 90% (blocks deployment if fails)
+- Accessibility: 80%
+
+```bash
+npm run lighthouse:ci    # Run Lighthouse checks
+```
+
+---
+
+## Important Documentation
+
+### Must-Read Before Coding
+
+1. **README.md** - Project overview and quick start
+2. **docs/REQUIREMENTS.md** - Product requirements, features, out-of-scope
+3. **docs/ARCHITECTURE.md** - Tech stack rationale, system design
+4. **docs/SECURITY.md** - Security threats, controls, compliance ⚠️ CRITICAL
+5. **docs/TESTING_STRATEGY.md** - Testing pyramid, coverage goals
+
+### When to Update Documentation
+
+**Always update when**:
+
+- Adding new features
+- Changing API behavior
+- Modifying environment variables
+- Updating dependencies with breaking changes
+- Adding new testing patterns
+- Changing security controls
+
+---
+
+## Troubleshooting
+
+### Redis Connection Issues
+
+```bash
+# Check if Redis is running
+docker ps | grep keyflash-redis
+
+# Start Redis
+npm run redis:start
+
+# View logs
+npm run redis:logs
+```
+
+### API Provider Issues
+
+**Mock provider not working**:
+
+```bash
+# Verify environment variable
+echo $KEYWORD_API_PROVIDER  # Should be 'mock' or empty
+
+# Or set explicitly
+export KEYWORD_API_PROVIDER=mock
+npm run dev
+```
+
+**Google Ads API errors**:
+
+- Verify all credentials in `.env.local`
+- Check Google Ads account is active
+- Confirm Developer Token is approved
+- See provider `validateConfiguration()` for detailed error messages
+
+### Test Failures
+
+```bash
+# Run tests in watch mode to debug
+npm run test:watch
+
+# Run specific test file
+npm test -- path/to/test.test.ts
+
+# Check coverage gaps
+npm run test:coverage
+```
+
+---
+
+## AI Assistant Guidelines
 
 ### When Working on KeyFlash
 
-1. **Always read documentation first**
+1. **Read documentation first**
    - Check `docs/REQUIREMENTS.md` for feature scope
    - Check `docs/SECURITY.md` for security requirements
    - Check `docs/ARCHITECTURE.md` for design decisions
 
 2. **Follow existing patterns**
-   - Use existing component structure
-   - Follow established naming conventions
-   - Maintain consistency with current code
+   - Use provider factory for API integrations
+   - Follow TypeScript strict mode
+   - Maintain consistent naming conventions
 
 3. **Security is paramount**
    - Never commit secrets
-   - Always validate user input
+   - Always validate user input with Zod
    - Follow OWASP Top 10 guidelines
-   - Check for XSS, injection attacks
+   - Check for XSS and injection attacks
 
 4. **Test everything**
-   - Write tests before or with code
+   - Write tests before or with code (TDD)
    - Maintain 70% coverage minimum
    - Test edge cases and error states
 
 5. **Document changes**
    - Update relevant documentation
-   - Add code comments for complex logic
-   - Use JSDoc for public APIs
+   - Add JSDoc comments for complex logic
+   - Use TypeScript for self-documenting code
 
 6. **Run quality checks before committing**
-
    ```bash
-   pnpm lint:fix
-   pnpm test
-   pnpm validate:all
+   npm run lint:fix
+   npm run type-check:all
+   npm test
+   npm run validate:all
    ```
-
-7. **Ask for clarification**
-   - If requirements are unclear, ask the user
-   - Don't make assumptions about feature scope
-   - Verify API usage patterns
 
 ### Questions to Ask Before Coding
 
 - Is this feature in scope for MVP? (Check `docs/REQUIREMENTS.md`)
 - Are there security implications? (Check `docs/SECURITY.md`)
 - What tests are needed? (Check `docs/TESTING_STRATEGY.md`)
-- Does this follow the existing architecture? (Check `docs/ARCHITECTURE.md`)
-- Are there existing patterns I should follow?
+- Does this follow the existing architecture?
+- Are there existing patterns to follow?
+
+---
+
+## Project Status
+
+### Current Phase: Early Development (MVP)
+
+**Completed** ✅:
+
+- Project structure and configuration
+- Comprehensive documentation
+- Quality automation (ESLint, Prettier, Husky)
+- Testing infrastructure (Vitest, Playwright)
+- API provider abstraction layer
+- Basic UI scaffolding
+- Security headers and configuration
+
+**In Progress** 🔄:
+
+- API provider implementations (Google Ads, DataForSEO)
+- Keyword search UI/UX
+- Redis caching integration
+- Rate limiting implementation
+
+**Upcoming** ⏳:
+
+- User authentication (future)
+- Database integration (future)
+- Advanced features (see `docs/REQUIREMENTS.md`)
+
+### Known Limitations
+
+- No database (MVP is stateless)
+- In-memory rate limiting (not distributed)
+- Mock provider for development only
+- No user accounts or saved searches (MVP)
 
 ---
 
 ## Quick Reference
 
-### Important URLs
+### Essential URLs
 
 - **Repository**: https://github.com/brettstark73/keyflash
 - **License**: AGPL-3.0
 - **Issues**: https://github.com/brettstark73/keyflash/issues
-- **Discussions**: https://github.com/brettstark73/keyflash/discussions
 
 ### Key Constraints
 
-- **Node Version**: 20+ (enforced by `.nvmrc`, `package.json`, `.npmrc`)
+- **Node Version**: 20+ (enforced by Volta, `.nvmrc`, `package.json`)
 - **Test Coverage**: 70% minimum overall
 - **SEO Score**: 90% minimum (Lighthouse CI)
 - **API Response Time**: <3 seconds (p95)
@@ -908,41 +780,32 @@ git commit -m "chore(deps): update dependencies"
 
 ### Critical Security Rules
 
-1. ❌ NEVER commit API keys, secrets, or credentials
+1. ❌ NEVER commit API keys or secrets
 2. ❌ NEVER use `eval()`, `Function()`, or `innerHTML` with user input
 3. ❌ NEVER trust client-side data without validation
 4. ✅ ALWAYS validate with Zod schemas
 5. ✅ ALWAYS sanitize user input
 6. ✅ ALWAYS implement rate limiting
 
-### File Extensions
-
-- TypeScript: `.ts`, `.tsx`
-- Configuration: `.cjs` (ESLint), `.json`
-- Styles: `.css` (Tailwind utility classes preferred)
-- Tests: `.test.ts`, `.test.tsx`, `.spec.ts`
-
 ---
 
 ## Getting Help
 
-### Documentation
+### Resources
 
-1. **README.md** - Start here
-2. **docs/REQUIREMENTS.md** - What to build
-3. **docs/ARCHITECTURE.md** - How it's built
-4. **docs/SECURITY.md** - Security requirements
-5. **docs/TESTING_STRATEGY.md** - Testing approach
+- **GitHub Issues**: Report bugs and request features
+- **GitHub Discussions**: Ask questions, share ideas
+- **Documentation**: Check `docs/` folder for detailed guides
 
 ### Contact
 
-- **GitHub Issues**: https://github.com/brettstark73/keyflash/issues
-- **GitHub Discussions**: https://github.com/brettstark73/keyflash/discussions
+- Maintained by: **Vibe Build Lab LLC**
+- Website: https://www.vibebuildlab.com
 
 ---
 
-**Version**: 1.0
-**Last Updated**: 2025-11-19
-**Maintained By**: KeyFlash Contributors
+**Happy coding! Let's build something amazing.** 🚀
 
-**Happy coding! Let's build something amazing together.** 🚀
+**Version**: 1.0
+**Last Updated**: 2025-12-05
+**Next Review**: After API provider implementation

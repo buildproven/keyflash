@@ -6,6 +6,7 @@
  */
 
 import { validateEnvironment } from './env-validation'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Initialize application configuration and dependencies
@@ -25,20 +26,29 @@ export function initializeApp(): void {
     return
   }
 
-  /* eslint-disable no-console -- Intentional operational logging during application startup */
   if (isDevelopment) {
     // Development: skip environment validation entirely to avoid noise
-    console.info('🔧 Development mode: environment validation skipped')
-    console.info('💡 Set NODE_ENV=production for strict validation')
+    logger.info('🔧 Development mode: environment validation skipped', {
+      module: 'Startup',
+    })
+    logger.info('💡 Set NODE_ENV=production for strict validation', {
+      module: 'Startup',
+    })
   } else {
     // Production: strict validation with fast failure
-    console.info('🏭 Production mode: performing strict environment validation')
+    logger.info(
+      '🏭 Production mode: performing strict environment validation',
+      {
+        module: 'Startup',
+      }
+    )
     validateEnvironment() // This will exit on failure
   }
 
   // Mark initialization as complete
-  console.info('🚀 KeyFlash application initialized successfully')
-  /* eslint-enable no-console */
+  logger.info('🚀 KeyFlash application initialized successfully', {
+    module: 'Startup',
+  })
 }
 
 // Auto-initialize when this module is imported

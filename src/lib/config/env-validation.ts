@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Environment Configuration Validation
@@ -92,11 +93,11 @@ function validateProviderConfig(env: z.infer<typeof envSchema>): void {
 function validateRedisConfig(env: z.infer<typeof envSchema>): void {
   if (env.NODE_ENV === 'production' && env.PRIVACY_MODE !== 'true') {
     if (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) {
-      // eslint-disable-next-line no-console -- Important operational warning for production deployments
-      console.info(
+      logger.warn(
         '⚠️  Production environment detected without Redis configuration. ' +
           'Caching will be disabled, which may impact performance. ' +
-          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for optimal performance.'
+          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for optimal performance.',
+        { module: 'EnvValidation' }
       )
     }
   }
@@ -113,10 +114,10 @@ function validateRateLimitConfig(env: z.infer<typeof envSchema>): void {
     }
 
     if (env.RATE_LIMIT_REQUESTS_PER_HOUR < 5) {
-      // eslint-disable-next-line no-console -- Important operational warning for rate limit configuration
-      console.info(
+      logger.warn(
         `⚠️  Rate limit set very low (${env.RATE_LIMIT_REQUESTS_PER_HOUR}/hour). ` +
-          'This may impact legitimate usage.'
+          'This may impact legitimate usage.',
+        { module: 'EnvValidation' }
       )
     }
   }
@@ -141,17 +142,23 @@ export function validateEnvironment() {
     validateRateLimitConfig(env)
 
     // Log configuration summary (without secrets)
-    /* eslint-disable no-console -- Intentional operational logging during startup */
-    console.info('✅ Environment configuration validated successfully')
-    console.info(`📦 Provider: ${env.KEYWORD_API_PROVIDER}`)
-    console.info(`🔒 Privacy mode: ${env.PRIVACY_MODE}`)
-    console.info(
-      `⚡ Rate limiting: ${env.RATE_LIMIT_ENABLED} (${env.RATE_LIMIT_REQUESTS_PER_HOUR}/hour)`
+    logger.info('✅ Environment configuration validated successfully', {
+      module: 'EnvValidation',
+    })
+    logger.info(`📦 Provider: ${env.KEYWORD_API_PROVIDER}`, {
+      module: 'EnvValidation',
+    })
+    logger.info(`🔒 Privacy mode: ${env.PRIVACY_MODE}`, {
+      module: 'EnvValidation',
+    })
+    logger.info(
+      `⚡ Rate limiting: ${env.RATE_LIMIT_ENABLED} (${env.RATE_LIMIT_REQUESTS_PER_HOUR}/hour)`,
+      { module: 'EnvValidation' }
     )
-    console.info(
-      `💾 Redis: ${env.UPSTASH_REDIS_REST_URL ? 'configured' : 'not configured'}`
+    logger.info(
+      `💾 Redis: ${env.UPSTASH_REDIS_REST_URL ? 'configured' : 'not configured'}`,
+      { module: 'EnvValidation' }
     )
-    /* eslint-enable no-console */
 
     return env
   } catch (error) {

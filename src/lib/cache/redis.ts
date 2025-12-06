@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis'
 import type { KeywordData } from '@/types/keyword'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Redis Cache Client
@@ -44,9 +45,9 @@ class RedisCache {
     this.privacyMode = privacyEnv === 'true'
 
     if (this.privacyMode) {
-      // eslint-disable-next-line no-console -- Important operational info about privacy mode
-      console.info(
-        '[RedisCache] Privacy mode enabled. Keyword caching is disabled to honor privacy promise.'
+      logger.info(
+        'Privacy mode enabled. Keyword caching is disabled to honor privacy promise.',
+        { module: 'RedisCache' }
       )
       return
     }
@@ -60,13 +61,16 @@ class RedisCache {
         this.isConfigured = true
         this.defaultTTL = ttl
       } catch (error) {
-        console.error('[RedisCache] Failed to initialize Redis client:', error)
+        logger.error('Failed to initialize Redis client', error, {
+          module: 'RedisCache',
+        })
         this.isConfigured = false
       }
     } else {
-      console.warn(
-        '[RedisCache] Redis not configured. Cache operations will be skipped. ' +
-          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to enable caching.'
+      logger.warn(
+        'Redis not configured. Cache operations will be skipped. ' +
+          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to enable caching.',
+        { module: 'RedisCache' }
       )
     }
   }
@@ -125,7 +129,7 @@ class RedisCache {
       const cached = await this.client!.get<CachedKeywordData>(key)
       return cached
     } catch (error) {
-      console.error('[RedisCache] Failed to get from cache:', error)
+      logger.error('Failed to get from cache', error, { module: 'RedisCache' })
       return null
     }
   }
@@ -162,7 +166,7 @@ class RedisCache {
       await this.client!.set(key, cacheData, { ex: cacheTTL })
       return true
     } catch (error) {
-      console.error('[RedisCache] Failed to set cache:', error)
+      logger.error('Failed to set cache', error, { module: 'RedisCache' })
       return false
     }
   }
@@ -179,7 +183,9 @@ class RedisCache {
       await this.client!.del(key)
       return true
     } catch (error) {
-      console.error('[RedisCache] Failed to delete from cache:', error)
+      logger.error('Failed to delete from cache', error, {
+        module: 'RedisCache',
+      })
       return false
     }
   }
@@ -196,7 +202,7 @@ class RedisCache {
       await this.client!.flushdb()
       return true
     } catch (error) {
-      console.error('[RedisCache] Failed to flush cache:', error)
+      logger.error('Failed to flush cache', error, { module: 'RedisCache' })
       return false
     }
   }
@@ -220,11 +226,14 @@ class RedisCache {
 
       // Delete all keyword cache entries
       await this.client!.del(...keys)
-      // eslint-disable-next-line no-console -- Important operational info about cache purging
-      console.info(`[RedisCache] Purged ${keys.length} keyword cache entries`)
+      logger.info(`Purged ${keys.length} keyword cache entries`, {
+        module: 'RedisCache',
+      })
       return keys.length
     } catch (error) {
-      console.error('[RedisCache] Failed to purge keyword cache:', error)
+      logger.error('Failed to purge keyword cache', error, {
+        module: 'RedisCache',
+      })
       return 0
     }
   }
@@ -241,7 +250,7 @@ class RedisCache {
       const result = await this.client!.ping()
       return result === 'PONG'
     } catch (error) {
-      console.error('[RedisCache] Ping failed:', error)
+      logger.error('Ping failed', error, { module: 'RedisCache' })
       return false
     }
   }

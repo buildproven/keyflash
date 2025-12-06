@@ -7,6 +7,7 @@ import {
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { getProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
+import { logger } from '@/lib/utils/logger'
 import type { KeywordSearchResponse } from '@/types/keyword'
 
 type HttpError = Error & {
@@ -76,7 +77,6 @@ async function readJsonWithLimit(
   const chunks: Uint8Array[] = []
   let received = 0
 
-  // eslint-disable-next-line no-constant-condition -- intentional streaming loop
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
@@ -122,9 +122,9 @@ const RATE_LIMIT_CONFIG = (() => {
     Number.isFinite(parsed) && parsed > 0 ? Math.min(10000, parsed) : 10 // default fallback
 
   if (!Number.isFinite(parsed) && raw) {
-    // eslint-disable-next-line no-console -- warn ops about misconfiguration
-    console.warn(
-      `[RateLimit] Invalid RATE_LIMIT_REQUESTS_PER_HOUR="${raw}", falling back to ${safeValue}`
+    logger.warn(
+      `Invalid RATE_LIMIT_REQUESTS_PER_HOUR="${raw}", falling back to ${safeValue}`,
+      { module: 'RateLimit' }
     )
   }
 
@@ -190,12 +190,10 @@ export async function POST(request: NextRequest) {
       // Cache hit - use cached data
       keywordData = cachedData.data
       isCached = true
-      // eslint-disable-next-line no-console
-      console.log(`[Cache] HIT - ${cacheKey}`)
+      logger.debug(`Cache HIT - ${cacheKey}`, { module: 'Cache' })
     } else {
       // Cache miss - fetch from provider
-      // eslint-disable-next-line no-console
-      console.log(`[Cache] MISS - ${cacheKey}`)
+      logger.debug(`Cache MISS - ${cacheKey}`, { module: 'Cache' })
       provider = getProvider()
       keywordData = await provider.getKeywordData(validated.keywords, {
         matchType: validated.matchType,
@@ -207,15 +205,14 @@ export async function POST(request: NextRequest) {
       const cacheWrite = cache.set(cacheKey, keywordData, provider.name)
       const timeout = new Promise(resolve =>
         setTimeout(() => {
-          console.warn(
-            `[Cache] Cache write taking too long for key ${cacheKey}`
-          )
+          logger.warn(`Cache write taking too long for key ${cacheKey}`, {
+            module: 'Cache',
+          })
           resolve(null)
         }, 150)
       )
       await Promise.race([cacheWrite, timeout]).catch(error => {
-        // eslint-disable-next-line no-console
-        console.error('[Cache] Failed to cache data:', error)
+        logger.error('Failed to cache data', error, { module: 'Cache' })
       })
     }
 

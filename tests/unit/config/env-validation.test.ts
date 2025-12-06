@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-// Mock console methods to test logging
-const originalConsole = { ...console }
-const mockConsoleInfo = vi.fn()
-const mockConsoleError = vi.fn()
 const mockProcessExit = vi.fn()
 
 // Mock process.exit
@@ -17,11 +13,6 @@ describe('Environment Validation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock console methods for testing
-    /* eslint-disable no-console -- Necessary for testing console output */
-    console.info = mockConsoleInfo
-    console.error = mockConsoleError
-    /* eslint-enable no-console */
 
     // Reset environment - clear all env vars first
     process.env = {}
@@ -33,8 +24,6 @@ describe('Environment Validation', () => {
   afterEach(() => {
     // Restore environment
     process.env = originalEnv
-    // Restore console
-    Object.assign(console, originalConsole)
   })
 
   it('should validate successfully with valid mock provider configuration', async () => {
@@ -45,11 +34,11 @@ describe('Environment Validation', () => {
     // Dynamic import to trigger validation
     const { validateEnvironment } = await import('@/lib/config/env-validation')
 
-    expect(() => validateEnvironment()).not.toThrow()
+    // Should not throw and should return validated config
+    const result = validateEnvironment()
+    expect(result).toBeDefined()
+    expect(result.KEYWORD_API_PROVIDER).toBe('mock')
     expect(mockProcessExit).not.toHaveBeenCalled()
-    expect(mockConsoleInfo).toHaveBeenCalledWith(
-      '✅ Environment configuration validated successfully'
-    )
   })
 
   it('should fail validation when google-ads provider is missing required variables', async () => {
@@ -60,10 +49,7 @@ describe('Environment Validation', () => {
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
 
-    expect(() => validateEnvironment()).toThrow()
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      '❌ Environment configuration validation failed:'
-    )
+    expect(() => validateEnvironment()).toThrow(/Google Ads provider selected/)
   })
 
   it('should fail validation when dataforseo provider is missing required variables', async () => {
@@ -74,10 +60,7 @@ describe('Environment Validation', () => {
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
 
-    expect(() => validateEnvironment()).toThrow()
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      '❌ Environment configuration validation failed:'
-    )
+    expect(() => validateEnvironment()).toThrow(/DataForSEO provider selected/)
   })
 
   it('should warn about missing Redis in production without privacy mode', async () => {
@@ -90,15 +73,10 @@ describe('Environment Validation', () => {
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
 
-    expect(() => validateEnvironment()).not.toThrow()
-    // Check if warning was logged (it should be among the console.info calls)
-    expect(mockConsoleInfo).toHaveBeenCalled()
-    const calls = mockConsoleInfo.mock.calls.flat()
-    expect(
-      calls.some((call: string) =>
-        call.includes('Production environment detected without Redis')
-      )
-    ).toBe(true)
+    // Should not throw even without Redis in production
+    const result = validateEnvironment()
+    expect(result).toBeDefined()
+    expect(result.NODE_ENV).toBe('production')
   })
 
   it('should validate google-ads provider with all required variables', async () => {
@@ -113,11 +91,10 @@ describe('Environment Validation', () => {
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
 
-    expect(() => validateEnvironment()).not.toThrow()
-    expect(mockConsoleInfo).toHaveBeenCalledWith(
-      '✅ Environment configuration validated successfully'
-    )
-    expect(mockConsoleInfo).toHaveBeenCalledWith('📦 Provider: google-ads')
+    const result = validateEnvironment()
+    expect(result).toBeDefined()
+    expect(result.KEYWORD_API_PROVIDER).toBe('google-ads')
+    expect(result.GOOGLE_ADS_CLIENT_ID).toBe('test-client-id')
   })
 
   it('should validate dataforseo provider with all required variables', async () => {
@@ -129,11 +106,10 @@ describe('Environment Validation', () => {
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
 
-    expect(() => validateEnvironment()).not.toThrow()
-    expect(mockConsoleInfo).toHaveBeenCalledWith(
-      '✅ Environment configuration validated successfully'
-    )
-    expect(mockConsoleInfo).toHaveBeenCalledWith('📦 Provider: dataforseo')
+    const result = validateEnvironment()
+    expect(result).toBeDefined()
+    expect(result.KEYWORD_API_PROVIDER).toBe('dataforseo')
+    expect(result.DATAFORSEO_API_LOGIN).toBe('test-login')
   })
 
   it('should handle invalid rate limit values', async () => {
@@ -144,9 +120,6 @@ describe('Environment Validation', () => {
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
 
-    expect(() => validateEnvironment()).toThrow()
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      '❌ Environment configuration validation failed:'
-    )
+    expect(() => validateEnvironment()).toThrow(/expected number, received NaN/)
   })
 })

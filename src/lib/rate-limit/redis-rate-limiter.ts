@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis'
 import crypto from 'crypto'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Redis-based rate limiter with spoof-resistant client identification
@@ -52,16 +53,20 @@ export class RedisRateLimiter {
           token: redisToken,
         })
         this.isRedisAvailable = true
-        // eslint-disable-next-line no-console -- Important operational info about Redis configuration
-        console.info('[RedisRateLimiter] Redis configured for rate limiting')
+        logger.info('Redis configured for rate limiting', {
+          module: 'RedisRateLimiter',
+        })
       } catch (error) {
-        console.error('[RedisRateLimiter] Failed to initialize Redis:', error)
+        logger.error('Failed to initialize Redis', error, {
+          module: 'RedisRateLimiter',
+        })
         this.isRedisAvailable = false
       }
     } else {
-      console.warn(
-        '[RedisRateLimiter] Redis not configured. Falling back to in-memory rate limiting. ' +
-          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production.'
+      logger.warn(
+        'Redis not configured. Falling back to in-memory rate limiting. ' +
+          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production.',
+        { module: 'RedisRateLimiter' }
       )
     }
   }
@@ -147,7 +152,9 @@ export class RedisRateLimiter {
         )
       }
     } catch (error) {
-      console.error('[RedisRateLimiter] Error checking rate limit:', error)
+      logger.error('Error checking rate limit', error, {
+        module: 'RedisRateLimiter',
+      })
 
       // Determine fail-safe behavior - default to closed in production for security
       const failOpen =
@@ -157,9 +164,9 @@ export class RedisRateLimiter {
 
       if (failOpen) {
         // Fail open - allow request but log warning
-        console.warn(
-          '[RedisRateLimiter] Rate limiter failed, allowing request (fail-open mode)'
-        )
+        logger.warn('Rate limiter failed, allowing request (fail-open mode)', {
+          module: 'RedisRateLimiter',
+        })
         return {
           allowed: true,
           remaining: config.requestsPerHour,
@@ -167,8 +174,10 @@ export class RedisRateLimiter {
         }
       } else {
         // Fail closed - deny request for security
-        console.error(
-          '[RedisRateLimiter] Rate limiter failed, denying request (fail-closed mode)'
+        logger.error(
+          'Rate limiter failed, denying request (fail-closed mode)',
+          undefined,
+          { module: 'RedisRateLimiter' }
         )
         return {
           allowed: false,
@@ -211,7 +220,9 @@ export class RedisRateLimiter {
           await this.redis.del(...keys)
         }
       } catch (error) {
-        console.error('[RedisRateLimiter] Error clearing Redis entries:', error)
+        logger.error('Error clearing Redis entries', error, {
+          module: 'RedisRateLimiter',
+        })
       }
     }
     this.fallbackStore.clear()

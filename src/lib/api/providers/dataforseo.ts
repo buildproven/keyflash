@@ -5,6 +5,7 @@ import type {
   ProviderConfig,
 } from '../types'
 import type { KeywordData, Competition } from '@/types/keyword'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * DataForSEO API Response Types
@@ -107,8 +108,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       // Transform response to KeywordData format
       return this.transformResponse(response, keywords)
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(`[${this.name}] API error:`, error)
+      logger.error('API error', error, { module: this.name })
 
       // Re-throw with more context
       if (error instanceof Error) {
@@ -195,8 +195,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
 
       return data
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('[DataForSEO] API call error:', error)
+      logger.error('API call error', error, { module: 'DataForSEO' })
       throw new Error(
         `DataForSEO API call failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
@@ -383,7 +382,6 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       Worldwide: 0, // Global
     }
 
-    // eslint-disable-next-line security/detect-object-injection -- location is validated input from options, locationMap is controlled object
     return locationMap[location || 'United States'] || 2840
   }
 
@@ -405,7 +403,6 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       it: 'it',
     }
 
-    // eslint-disable-next-line security/detect-object-injection -- language is validated input from options, languageMap is controlled object
     return languageMap[language || 'en'] || 'en'
   }
 }

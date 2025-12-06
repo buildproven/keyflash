@@ -5,6 +5,7 @@ import type {
   ProviderConfig,
 } from '../types'
 import type { KeywordData, Competition } from '@/types/keyword'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Google Ads API Response Types
@@ -128,8 +129,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       // Transform response to KeywordData format
       return this.transformResponse(response, keywords)
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(`[${this.name}] API error:`, error)
+      logger.error('API error', error, { module: this.name })
 
       // Re-throw with more context
       if (error instanceof Error) {
@@ -178,8 +178,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       const data: GoogleAdsOAuthResponse = await response.json()
       return data.access_token
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('[Google Ads] OAuth token refresh error:', error)
+      logger.error('OAuth token refresh error', error, { module: 'Google Ads' })
       throw new Error(
         `Failed to refresh OAuth token: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
@@ -243,8 +242,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       const data: GoogleAdsKeywordResult = await response.json()
       return data
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('[Google Ads] API call error:', error)
+      logger.error('API call error', error, { module: 'Google Ads' })
       throw new Error(
         `Google Ads API call failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
@@ -385,7 +383,6 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       Worldwide: 0, // Global targeting
     }
 
-    // eslint-disable-next-line security/detect-object-injection -- location is validated input from options, locationMap is controlled object
     return locationMap[location || 'United States'] || 2840
   }
 }

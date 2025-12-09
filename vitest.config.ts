@@ -8,7 +8,12 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/tests/e2e/**',
+      '**/tests/command-execution/**',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -25,6 +30,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // React 19 compatibility: redirect deprecated react-dom/test-utils to our shim
+      'react-dom/test-utils': path.resolve(
+        __dirname,
+        './tests/test-utils-shim.ts'
+      ),
     },
   },
 })

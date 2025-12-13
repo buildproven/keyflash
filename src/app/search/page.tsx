@@ -19,6 +19,7 @@ export default function SearchPage() {
   const [results, setResults] = useState<KeywordData[]>([])
   const [mockData, setMockData] = useState<boolean>(false)
   const [provider, setProvider] = useState<string | undefined>()
+  const [searchLocation, setSearchLocation] = useState<string>('US')
 
   const handleSearch = useCallback(async (formData: KeywordSearchFormData) => {
     setIsLoading(true)
@@ -64,6 +65,7 @@ export default function SearchPage() {
       setResults(data.data)
       setMockData(data.mockData || false)
       setProvider(data.provider)
+      setSearchLocation(formData.location || 'US')
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -156,6 +158,7 @@ export default function SearchPage() {
                   onExport={handleExport}
                   mockData={mockData}
                   provider={provider}
+                  location={searchLocation}
                 />
               </div>
             )}

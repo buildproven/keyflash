@@ -262,4 +262,135 @@ describe('RedisCache', () => {
       expect(typeof cache.isAvailable).toBe('function')
     })
   })
+
+  describe('with configured Redis client', () => {
+    let cache: RedisCache
+    const testData: KeywordData[] = [
+      {
+        keyword: 'test keyword',
+        searchVolume: 1000,
+        difficulty: 50,
+        cpc: 1.25,
+        competition: 'medium',
+        intent: 'informational',
+      },
+    ]
+
+    beforeEach(() => {
+      vi.clearAllMocks()
+      cache = new RedisCache({
+        url: 'https://test.upstash.io',
+        token: 'test-token',
+      })
+    })
+
+    afterEach(() => {
+      vi.clearAllMocks()
+    })
+
+    it('should be available when properly configured', () => {
+      expect(cache.isAvailable()).toBe(true)
+    })
+
+    it('should successfully get cached data', async () => {
+      const cachedData: CachedKeywordData = {
+        data: testData,
+        metadata: {
+          cachedAt: new Date().toISOString(),
+          ttl: 604800,
+          provider: 'Mock',
+        },
+      }
+      mockGet.mockResolvedValue(cachedData)
+
+      const result = await cache.get('test-key')
+
+      expect(mockGet).toHaveBeenCalledWith('test-key')
+      expect(result).toEqual(cachedData)
+    })
+
+    it('should return null when cache get fails', async () => {
+      mockGet.mockRejectedValue(new Error('Redis error'))
+
+      const result = await cache.get('test-key')
+
+      expect(result).toBeNull()
+    })
+
+    it('should successfully set cached data', async () => {
+      mockSet.mockResolvedValue('OK')
+
+      const result = await cache.set('test-key', testData, 'Mock')
+
+      expect(mockSet).toHaveBeenCalled()
+      expect(result).toBe(true)
+    })
+
+    it('should return false when cache set fails', async () => {
+      mockSet.mockRejectedValue(new Error('Redis error'))
+
+      const result = await cache.set('test-key', testData, 'Mock')
+
+      expect(result).toBe(false)
+    })
+
+    it('should successfully delete cached data', async () => {
+      mockDel.mockResolvedValue(1)
+
+      const result = await cache.delete('test-key')
+
+      expect(mockDel).toHaveBeenCalledWith('test-key')
+      expect(result).toBe(true)
+    })
+
+    it('should return false when cache delete fails', async () => {
+      mockDel.mockRejectedValue(new Error('Redis error'))
+
+      const result = await cache.delete('test-key')
+
+      expect(result).toBe(false)
+    })
+
+    it('should successfully flush cache', async () => {
+      mockFlushdb.mockResolvedValue('OK')
+
+      const result = await cache.flush()
+
+      expect(mockFlushdb).toHaveBeenCalled()
+      expect(result).toBe(true)
+    })
+
+    it('should return false when cache flush fails', async () => {
+      mockFlushdb.mockRejectedValue(new Error('Redis error'))
+
+      const result = await cache.flush()
+
+      expect(result).toBe(false)
+    })
+
+    it('should successfully ping Redis', async () => {
+      mockPing.mockResolvedValue('PONG')
+
+      const result = await cache.ping()
+
+      expect(mockPing).toHaveBeenCalled()
+      expect(result).toBe(true)
+    })
+
+    it('should return false when ping fails', async () => {
+      mockPing.mockRejectedValue(new Error('Redis error'))
+
+      const result = await cache.ping()
+
+      expect(result).toBe(false)
+    })
+
+    it('should return false when ping returns non-PONG', async () => {
+      mockPing.mockResolvedValue('ERROR')
+
+      const result = await cache.ping()
+
+      expect(result).toBe(false)
+    })
+  })
 })

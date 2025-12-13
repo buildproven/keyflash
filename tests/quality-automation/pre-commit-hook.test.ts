@@ -39,10 +39,12 @@ describe('pre-commit hook configuration', () => {
     expect(content).toContain('lint-staged')
   })
 
-  it('pre-commit hook sources husky.sh', () => {
+  it('pre-commit hook uses valid shell format', () => {
     const content = readFileSync(hookPath, 'utf-8')
 
-    expect(content).toContain('husky.sh')
+    // Husky v9+ uses a simpler format without sourcing husky.sh
+    // Just verify it has shell commands
+    expect(content).toMatch(/npm|npx|lint-staged/)
   })
 })
 

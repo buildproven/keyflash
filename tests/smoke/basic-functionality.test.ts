@@ -159,7 +159,6 @@ describe('Documentation smoke tests', () => {
   it('critical documentation files exist', () => {
     const docs = [
       'README.md',
-      'CONTRIBUTING.md',
       'LICENSE',
       'docs/REQUIREMENTS.md',
       'docs/ARCHITECTURE.md',
@@ -180,16 +179,17 @@ describe('Documentation smoke tests', () => {
     // Should mention KeyFlash
     expect(content.toLowerCase()).toContain('keyflash')
 
-    // Should have basic sections
-    expect(content).toMatch(/##.*[Ii]nstall/i)
+    // Should have features section
+    expect(content).toMatch(/##.*[Ff]eatures/i)
   })
 
-  it('LICENSE is AGPL-3.0', () => {
+  it('LICENSE exists and is valid', () => {
     const licensePath = join(process.cwd(), 'LICENSE')
     const content = readFileSync(licensePath, 'utf-8')
 
-    expect(content).toContain('GNU AFFERO GENERAL PUBLIC LICENSE')
-    expect(content).toContain('Version 3')
+    // KeyFlash uses a commercial license
+    expect(content).toContain('KEYFLASH')
+    expect(content).toContain('Vibe Build Lab')
   })
 })
 

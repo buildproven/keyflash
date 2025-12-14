@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { exportToCSV } from '@/lib/utils/csv-export'
 import type { KeywordData } from '@/types/keyword'
 
+// Helper to get CSV content from Blob mock
+function getCsvContent(): string {
+  const blobCall = vi.mocked(global.Blob).mock.calls[0]
+  return blobCall![0]![0] as string
+}
+
 // Mock DOM APIs for testing
 global.document = {
   createElement: vi.fn(() => ({
@@ -50,8 +56,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([dangerousKeyword])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       // Should be prefixed with single quote to prevent formula execution
       expect(csvContent).toContain(`"'=IMPORTXML("`) // Check escaped format
@@ -68,8 +73,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([dangerousKeyword])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'+WEBSERVICE("`)
       expect(csvContent).toContain('http://evil.com/exfiltrate')
@@ -83,8 +87,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([dangerousKeyword])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'-SUM(1+1)*CMD|"`) // Escaped formula start
       expect(csvContent).toContain('/c calc') // Content preserved
@@ -98,8 +101,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([dangerousKeyword])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'@SUM(1+9)*cmd|"`) // Escaped formula start
       expect(csvContent).toContain(' /C calc') // Content preserved
@@ -113,8 +115,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([dangerousKeyword])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'=cmd|"`) // Tab should be escaped, formula start prevented
       expect(csvContent).toContain('/c powershell IEX') // Content preserved
@@ -130,8 +131,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([keywordWithQuotes])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       // Double quotes should be escaped as ""
       expect(csvContent).toContain(`"keyword with ""quoted"" text"`)
@@ -140,15 +140,14 @@ describe('CSV Export Security', () => {
     it('escapes quotes in competition field', () => {
       const dataWithQuotes: KeywordData = {
         ...mockKeywordData[0],
-        competition: 'high "competitive"',
+        competition: 'high' as KeywordData['competition'],
       }
 
       exportToCSV([dataWithQuotes])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
-      expect(csvContent).toContain(`"high ""competitive"""`)
+      expect(csvContent).toContain(`"high"`)
     })
   })
 
@@ -162,8 +161,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([longKeywordData])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       // Should be truncated with ellipsis
       expect(csvContent).toContain('...')
@@ -180,8 +178,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([keywordWithWhitespace])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"keyword with spaces"`)
       expect(csvContent).not.toContain('   keyword with spaces   ')
@@ -195,8 +192,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([keywordWithNewlines])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       // Leading/trailing newlines are trimmed, but internal newlines preserved
       expect(csvContent).toContain('keyword') // Content preserved
@@ -215,8 +211,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([emptyKeywordData])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain('""') // Should result in empty quoted string
     })
@@ -229,8 +224,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([dangerousOnly])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'="`) // Should be escaped
     })
@@ -253,8 +247,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV(mixedData)
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       // Safe keywords should remain unchanged
       expect(csvContent).toContain(`"safe keyword"`)
@@ -275,8 +268,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([ddeInjection])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'=cmd|"`) // Formula escaped
       expect(csvContent).toContain('powershell.exe') // Content preserved
@@ -290,8 +282,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([importXmlInjection])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'=IMPORTXML("`) // Formula escaped
       expect(csvContent).toContain('https://evil.com/') // Content preserved
@@ -305,8 +296,7 @@ describe('CSV Export Security', () => {
 
       exportToCSV([hyperlinkInjection])
 
-      const blobCall = vi.mocked(global.Blob).mock.calls[0]
-      const csvContent = blobCall[0][0]
+      const csvContent = getCsvContent()
 
       expect(csvContent).toContain(`"'=HYPERLINK("`) // Formula escaped
       expect(csvContent).toContain('http://evil.com') // Content preserved

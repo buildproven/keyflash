@@ -12,16 +12,14 @@ describe('Error Handler', () => {
         {
           code: 'too_small',
           minimum: 1,
-          type: 'string',
           inclusive: true,
           exact: false,
           message: 'String must contain at least 1 character(s)',
           path: ['keyword'],
-        },
+        } as any,
       ])
 
       const response = handleAPIError(zodError)
-      const data = response.json()
 
       expect(response.status).toBe(400)
       // Note: We can't directly test the JSON body in this way

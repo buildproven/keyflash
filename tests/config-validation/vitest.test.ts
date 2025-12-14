@@ -42,7 +42,10 @@ describe('Vitest configuration', () => {
     if (existsSync(configPath)) {
       const config = await import('../../vitest.config')
 
-      const thresholds = config.default.test?.coverage?.thresholds
+      const coverage = config.default.test?.coverage as
+        | { thresholds?: Record<string, number> }
+        | undefined
+      const thresholds = coverage?.thresholds
 
       if (thresholds) {
         // All thresholds should be numbers between 0-100
@@ -77,7 +80,7 @@ describe('Vitest configuration', () => {
       const hasAlias = config.default.resolve?.alias !== undefined
 
       // If aliases are configured, @ should map to src
-      if (hasAlias) {
+      if (hasAlias && config.default.resolve) {
         const alias = config.default.resolve.alias
         expect(alias).toBeDefined()
       }

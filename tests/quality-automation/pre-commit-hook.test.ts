@@ -6,9 +6,8 @@
  * misconfigured without being detected.
  */
 
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { IsolatedTestEnv } from '../helpers/isolated-test-env'
-import { TEST_TIMEOUT } from '../helpers/test-setup'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 

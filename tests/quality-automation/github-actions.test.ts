@@ -10,38 +10,6 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-// Simple YAML parser (we'll parse manually to avoid dependencies)
-function parseYAML(content: string): any {
-  // This is a simple parser - for production use a proper YAML library
-  // For now, we'll do basic validation and key extraction
-  const lines = content.split('\n')
-  const result: any = {}
-
-  let currentKey = ''
-  let currentIndent = 0
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-
-    // Skip comments and empty lines
-    if (trimmed.startsWith('#') || trimmed === '') continue
-
-    // Extract key-value pairs
-    const match = line.match(/^(\s*)([a-zA-Z_-]+):\s*(.*)$/)
-    if (match) {
-      const [, indent, key, value] = match
-      const indentLevel = indent.length
-
-      if (indentLevel === 0) {
-        currentKey = key
-        result[key] = value || {}
-      }
-    }
-  }
-
-  return result
-}
-
 describe('GitHub Actions workflow validation', () => {
   const workflowPath = join(process.cwd(), '.github/workflows/quality.yml')
   let workflowContent: string

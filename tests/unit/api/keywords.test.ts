@@ -5,8 +5,12 @@ import { NextRequest } from 'next/server'
 vi.mock('@/lib/cache/redis', () => ({
   cache: {
     generateKey: vi.fn(
-      (keywords, location = 'default', language = 'en', matchType = 'phrase') =>
-        `kw:${location}:${language}:${matchType}:mock`
+      (
+        _keywords,
+        location = 'default',
+        language = 'en',
+        matchType = 'phrase'
+      ) => `kw:${location}:${language}:${matchType}:mock`
     ),
     get: vi.fn(),
     set: vi.fn(),

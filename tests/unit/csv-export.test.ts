@@ -6,7 +6,6 @@ describe('CSV Export', () => {
   // Mock DOM APIs
   let createElementSpy: ReturnType<typeof vi.spyOn>
   let createObjectURLSpy: ReturnType<typeof vi.spyOn>
-  let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     // Setup mocks
@@ -23,9 +22,7 @@ describe('CSV Export', () => {
     createObjectURLSpy = vi
       .spyOn(URL, 'createObjectURL')
       .mockReturnValue('blob:mock-url')
-    revokeObjectURLSpy = vi
-      .spyOn(URL, 'revokeObjectURL')
-      .mockImplementation(() => {})
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
 
     document.body.appendChild = vi.fn()
     document.body.removeChild = vi.fn()

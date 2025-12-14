@@ -4,7 +4,8 @@ import type {
   RateLimit,
   ProviderConfig,
 } from '../types'
-import type { KeywordData, Competition } from '@/types/keyword'
+import type { KeywordData, Competition, MonthlyTrend } from '@/types/keyword'
+import type { RelatedKeyword } from '@/types/related-keywords'
 import { logger } from '@/lib/utils/logger'
 
 /**
@@ -19,6 +20,11 @@ interface DataForSEOKeywordMetrics {
   low_top_of_page_bid?: number
   high_top_of_page_bid?: number
   keyword_difficulty?: number
+  monthly_searches?: Array<{
+    month?: number
+    year?: number
+    search_volume?: number
+  }>
 }
 
 interface DataForSEOTask {
@@ -255,6 +261,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
         high_top_of_page_bid:
           result.search_volume_info?.high_top_of_page_bid || 0,
         keyword_difficulty: result.keyword_properties?.keyword_difficulty || 50,
+        monthly_searches: result.keyword_info?.monthly_searches,
       }
 
       resultMap.set(keyword.toLowerCase(), metrics)
@@ -290,6 +297,9 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       // Infer intent from metrics
       const intent = this.inferIntent(searchVolume, cpc, competition)
 
+      // Extract trend data (last 12 months of search volume)
+      const trends = this.extractTrends(metrics.monthly_searches)
+
       return {
         keyword,
         searchVolume,
@@ -297,8 +307,39 @@ export class DataForSEOProvider implements KeywordAPIProvider {
         cpc,
         competition,
         intent,
+        trends,
       }
     })
+  }
+
+  /**
+   * Extract and transform monthly search trends
+   * @private
+   */
+  private extractTrends(
+    monthlySearches?: Array<{
+      month?: number
+      year?: number
+      search_volume?: number
+    }>
+  ): MonthlyTrend[] | undefined {
+    if (!monthlySearches || monthlySearches.length === 0) {
+      return undefined
+    }
+
+    // Transform and sort by date (oldest first for charting)
+    return monthlySearches
+      .filter(m => m.month !== undefined && m.year !== undefined)
+      .map(m => ({
+        month: m.month!,
+        year: m.year!,
+        volume: m.search_volume || 0,
+      }))
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year
+        return a.month - b.month
+      })
+      .slice(-12) // Keep last 12 months
   }
 
   /**
@@ -404,5 +445,116 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     }
 
     return languageMap[language || 'en'] || 'en'
+  }
+
+  /**
+   * Fetch related keywords for a seed keyword
+   * Uses DataForSEO Keywords for Keywords endpoint
+   */
+  async getRelatedKeywords(
+    keyword: string,
+    options: SearchOptions
+  ): Promise<RelatedKeyword[]> {
+    this.validateConfiguration()
+
+    const apiBaseUrl = 'https://api.dataforseo.com/v3'
+    const locationCode = this.getLocationCode(options.location)
+    const languageCode = this.getLanguageCode(options.language)
+
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/keywords_data/google_ads/keywords_for_keywords/live`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: this.getAuthHeader(),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            {
+              keywords: [keyword],
+              location_code: locationCode,
+              language_code: languageCode,
+              include_seed_keyword: false,
+              sort_by: 'relevance',
+            },
+          ]),
+        }
+      )
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(
+          `DataForSEO API request failed (${response.status}): ${errorText}`
+        )
+      }
+
+      const data: DataForSEOResponse = await response.json()
+
+      if (data.status_code !== 20000) {
+        throw new Error(
+          `DataForSEO API error (${data.status_code}): ${data.status_message}`
+        )
+      }
+
+      return this.transformRelatedKeywordsResponse(data, keyword)
+    } catch (error) {
+      logger.error('Related keywords API error', error, {
+        module: 'DataForSEO',
+      })
+      throw new Error(
+        `DataForSEO related keywords failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+    }
+  }
+
+  /**
+   * Transform DataForSEO response to RelatedKeyword array
+   * @private
+   */
+  private transformRelatedKeywordsResponse(
+    response: DataForSEOResponse,
+    seedKeyword: string
+  ): RelatedKeyword[] {
+    const tasks = response.tasks || []
+    if (tasks.length === 0 || !tasks[0].result) {
+      return []
+    }
+
+    const results = tasks[0].result
+    const relatedKeywords: RelatedKeyword[] = []
+
+    results.forEach((result, index) => {
+      const kw =
+        result.keyword ||
+        result.keyword_info?.keyword ||
+        result.search_volume_info?.keyword
+
+      if (!kw || kw.toLowerCase() === seedKeyword.toLowerCase()) return
+
+      const searchVolume = result.search_volume_info?.search_volume || 0
+      const difficulty = result.keyword_properties?.keyword_difficulty || 50
+      const cpc = result.search_volume_info?.cpc || 0
+      const competition = this.mapCompetition(
+        result.search_volume_info?.competition_level,
+        result.search_volume_info?.competition
+      )
+
+      // Calculate relevance based on position in results (higher = more relevant)
+      const relevance = Math.max(0, 100 - index * 3)
+
+      relatedKeywords.push({
+        keyword: kw,
+        searchVolume,
+        difficulty,
+        cpc,
+        competition,
+        intent: this.inferIntent(searchVolume, cpc, competition),
+        relevance,
+      })
+    })
+
+    // Return top 20 most relevant keywords
+    return relatedKeywords.slice(0, 20)
   }
 }

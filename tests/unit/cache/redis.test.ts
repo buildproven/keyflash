@@ -391,5 +391,96 @@ describe('RedisCache', () => {
 
       expect(result).toBe(false)
     })
+
+    // Tests for getRaw/setRaw methods (used for related keywords caching)
+    describe('getRaw', () => {
+      it('should successfully get raw cached data', async () => {
+        const rawData = {
+          data: [{ keyword: 'test', relevance: 90 }],
+          metadata: { cachedAt: new Date().toISOString(), provider: 'Mock' },
+        }
+        mockGet.mockResolvedValue(rawData)
+
+        const result = await cache.getRaw<typeof rawData>('related:test')
+
+        expect(mockGet).toHaveBeenCalledWith('related:test')
+        expect(result).toEqual(rawData)
+      })
+
+      it('should return null when getRaw fails', async () => {
+        mockGet.mockRejectedValue(new Error('Redis error'))
+
+        const result = await cache.getRaw('related:test')
+
+        expect(result).toBeNull()
+      })
+
+      it('should return null when cache is not available', async () => {
+        const unconfiguredCache = new RedisCache()
+
+        const result = await unconfiguredCache.getRaw('test-key')
+
+        expect(result).toBeNull()
+      })
+    })
+
+    describe('setRaw', () => {
+      it('should successfully set raw cached data', async () => {
+        mockSet.mockResolvedValue('OK')
+
+        const rawData = {
+          data: [{ keyword: 'test', relevance: 90 }],
+          metadata: { cachedAt: new Date().toISOString(), provider: 'Mock' },
+        }
+
+        const result = await cache.setRaw('related:test', rawData)
+
+        expect(mockSet).toHaveBeenCalled()
+        expect(result).toBe(true)
+      })
+
+      it('should use default TTL when not provided', async () => {
+        mockSet.mockResolvedValue('OK')
+
+        await cache.setRaw('test-key', { data: 'test' })
+
+        expect(mockSet).toHaveBeenCalledWith(
+          'test-key',
+          { data: 'test' },
+          expect.objectContaining({ ex: expect.any(Number) })
+        )
+      })
+
+      it('should use custom TTL when provided', async () => {
+        mockSet.mockResolvedValue('OK')
+
+        const customTTL = 3600 // 1 hour
+        await cache.setRaw('test-key', { data: 'test' }, customTTL)
+
+        expect(mockSet).toHaveBeenCalledWith(
+          'test-key',
+          { data: 'test' },
+          { ex: customTTL }
+        )
+      })
+
+      it('should return false when setRaw fails', async () => {
+        mockSet.mockRejectedValue(new Error('Redis error'))
+
+        const result = await cache.setRaw('test-key', { data: 'test' })
+
+        expect(result).toBe(false)
+      })
+
+      it('should return false when cache is not available', async () => {
+        const unconfiguredCache = new RedisCache()
+
+        const result = await unconfiguredCache.setRaw('test-key', {
+          data: 'test',
+        })
+
+        expect(result).toBe(false)
+      })
+    })
   })
 })

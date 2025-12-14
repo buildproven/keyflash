@@ -62,5 +62,40 @@ export const KeywordInputSchema = z.object({
     .default('US'),
 })
 
+/**
+ * Schema for validating related keywords request
+ */
+export const RelatedKeywordsSchema = z.object({
+  keyword: z
+    .string()
+    .trim()
+    .min(1, 'Keyword cannot be empty')
+    .max(100, 'Keyword too long (max 100 chars)')
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      'Keyword must contain only letters, numbers, spaces, hyphens, and underscores'
+    ),
+  location: z
+    .string()
+    .trim()
+    .regex(
+      /^([A-Z]{2}|GL)$/,
+      'Location must be a 2-letter country code (e.g., US, GB) or GL for Global'
+    )
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+  language: z
+    .string()
+    .trim()
+    .regex(
+      /^[a-z]{2}(-[A-Z]{2})?$/, // eslint-disable-line security/detect-unsafe-regex -- Language code regex is safe
+      'Language must be valid language code (e.g., en, en-US)'
+    )
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+  limit: z.number().int().min(1).max(50).optional(),
+})
+
 export type KeywordSearchInput = z.infer<typeof KeywordSearchSchema>
 export type KeywordFormInput = z.infer<typeof KeywordInputSchema>
+export type RelatedKeywordsInput = z.infer<typeof RelatedKeywordsSchema>

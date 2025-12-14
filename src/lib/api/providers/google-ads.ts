@@ -304,6 +304,9 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       // Infer intent from metrics (heuristic approach)
       const intent = this.inferIntent(searchVolume, cpc, competition)
 
+      // Note: Google Ads API only provides average monthly searches,
+      // not a month-by-month breakdown. trends remains undefined.
+      // Use DataForSEO provider for historical trend data.
       return {
         keyword,
         searchVolume,
@@ -311,6 +314,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
         cpc,
         competition,
         intent,
+        // trends: undefined - Google Ads doesn't provide monthly breakdown
       }
     })
   }

@@ -1,8 +1,13 @@
 'use client'
 
-import { memo, useState } from 'react'
+import React, { memo, useState } from 'react'
 import type { KeywordData } from '@/types/keyword'
 import { ContentBriefModal } from '@/components/content-brief/content-brief-modal'
+import {
+  TrendSparkline,
+  TrendChartExpanded,
+} from '@/components/trends/trend-sparkline'
+import { RelatedKeywordsModal } from '@/components/related-keywords/related-keywords-modal'
 
 interface KeywordResultsTableProps {
   data: KeywordData[]
@@ -20,6 +25,12 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
   location = 'US',
 }: KeywordResultsTableProps) {
   const [briefKeyword, setBriefKeyword] = useState<string | null>(null)
+  const [relatedKeyword, setRelatedKeyword] = useState<string | null>(null)
+  const [expandedRow, setExpandedRow] = useState<string | null>(null)
+
+  const toggleRowExpansion = (keyword: string) => {
+    setExpandedRow(prev => (prev === keyword ? null : keyword))
+  }
 
   if (data.length === 0) {
     return (
@@ -134,6 +145,12 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
               </th>
               <th
                 scope="col"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+              >
+                Trend
+              </th>
+              <th
+                scope="col"
                 className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Actions
@@ -142,75 +159,132 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
             {data.map((row, index) => (
-              <tr
-                key={`${row.keyword}-${index}`}
-                className="hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {row.keyword}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                  {row.searchVolume.toLocaleString()}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center">
-                    <div className="mr-2 h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                      <div
-                        className={`h-2 rounded-full ${
-                          row.difficulty < 30
-                            ? 'bg-green-500'
-                            : row.difficulty < 70
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                        }`}
-                        style={{ width: `${row.difficulty}%` }}
-                      />
+              <React.Fragment key={`${row.keyword}-${index}`}>
+                <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {row.keyword}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {row.searchVolume.toLocaleString()}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div
+                          className={`h-2 rounded-full ${
+                            row.difficulty < 30
+                              ? 'bg-green-500'
+                              : row.difficulty < 70
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
+                          }`}
+                          style={{ width: `${row.difficulty}%` }}
+                        />
+                      </div>
+                      <span>{row.difficulty}/100</span>
                     </div>
-                    <span>{row.difficulty}/100</span>
-                  </div>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                  ${row.cpc.toFixed(2)}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <span
-                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold leading-5 ${
-                      row.competition === 'low'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : row.competition === 'medium'
-                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}
-                  >
-                    {row.competition}
-                  </span>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                  {row.intent}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
-                  <button
-                    onClick={() => setBriefKeyword(row.keyword)}
-                    className="inline-flex items-center gap-1 rounded-md bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
-                    title={`Generate content brief for "${row.keyword}"`}
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    ${row.cpc.toFixed(2)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold leading-5 ${
+                        row.competition === 'low'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : row.competition === 'medium'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      }`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Brief
-                  </button>
-                </td>
-              </tr>
+                      {row.competition}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {row.intent}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {row.trends && row.trends.length >= 2 ? (
+                      <button
+                        onClick={() => toggleRowExpansion(row.keyword)}
+                        className="group flex items-center gap-1 rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        title="Click to view detailed trend chart"
+                      >
+                        <TrendSparkline trends={row.trends} />
+                        <svg
+                          className={`h-4 w-4 text-gray-400 transition-transform group-hover:text-gray-600 dark:group-hover:text-gray-300 ${
+                            expandedRow === row.keyword ? 'rotate-180' : ''
+                          }`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => setRelatedKeyword(row.keyword)}
+                        className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                        title={`Find related keywords for "${row.keyword}"`}
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                          />
+                        </svg>
+                        Related
+                      </button>
+                      <button
+                        onClick={() => setBriefKeyword(row.keyword)}
+                        className="inline-flex items-center gap-1 rounded-md bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+                        title={`Generate content brief for "${row.keyword}"`}
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        Brief
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {/* Expanded trend chart row */}
+                {expandedRow === row.keyword && row.trends && (
+                  <tr className="bg-gray-50 dark:bg-gray-800/50">
+                    <td colSpan={8} className="px-6 py-4">
+                      <TrendChartExpanded trends={row.trends} />
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
@@ -223,6 +297,16 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
           location={location}
           isOpen={!!briefKeyword}
           onClose={() => setBriefKeyword(null)}
+        />
+      )}
+
+      {/* Related Keywords Modal */}
+      {relatedKeyword && (
+        <RelatedKeywordsModal
+          keyword={relatedKeyword}
+          location={location}
+          isOpen={!!relatedKeyword}
+          onClose={() => setRelatedKeyword(null)}
         />
       )}
     </div>

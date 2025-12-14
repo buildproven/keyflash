@@ -1,4 +1,6 @@
-import type { KeywordAPIProvider } from './types'
+import type { KeywordAPIProvider, SearchOptions } from './types'
+import type { MonthlyTrend } from '@/types/keyword'
+import type { RelatedKeyword } from '@/types/related-keywords'
 import { GoogleAdsProvider } from './providers/google-ads'
 import { DataForSEOProvider } from './providers/dataforseo'
 
@@ -24,23 +26,52 @@ class MockProvider implements KeywordAPIProvider {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800))
 
-    return keywords.map(keyword => ({
-      keyword,
-      searchVolume: Math.floor(Math.random() * 100000),
-      difficulty: Math.floor(Math.random() * 100),
-      cpc: Math.random() * 10,
-      competition: (['low', 'medium', 'high'] as const)[
-        Math.floor(Math.random() * 3)
-      ],
-      intent: (
-        [
-          'informational',
-          'commercial',
-          'transactional',
-          'navigational',
-        ] as const
-      )[Math.floor(Math.random() * 4)],
-    }))
+    return keywords.map(keyword => {
+      const baseVolume = Math.floor(Math.random() * 100000)
+      return {
+        keyword,
+        searchVolume: baseVolume,
+        difficulty: Math.floor(Math.random() * 100),
+        cpc: Math.random() * 10,
+        competition: (['low', 'medium', 'high'] as const)[
+          Math.floor(Math.random() * 3)
+        ],
+        intent: (
+          [
+            'informational',
+            'commercial',
+            'transactional',
+            'navigational',
+          ] as const
+        )[Math.floor(Math.random() * 4)],
+        trends: this.generateMockTrends(baseVolume),
+      }
+    })
+  }
+
+  /**
+   * Generate realistic mock trend data for last 12 months
+   */
+  private generateMockTrends(baseVolume: number): MonthlyTrend[] {
+    const now = new Date()
+    const trends: MonthlyTrend[] = []
+
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      // Add seasonal variation (±30%) and random noise (±10%)
+      const seasonalFactor =
+        1 + 0.3 * Math.sin((date.getMonth() / 12) * 2 * Math.PI)
+      const noise = 0.9 + Math.random() * 0.2
+      const volume = Math.floor(baseVolume * seasonalFactor * noise)
+
+      trends.push({
+        month: date.getMonth() + 1, // 1-12
+        year: date.getFullYear(),
+        volume: Math.max(0, volume),
+      })
+    }
+
+    return trends
   }
 
   getBatchLimit(): number {
@@ -52,6 +83,56 @@ class MockProvider implements KeywordAPIProvider {
       requests: 1000,
       period: 'hour' as const,
     }
+  }
+
+  async getRelatedKeywords(
+    keyword: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- options required by interface but not needed for mock
+    _options: SearchOptions
+  ): Promise<RelatedKeyword[]> {
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const relatedTerms = [
+      `${keyword} guide`,
+      `${keyword} tutorial`,
+      `best ${keyword}`,
+      `${keyword} tips`,
+      `how to ${keyword}`,
+      `${keyword} for beginners`,
+      `${keyword} examples`,
+      `${keyword} tools`,
+      `${keyword} software`,
+      `${keyword} online`,
+      `free ${keyword}`,
+      `${keyword} course`,
+      `${keyword} training`,
+      `${keyword} certification`,
+      `${keyword} services`,
+      `${keyword} agency`,
+      `${keyword} consultant`,
+      `${keyword} expert`,
+      `${keyword} strategies`,
+      `${keyword} techniques`,
+    ]
+
+    return relatedTerms.map((term, index) => ({
+      keyword: term,
+      searchVolume: Math.floor(Math.random() * 50000),
+      difficulty: Math.floor(Math.random() * 100),
+      cpc: Math.random() * 5,
+      competition: (['low', 'medium', 'high'] as const)[
+        Math.floor(Math.random() * 3)
+      ],
+      intent: (
+        [
+          'informational',
+          'commercial',
+          'transactional',
+          'navigational',
+        ] as const
+      )[Math.floor(Math.random() * 4)],
+      relevance: Math.max(0, 100 - index * 5),
+    }))
   }
 }
 

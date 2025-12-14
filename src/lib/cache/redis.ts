@@ -172,6 +172,44 @@ class RedisCache {
   }
 
   /**
+   * Get raw cached data (for non-KeywordData types)
+   */
+  async getRaw<T>(key: string): Promise<T | null> {
+    if (!this.isAvailable()) {
+      return null
+    }
+
+    try {
+      const cached = await this.client!.get<T>(key)
+      return cached
+    } catch (error) {
+      logger.error('Failed to get raw from cache', error, {
+        module: 'RedisCache',
+      })
+      return null
+    }
+  }
+
+  /**
+   * Set raw cached data (for non-KeywordData types)
+   */
+  async setRaw<T>(key: string, data: T, ttl?: number): Promise<boolean> {
+    if (!this.isAvailable()) {
+      return false
+    }
+
+    const cacheTTL = ttl || this.defaultTTL
+
+    try {
+      await this.client!.set(key, data, { ex: cacheTTL })
+      return true
+    } catch (error) {
+      logger.error('Failed to set raw cache', error, { module: 'RedisCache' })
+      return false
+    }
+  }
+
+  /**
    * Delete cached data
    */
   async delete(key: string): Promise<boolean> {

@@ -18,6 +18,15 @@ export type MatchType = 'phrase' | 'exact'
 export type Competition = 'low' | 'medium' | 'high'
 
 /**
+ * Monthly search volume trend data point
+ */
+export interface MonthlyTrend {
+  month: number // 1-12
+  year: number // e.g., 2024
+  volume: number
+}
+
+/**
  * Individual keyword data from API
  */
 export interface KeywordData {
@@ -27,6 +36,7 @@ export interface KeywordData {
   cpc: number // Cost per click in USD
   competition: Competition
   intent: KeywordIntent
+  trends?: MonthlyTrend[] // Historical monthly search volume (last 12 months)
 }
 
 /**

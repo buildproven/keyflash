@@ -1,4 +1,5 @@
 import type { KeywordData } from '@/types/keyword'
+import type { RelatedKeyword } from '@/types/related-keywords'
 
 /**
  * Search options for keyword API requests
@@ -67,6 +68,17 @@ export interface KeywordAPIProvider {
    * @throws Error if credentials are missing
    */
   validateConfiguration(): void
+
+  /**
+   * Fetch related/similar keywords for a seed keyword
+   * @param keyword - Seed keyword to find related terms for
+   * @param options - Search configuration options
+   * @returns Promise with related keyword data
+   */
+  getRelatedKeywords?(
+    keyword: string,
+    options: SearchOptions
+  ): Promise<RelatedKeyword[]>
 }
 
 /**

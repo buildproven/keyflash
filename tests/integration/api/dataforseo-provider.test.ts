@@ -549,4 +549,275 @@ describe('DataForSEOProvider Integration Tests', () => {
       expect(decodedCreds).toBe('test-login:test-password')
     })
   })
+
+  describe('getRelatedKeywords', () => {
+    it('should return related keywords for a seed keyword', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          status_message: 'Ok.',
+          tasks: [
+            {
+              status_code: 20000,
+              result: [
+                {
+                  keyword: 'seo tools guide',
+                  search_volume_info: {
+                    search_volume: 5000,
+                    competition: 0.45,
+                    competition_level: 'MEDIUM',
+                    cpc: 2.5,
+                  },
+                  keyword_properties: {
+                    keyword_difficulty: 45,
+                  },
+                },
+                {
+                  keyword: 'best seo tools',
+                  search_volume_info: {
+                    search_volume: 8000,
+                    competition: 0.75,
+                    competition_level: 'HIGH',
+                    cpc: 4.5,
+                  },
+                  keyword_properties: {
+                    keyword_difficulty: 65,
+                  },
+                },
+              ],
+            },
+          ],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+        location: 'United States',
+        language: 'en',
+      }
+
+      const result = await provider.getRelatedKeywords('seo tools', options)
+
+      expect(result).toHaveLength(2)
+      expect(result[0]).toMatchObject({
+        keyword: 'seo tools guide',
+        searchVolume: 5000,
+        difficulty: 45,
+        cpc: 2.5,
+        competition: 'medium',
+      })
+      expect(result[0].relevance).toBeGreaterThanOrEqual(0)
+      expect(result[0].relevance).toBeLessThanOrEqual(100)
+    })
+
+    it('should call the correct API endpoint', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [{ status_code: 20000, result: [] }],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      await provider.getRelatedKeywords('test keyword', options)
+
+      expect(fetchMock).toHaveBeenCalled()
+      const fetchCall = fetchMock.mock.calls[0]
+      expect(fetchCall[0]).toContain('keywords_for_keywords')
+    })
+
+    it('should filter out the seed keyword from results', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [
+            {
+              status_code: 20000,
+              result: [
+                {
+                  keyword: 'seo tools', // Same as seed - should be filtered
+                  search_volume_info: { search_volume: 10000, cpc: 3.0 },
+                  keyword_properties: { keyword_difficulty: 50 },
+                },
+                {
+                  keyword: 'seo software',
+                  search_volume_info: { search_volume: 5000, cpc: 2.5 },
+                  keyword_properties: { keyword_difficulty: 45 },
+                },
+              ],
+            },
+          ],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      const result = await provider.getRelatedKeywords('seo tools', options)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].keyword).toBe('seo software')
+    })
+
+    it('should return max 20 related keywords', async () => {
+      const manyResults = Array(30)
+        .fill(null)
+        .map((_, i) => ({
+          keyword: `related keyword ${i}`,
+          search_volume_info: { search_volume: 1000 - i * 10, cpc: 1.0 },
+          keyword_properties: { keyword_difficulty: 50 },
+        }))
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [{ status_code: 20000, result: manyResults }],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      const result = await provider.getRelatedKeywords('test', options)
+
+      expect(result.length).toBeLessThanOrEqual(20)
+    })
+
+    it('should calculate relevance score based on position', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [
+            {
+              status_code: 20000,
+              result: [
+                {
+                  keyword: 'first result',
+                  search_volume_info: { search_volume: 5000, cpc: 2.0 },
+                  keyword_properties: { keyword_difficulty: 40 },
+                },
+                {
+                  keyword: 'second result',
+                  search_volume_info: { search_volume: 4000, cpc: 1.5 },
+                  keyword_properties: { keyword_difficulty: 35 },
+                },
+                {
+                  keyword: 'third result',
+                  search_volume_info: { search_volume: 3000, cpc: 1.0 },
+                  keyword_properties: { keyword_difficulty: 30 },
+                },
+              ],
+            },
+          ],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      const result = await provider.getRelatedKeywords('test', options)
+
+      // First result should have highest relevance
+      expect(result[0].relevance).toBeGreaterThan(result[1].relevance)
+      expect(result[1].relevance).toBeGreaterThan(result[2].relevance)
+    })
+
+    it('should handle API error response', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        text: async () => 'Internal Server Error',
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      await expect(
+        provider.getRelatedKeywords('test', options)
+      ).rejects.toThrow(/DataForSEO/)
+    })
+
+    it('should handle DataForSEO API-level errors', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 40101,
+          status_message: 'Authentication failed',
+          tasks: [],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      await expect(
+        provider.getRelatedKeywords('test', options)
+      ).rejects.toThrow(/DataForSEO API error/)
+    })
+
+    it('should return empty array when no results', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [{ status_code: 20000, result: [] }],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      const result = await provider.getRelatedKeywords('obscure term', options)
+
+      expect(result).toEqual([])
+    })
+
+    it('should include intent in related keywords', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          tasks: [
+            {
+              status_code: 20000,
+              result: [
+                {
+                  keyword: 'buy seo tools',
+                  search_volume_info: {
+                    search_volume: 3000,
+                    competition: 0.9,
+                    competition_level: 'HIGH',
+                    cpc: 7.0,
+                  },
+                  keyword_properties: { keyword_difficulty: 85 },
+                },
+              ],
+            },
+          ],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+      }
+
+      const result = await provider.getRelatedKeywords('seo tools', options)
+
+      expect(result[0].intent).toBe('transactional')
+    })
+  })
 })

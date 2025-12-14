@@ -3,9 +3,7 @@ import {
   createProvider,
   getProvider,
   isProviderAvailable,
-  type ProviderName,
 } from '@/lib/api/factory'
-import type { KeywordAPIProvider } from '@/lib/api/types'
 
 describe('API Provider Factory', () => {
   const originalEnv = process.env
@@ -86,7 +84,9 @@ describe('API Provider Factory', () => {
       const provider = createProvider()
       const keywords = ['test keyword 1', 'test keyword 2']
 
-      const data = await provider.getKeywordData(keywords)
+      const data = await provider.getKeywordData(keywords, {
+        matchType: 'phrase',
+      })
 
       expect(data).toHaveLength(2)
       expect(data[0].keyword).toBe('test keyword 1')
@@ -199,7 +199,7 @@ describe('API Provider Factory', () => {
       const provider = createProvider()
       const startTime = Date.now()
 
-      await provider.getKeywordData(['test'])
+      await provider.getKeywordData(['test'], { matchType: 'phrase' })
 
       const elapsed = Date.now() - startTime
       expect(elapsed).toBeGreaterThanOrEqual(750) // Allow some margin

@@ -24,7 +24,7 @@ describe('GoogleAdsProvider Integration Tests', () => {
 
     // Mock global fetch
     fetchMock = vi.fn()
-    global.fetch = fetchMock
+    global.fetch = fetchMock as typeof fetch
   })
 
   afterEach(() => {

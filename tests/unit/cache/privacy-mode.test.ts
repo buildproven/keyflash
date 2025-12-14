@@ -98,17 +98,14 @@ describe('RedisCache Privacy Mode', () => {
     expect(result).toBe(false)
   })
 
-  it('logs privacy mode activation message', () => {
-    const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
-
+  it('initializes with privacy mode when PRIVACY_MODE=true', () => {
     process.env.PRIVACY_MODE = 'true'
+    process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
 
-    new RedisCache()
+    const cache = new RedisCache()
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[RedisCache] Privacy mode enabled. Keyword caching is disabled to honor privacy promise.'
-    )
-
-    consoleSpy.mockRestore()
+    // Privacy mode should disable the cache even with valid credentials
+    expect(cache.isAvailable()).toBe(false)
   })
 })

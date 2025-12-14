@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { NextRequest } from 'next/server'
 
 // Mock the cache module - must be before any imports that use it
 vi.mock('@/lib/cache/redis', () => ({
@@ -10,11 +11,33 @@ vi.mock('@/lib/cache/redis', () => ({
   },
 }))
 
+// Mock the rate limiter to always allow requests in tests
+vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
+  rateLimiter: {
+    checkRateLimit: vi.fn().mockResolvedValue({
+      allowed: true,
+      remaining: 59,
+      retryAfter: 0,
+      resetAt: new Date(),
+    }),
+  },
+}))
+
 import { GET } from '@/app/api/health/route'
 import { cache } from '@/lib/cache/redis'
 
 // Get the mocked cache for type safety
 const mockCache = cache as any
+
+// Helper to create mock NextRequest
+function createMockRequest(): NextRequest {
+  return new NextRequest('http://localhost:3000/api/health', {
+    method: 'GET',
+    headers: {
+      'x-forwarded-for': '127.0.0.1',
+    },
+  })
+}
 
 describe('/api/health', () => {
   const originalEnv = process.env
@@ -37,7 +60,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'mock'
       mockCache.ping.mockResolvedValue('PONG')
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -51,7 +74,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'mock'
       process.env.PRIVACY_MODE = 'true'
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       // Privacy mode is expected behavior, so Redis check is healthy
@@ -69,7 +92,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'mock'
       mockCache.ping.mockRejectedValue(new Error('Connection timeout'))
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(data.checks.redis.healthy).toBe(false)
@@ -84,7 +107,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'mock'
       mockCache.ping.mockResolvedValue('PONG')
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(data.checks.provider.healthy).toBe(true)
@@ -100,7 +123,7 @@ describe('/api/health', () => {
       mockCache.ping.mockResolvedValue('PONG')
       delete process.env.KEYWORD_API_PROVIDER
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(data.checks.provider.healthy).toBe(true)
@@ -117,7 +140,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'google-ads'
       // Missing required environment variables
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(data.checks.provider.healthy).toBe(false)
@@ -135,7 +158,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'dataforseo'
       // Missing required environment variables
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(data.checks.provider.healthy).toBe(false)
@@ -153,7 +176,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'mock'
       mockCache.ping.mockResolvedValue('PONG')
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -168,7 +191,7 @@ describe('/api/health', () => {
       delete process.env.UPSTASH_REDIS_REST_TOKEN
       process.env.KEYWORD_API_PROVIDER = 'mock'
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(response.status).toBe(207) // Multi-Status
@@ -183,7 +206,7 @@ describe('/api/health', () => {
       delete process.env.UPSTASH_REDIS_REST_TOKEN
       delete process.env.KEYWORD_API_PROVIDER // Defaults to mock
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(response.status).toBe(207) // Multi-status (partial health)
@@ -198,7 +221,7 @@ describe('/api/health', () => {
       process.env.KEYWORD_API_PROVIDER = 'mock'
       mockCache.ping.mockResolvedValue('PONG')
 
-      const response = await GET()
+      const response = await GET(createMockRequest())
       const data = await response.json()
 
       expect(data.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)

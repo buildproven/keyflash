@@ -1,13 +1,15 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import type { KeywordData } from '@/types/keyword'
+import { ContentBriefModal } from '@/components/content-brief/content-brief-modal'
 
 interface KeywordResultsTableProps {
   data: KeywordData[]
   onExport?: () => void
   mockData?: boolean
   provider?: string
+  location?: string
 }
 
 export const KeywordResultsTable = memo(function KeywordResultsTable({
@@ -15,7 +17,10 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
   onExport,
   mockData = false,
   provider,
+  location = 'US',
 }: KeywordResultsTableProps) {
+  const [briefKeyword, setBriefKeyword] = useState<string | null>(null)
+
   if (data.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
@@ -127,6 +132,12 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
               >
                 Intent
               </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+              >
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
@@ -177,11 +188,43 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                   {row.intent}
                 </td>
+                <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
+                  <button
+                    onClick={() => setBriefKeyword(row.keyword)}
+                    className="inline-flex items-center gap-1 rounded-md bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+                    title={`Generate content brief for "${row.keyword}"`}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    Brief
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Content Brief Modal */}
+      {briefKeyword && (
+        <ContentBriefModal
+          keyword={briefKeyword}
+          location={location}
+          isOpen={!!briefKeyword}
+          onClose={() => setBriefKeyword(null)}
+        />
+      )}
     </div>
   )
 })

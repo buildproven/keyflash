@@ -308,4 +308,185 @@ describe('RedisRateLimiter', () => {
       expect(mockRedis.incr).toHaveBeenCalledTimes(2)
     })
   })
+
+  describe('Clear Method', () => {
+    it('clears all rate limit entries from Redis', async () => {
+      mockRedis.keys.mockResolvedValueOnce([
+        'rate:1.2.3.4:abc',
+        'rate:5.6.7.8:def',
+      ])
+      mockRedis.del.mockResolvedValueOnce(2)
+
+      await rateLimiter.clear()
+
+      expect(mockRedis.keys).toHaveBeenCalledWith('rate:*')
+      expect(mockRedis.del).toHaveBeenCalledWith(
+        'rate:1.2.3.4:abc',
+        'rate:5.6.7.8:def'
+      )
+    })
+
+    it('handles empty key list gracefully', async () => {
+      mockRedis.keys.mockResolvedValueOnce([])
+
+      await rateLimiter.clear()
+
+      expect(mockRedis.keys).toHaveBeenCalledWith('rate:*')
+      expect(mockRedis.del).not.toHaveBeenCalled()
+    })
+
+    it('handles Redis clear errors gracefully', async () => {
+      mockRedis.keys.mockRejectedValueOnce(new Error('Redis error'))
+
+      // Should not throw
+      await expect(rateLimiter.clear()).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Fail-safe Behavior', () => {
+    it('allows requests when fail-safe is open and Redis fails', async () => {
+      // Make Redis fail
+      mockRedis.ttl.mockRejectedValueOnce(new Error('Redis error'))
+
+      const request = new Request('https://example.com', {
+        headers: {
+          'cf-connecting-ip': '1.2.3.4',
+          'user-agent': 'test-browser',
+        },
+      })
+
+      const config = {
+        requestsPerHour: 10,
+        enabled: true,
+        failSafe: 'open' as const,
+      }
+
+      const result = await rateLimiter.checkRateLimit(request, config)
+
+      expect(result.allowed).toBe(true)
+      expect(result.remaining).toBe(10)
+    })
+
+    it('blocks requests when fail-safe is closed and Redis fails', async () => {
+      // Make Redis fail
+      mockRedis.ttl.mockRejectedValueOnce(new Error('Redis error'))
+
+      const request = new Request('https://example.com', {
+        headers: {
+          'cf-connecting-ip': '1.2.3.4',
+          'user-agent': 'test-browser',
+        },
+      })
+
+      const config = {
+        requestsPerHour: 10,
+        enabled: true,
+        failSafe: 'closed' as const,
+      }
+
+      const result = await rateLimiter.checkRateLimit(request, config)
+
+      expect(result.allowed).toBe(false)
+      expect(result.remaining).toBe(0)
+      expect(result.retryAfter).toBe(60)
+    })
+  })
+
+  describe('Health Check without Redis', () => {
+    it('returns true for memory fallback mode', async () => {
+      // Create limiter without Redis
+      delete process.env.UPSTASH_REDIS_REST_URL
+      delete process.env.UPSTASH_REDIS_REST_TOKEN
+      const memoryLimiter = new RedisRateLimiter()
+
+      const isHealthy = await memoryLimiter.isHealthy()
+      expect(isHealthy).toBe(true)
+    })
+
+    it('returns false when Redis ping does not return PONG', async () => {
+      mockRedis.ping.mockResolvedValueOnce('ERROR')
+
+      const isHealthy = await rateLimiter.isHealthy()
+      expect(isHealthy).toBe(false)
+    })
+  })
+
+  describe('In-Memory Fallback', () => {
+    let memoryLimiter: RedisRateLimiter
+
+    beforeEach(() => {
+      delete process.env.UPSTASH_REDIS_REST_URL
+      delete process.env.UPSTASH_REDIS_REST_TOKEN
+      memoryLimiter = new RedisRateLimiter()
+    })
+
+    it('allows first request from new client', async () => {
+      const request = new Request('https://example.com', {
+        headers: {
+          'cf-connecting-ip': '1.2.3.4',
+          'user-agent': 'test-browser',
+        },
+      })
+
+      const config = { requestsPerHour: 10, enabled: true }
+
+      const result = await memoryLimiter.checkRateLimit(request, config)
+
+      expect(result.allowed).toBe(true)
+      expect(result.remaining).toBe(9)
+    })
+
+    it('tracks multiple requests from same client', async () => {
+      const request = new Request('https://example.com', {
+        headers: {
+          'cf-connecting-ip': '1.2.3.4',
+          'user-agent': 'test-browser',
+        },
+      })
+
+      const config = { requestsPerHour: 3, enabled: true }
+
+      // First request
+      let result = await memoryLimiter.checkRateLimit(request, config)
+      expect(result.allowed).toBe(true)
+      expect(result.remaining).toBe(2)
+
+      // Second request
+      result = await memoryLimiter.checkRateLimit(request, config)
+      expect(result.allowed).toBe(true)
+      expect(result.remaining).toBe(1)
+
+      // Third request
+      result = await memoryLimiter.checkRateLimit(request, config)
+      expect(result.allowed).toBe(true)
+      expect(result.remaining).toBe(0)
+
+      // Fourth request - should be blocked
+      result = await memoryLimiter.checkRateLimit(request, config)
+      expect(result.allowed).toBe(false)
+      expect(result.remaining).toBe(0)
+      expect(result.retryAfter).toBeGreaterThan(0)
+    })
+
+    it('clears memory store', async () => {
+      const request = new Request('https://example.com', {
+        headers: {
+          'cf-connecting-ip': '1.2.3.4',
+          'user-agent': 'test-browser',
+        },
+      })
+
+      const config = { requestsPerHour: 1, enabled: true }
+
+      // Make a request to populate memory store
+      await memoryLimiter.checkRateLimit(request, config)
+
+      // Clear the store
+      await memoryLimiter.clear()
+
+      // Next request should be allowed as if new client
+      const result = await memoryLimiter.checkRateLimit(request, config)
+      expect(result.allowed).toBe(true)
+    })
+  })
 })

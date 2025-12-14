@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { RedisCache } from '@/lib/cache/redis'
+import { RedisCache, type CachedKeywordData } from '@/lib/cache/redis'
 import type { KeywordData } from '@/types/keyword'
-import type { CachedKeywordData } from '@/lib/cache/redis'
 
 // Create mock Redis methods
 const mockGet = vi.fn()

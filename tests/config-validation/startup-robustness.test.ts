@@ -58,7 +58,7 @@ describe('Startup Robustness', () => {
 
   describe('Environment Validation Error Handling', () => {
     it('should throw errors instead of exiting when validation fails', async () => {
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string>).NODE_ENV = 'production'
       delete process.env.RATE_LIMIT_HMAC_SECRET // Required in production
 
       let didThrow = false
@@ -82,7 +82,7 @@ describe('Startup Robustness', () => {
     })
 
     it('should provide detailed error messages for Zod validation errors', async () => {
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string>).NODE_ENV = 'production'
       process.env.RATE_LIMIT_REQUESTS_PER_HOUR = 'invalid_number'
       process.env.RATE_LIMIT_HMAC_SECRET = 'valid_secret_that_is_long_enough'
 
@@ -101,7 +101,7 @@ describe('Startup Robustness', () => {
     })
 
     it('should handle Google Ads provider validation correctly', async () => {
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string>).NODE_ENV = 'production'
       process.env.KEYWORD_API_PROVIDER = 'google-ads'
       process.env.RATE_LIMIT_HMAC_SECRET = 'valid_secret_that_is_long_enough'
       // Missing Google Ads credentials
@@ -157,7 +157,7 @@ describe('Startup Robustness', () => {
     it('should validate that error throwing allows proper handling', async () => {
       // Test that errors are throwable and catchable (not process.exit)
       // Use production mode to ensure validation is strict
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string>).NODE_ENV = 'production'
       delete process.env.KEYWORD_API_PROVIDER
       delete process.env.RATE_LIMIT_HMAC_SECRET // Force validation failure
 
@@ -182,7 +182,7 @@ describe('Startup Robustness', () => {
 
   describe('Production Safety', () => {
     it('should still enforce strict validation in production', async () => {
-      process.env.NODE_ENV = 'production'
+      ;(process.env as Record<string, string>).NODE_ENV = 'production'
       // Remove critical production requirements
       delete process.env.RATE_LIMIT_HMAC_SECRET
       delete process.env.KEYWORD_API_PROVIDER

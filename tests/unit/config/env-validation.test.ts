@@ -15,7 +15,7 @@ describe('Environment Validation', () => {
     vi.clearAllMocks()
 
     // Reset environment - clear all env vars first
-    process.env = {}
+    process.env = { NODE_ENV: 'test' } as NodeJS.ProcessEnv
 
     // Reset module cache to ensure fresh import
     vi.resetModules()
@@ -29,7 +29,7 @@ describe('Environment Validation', () => {
   it('should validate successfully with valid mock provider configuration', async () => {
     // Setup valid environment
     process.env.KEYWORD_API_PROVIDER = 'mock'
-    process.env.NODE_ENV = 'test'
+    ;(process.env as Record<string, string>).NODE_ENV = 'test'
 
     // Dynamic import to trigger validation
     const { validateEnvironment } = await import('@/lib/config/env-validation')
@@ -44,7 +44,7 @@ describe('Environment Validation', () => {
   it('should fail validation when google-ads provider is missing required variables', async () => {
     // Setup invalid environment
     process.env.KEYWORD_API_PROVIDER = 'google-ads'
-    process.env.NODE_ENV = 'test'
+    ;(process.env as Record<string, string>).NODE_ENV = 'test'
     // Missing GOOGLE_ADS_* variables
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
@@ -55,7 +55,7 @@ describe('Environment Validation', () => {
   it('should fail validation when dataforseo provider is missing required variables', async () => {
     // Setup invalid environment
     process.env.KEYWORD_API_PROVIDER = 'dataforseo'
-    process.env.NODE_ENV = 'test'
+    ;(process.env as Record<string, string>).NODE_ENV = 'test'
     // Missing DATAFORSEO_* variables
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')
@@ -66,7 +66,7 @@ describe('Environment Validation', () => {
   it('should warn about missing Redis in production without privacy mode', async () => {
     // Setup production environment without Redis
     process.env.KEYWORD_API_PROVIDER = 'mock'
-    process.env.NODE_ENV = 'production'
+    ;(process.env as Record<string, string>).NODE_ENV = 'production'
     process.env.PRIVACY_MODE = 'false'
     process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret-at-least-16-chars'
     delete process.env.UPSTASH_REDIS_REST_URL
@@ -82,7 +82,7 @@ describe('Environment Validation', () => {
   it('should validate google-ads provider with all required variables', async () => {
     // Setup complete Google Ads configuration
     process.env.KEYWORD_API_PROVIDER = 'google-ads'
-    process.env.NODE_ENV = 'test'
+    ;(process.env as Record<string, string>).NODE_ENV = 'test'
     process.env.GOOGLE_ADS_CLIENT_ID = 'test-client-id'
     process.env.GOOGLE_ADS_CLIENT_SECRET = 'test-client-secret'
     process.env.GOOGLE_ADS_DEVELOPER_TOKEN = 'test-dev-token'
@@ -100,7 +100,7 @@ describe('Environment Validation', () => {
   it('should validate dataforseo provider with all required variables', async () => {
     // Setup complete DataForSEO configuration
     process.env.KEYWORD_API_PROVIDER = 'dataforseo'
-    process.env.NODE_ENV = 'test'
+    ;(process.env as Record<string, string>).NODE_ENV = 'test'
     process.env.DATAFORSEO_API_LOGIN = 'test-login'
     process.env.DATAFORSEO_API_PASSWORD = 'test-password'
 
@@ -115,7 +115,7 @@ describe('Environment Validation', () => {
   it('should handle invalid rate limit values', async () => {
     // Setup environment with invalid rate limit
     process.env.KEYWORD_API_PROVIDER = 'mock'
-    process.env.NODE_ENV = 'test'
+    ;(process.env as Record<string, string>).NODE_ENV = 'test'
     process.env.RATE_LIMIT_REQUESTS_PER_HOUR = 'invalid'
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')

@@ -15,10 +15,10 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                         USER BROWSER                         │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │              React/Next.js Frontend (SPA)              │ │
-│  │  • TanStack Query (data fetching/caching)             │ │
-│  │  • Tailwind CSS (styling)                             │ │
-│  │  • React Hook Form (form validation)                  │ │
+│  │          Next.js App Router (SSR/ISR/Edge)            │ │
+│  │  • Server Components where possible                  │ │
+│  │  • Tailwind CSS 4 (styling)                          │ │
+│  │  • Client Components for interactive flows           │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                             │ HTTPS
@@ -55,7 +55,7 @@
 
 ### Frontend
 
-**Framework**: **Next.js 14+ (App Router)**
+**Framework**: **Next.js 16 (App Router)**
 
 - **Why**:
   - Server-side rendering for SEO (important for marketing site)
@@ -65,39 +65,24 @@
   - Battle-tested, huge ecosystem
   - Vercel deployment integration (easiest hosting)
 
-**UI Framework**: **React 18+**
+**UI Framework**: **React 19**
 
 - Industry standard
 - Excellent TypeScript support
 - Large component ecosystem
 
-**Styling**: **Tailwind CSS 4+**
+**Styling**: **Tailwind CSS 4**
 
 - Utility-first, fast development
 - Tiny production bundle sizes
 - Easy theming for dark mode
 - No CSS-in-JS runtime cost
 
-**State Management**: **TanStack Query v5** (React Query)
+**State / Data Fetching**: React server components + `fetch` in Route Handlers; light client-side state in components only when needed.
 
-- Server state management
-- Built-in caching, revalidation
-- Optimistic updates
-- Perfect for API-heavy apps
-- No global state needed for MVP
+**Validation**: **Zod** shared between server and client inputs.
 
-**Form Handling**: **React Hook Form + Zod**
-
-- Minimal re-renders
-- Built-in validation
-- Type-safe with Zod schemas
-- Small bundle size (~9KB)
-
-**Data Visualization**: **Recharts**
-
-- React-native charts
-- Responsive, accessible
-- For future trend visualizations
+**Data Visualization**: Trend sparkline component (custom SVG) for historical volumes.
 
 ### Backend/API
 
@@ -121,12 +106,9 @@
 - Excellent TypeScript inference
 - Input sanitization
 
-**API Client**: **Axios**
+**Observability**: **Pino** logger (`src/lib/utils/logger.ts`) and Sentry for client/edge/server error capture (see `sentry.*.config.ts`).
 
-- HTTP client for Google Ads / DataForSEO
-- Interceptors for auth, logging
-- Request/response transformation
-- Timeout handling
+**HTTP Client**: Native `fetch` with provider wrappers (`src/lib/api/providers/*`) and shared transformer in `src/lib/api/serp-service.ts`.
 
 ### Data Layer
 
@@ -249,18 +231,16 @@ const provider = createProvider(process.env.KEYWORD_API_PROVIDER)
 - Catch errors at compile time
 - Self-documenting code
 
-**Package Manager**: **pnpm**
+**Package Manager**: **npm** (Node 20 via Volta)
 
-- Faster than npm/yarn
-- Efficient disk space usage
-- Strict dependency resolution
-- Monorepo support (future)
+- Scripts defined in `package.json` (see README/AGENTS)
+- Consistent versions pinned with Volta (Node 20.11.1, npm 10.2.4)
 
-**Linting**: **ESLint + Prettier**
+**Linting/Formatting**: **ESLint + Stylelint + Prettier**
 
-- eslint-config-next (Next.js recommended rules)
-- prettier-plugin-tailwindcss (auto-sort classes)
-- Consistent code style
+- `eslint-config-next` + security plugin
+- Stylelint for CSS/Tailwind files
+- Prettier for formatting (checked in CI/hooks)
 
 **Testing**:
 
@@ -432,7 +412,7 @@ keyflash/
 
 **Development**:
 
-- Local: `pnpm dev` (http://localhost:3000)
+- Local: `npm run dev` (http://localhost:3000)
 - Uses .env.local for API keys
 - Hot reload enabled
 

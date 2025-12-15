@@ -55,9 +55,9 @@ Full KeyFlash access is included in [Vibe Lab Pro](https://vibebuildlab.com/pro)
 
 | Layer         | Technology                          |
 | ------------- | ----------------------------------- |
-| **Framework** | Next.js 14 (App Router)             |
-| **Language**  | TypeScript 5+                       |
-| **Styling**   | Tailwind CSS                        |
+| **Framework** | Next.js 16 (App Router)             |
+| **Language**  | TypeScript 5.9                      |
+| **Styling**   | Tailwind CSS 4                      |
 | **Caching**   | Upstash Redis                       |
 | **APIs**      | Google Ads API → DataForSEO (scale) |
 | **Hosting**   | Vercel                              |
@@ -72,14 +72,7 @@ Full KeyFlash access is included in [Vibe Lab Pro](https://vibebuildlab.com/pro)
 
 ## License
 
-This software is proprietary. See [LICENSE](LICENSE) for terms.
-
-**Usage Rights:**
-
-- ✅ Use via hosted service (free tier or Vibe Lab Pro)
-- ❌ No redistribution
-- ❌ No modification without license
-- ❌ No commercial resale
+Licensed under AGPL-3.0. See [LICENSE](LICENSE) for terms and obligations (including copyleft requirements for network use).
 
 ## Legal
 

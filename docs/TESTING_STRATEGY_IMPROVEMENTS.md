@@ -39,9 +39,9 @@ An external testing strategy audit revealed a **critical gap**: projects often t
 
 **What's Missing**:
 
-- No tests that actually run `pnpm lint` and verify it works
-- No tests that run `pnpm format` and verify it formats correctly
-- No tests that run `pnpm test:unit` and verify it executes
+- No tests that actually run `npm run lint` and verify it works
+- No tests that run `npm run format` and verify it formats correctly
+- No tests that run `npm run test:unit` and verify it executes
 
 **Real-World Consequence**:
 ESLint could have deprecated flags (like in the audit example), and our tests would still pass while shipping broken commands.
@@ -81,7 +81,7 @@ ESLint could have deprecated flags (like in the audit example), and our tests wo
 > "Tests run in the current project context instead of in isolation. This means you're testing against the generator's own configuration rather than genuinely generated output."
 
 **KeyFlash Risk**:
-If we test `pnpm lint` from within the KeyFlash directory, we're testing:
+If we test `npm run lint` from within the KeyFlash directory, we're testing:
 
 - Against KeyFlash's `node_modules`
 - Against KeyFlash's ESLint config
@@ -150,7 +150,7 @@ But users in a fresh project might get different results.
 **Proposed**:
 
 ```bash
-pnpm smoke-test  # Runs before deployment
+npm run test:smoke  # Runs before deployment
 # - Health endpoint returns 200
 # - API responds within 5s
 # - Redis connection works
@@ -178,7 +178,7 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 
 describe('npm scripts execution', () => {
-  it('pnpm lint executes successfully', () => {
+  it('npm run lint executes successfully', () => {
     // Create temp directory
     const tempDir = mkdtempSync(join(tmpdir(), 'keyflash-test-'))
 
@@ -187,7 +187,7 @@ describe('npm scripts execution', () => {
     // Create test files for linting
 
     // Actually run the command
-    const result = execSync('pnpm lint', {
+    const result = execSync('npm run lint', {
       cwd: tempDir,
       encoding: 'utf-8',
     })
@@ -196,7 +196,7 @@ describe('npm scripts execution', () => {
     expect(result).toBeDefined()
   })
 
-  it('pnpm format actually formats files', () => {
+  it('npm run format actually formats files', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'keyflash-test-'))
 
     // Create badly formatted file
@@ -204,21 +204,21 @@ describe('npm scripts execution', () => {
     writeFileSync(join(tempDir, 'test.ts'), badFile)
 
     // Run format command
-    execSync('pnpm format', { cwd: tempDir })
+    execSync('npm run format', { cwd: tempDir })
 
     // Verify file was formatted
     const formatted = readFileSync(join(tempDir, 'test.ts'), 'utf-8')
     expect(formatted).toBe('const x = 1;\nconst y = 2;\n')
   })
 
-  it('pnpm test:unit actually runs Vitest', () => {
+  it('npm run test:unit actually runs Vitest', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'keyflash-test-'))
 
     // Setup minimal test environment
     // Create a simple test file
 
     // Run test command
-    const output = execSync('pnpm test:unit', {
+    const output = execSync('npm run test:unit', {
       cwd: tempDir,
       encoding: 'utf-8',
     })
@@ -356,7 +356,7 @@ describe('Vitest configuration', () => {
   })
 
   it('can actually run tests', () => {
-    const output = execSync('pnpm vitest run --reporter=json', {
+    const output = execSync('npx vitest run --reporter=json', {
       encoding: 'utf-8',
     })
 
@@ -602,7 +602,7 @@ Update test distribution to:
     "test:smoke": "vitest run tests/smoke",
     "test:integration-real": "NODE_ENV=staging vitest run tests/integration-real",
     "test:e2e": "playwright test",
-    "test:all": "pnpm test:unit && pnpm test:integration && pnpm test:commands && pnpm test:config",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:commands && npm run test:config",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
     "test:e2e:ui": "playwright test --ui",
@@ -631,42 +631,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       # NEW: Configuration validation
       - name: Validate configurations
-        run: pnpm test:config
+        run: npm run test:config
 
       # NEW: Command execution tests
       - name: Test command execution
-        run: pnpm test:commands
+        run: npm run test:commands
 
       # NEW: Quality automation tests
       - name: Test quality automation
-        run: pnpm test:quality
+        run: npm run test:quality
 
       - name: Run unit tests
-        run: pnpm test:unit
+        run: npm run test:unit
 
       - name: Run integration tests
-        run: pnpm test:integration
+        run: npm run test:integration
         env:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_TEST }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_TEST }}
 
       # NEW: Smoke tests
       - name: Run smoke tests
-        run: pnpm test:smoke
+        run: npm run test:smoke
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -678,20 +674,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps
+        run: npx playwright install --with-deps
 
       - name: Run E2E tests
-        run: pnpm test:e2e
+        run: npm run test:e2e
         env:
           BASE_URL: http://localhost:3000
 
@@ -709,17 +704,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Run real API integration tests
-        run: pnpm test:integration-real
+        run: npm run test:integration-real
         env:
           NODE_ENV: staging
           GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID_STAGING }}

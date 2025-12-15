@@ -36,16 +36,23 @@ DATAFORSEO_API_LOGIN
 DATAFORSEO_API_PASSWORD
 UPSTASH_REDIS_REST_URL
 UPSTASH_REDIS_REST_TOKEN
+RATE_LIMIT_ENABLED
+RATE_LIMIT_REQUESTS_PER_HOUR
+RATE_LIMIT_HMAC_SECRET
+RATE_LIMIT_FAIL_SAFE
+RELATED_KEYWORDS_RATE_LIMIT_PER_HOUR
+PRIVACY_MODE
+SENTRY_DSN
 ```
 
 **Management**: Configure in Vercel dashboard → Settings → Environment Variables
 
 ## Deployment Checklist
 
-- [ ] All tests passing (`pnpm test`)
-- [ ] No ESLint errors (`pnpm lint`)
+- [ ] All tests passing (`npm test`)
+- [ ] No ESLint errors (`npm run lint`)
 - [ ] Environment variables configured
-- [ ] Security audit passed (`pnpm security:audit`)
+- [ ] Security audit passed (`npm run security:audit`)
 - [ ] Lighthouse CI score ≥90% (SEO)
 - [ ] PR approved and merged to `main`
 
@@ -53,13 +60,13 @@ UPSTASH_REDIS_REST_TOKEN
 
 ```bash
 # Run full validation
-pnpm validate:all
+npm run validate:all
 
 # Build locally to verify
-pnpm build
+npm run build
 
 # Test production build
-pnpm start
+npm start
 ```
 
 ## Monitoring

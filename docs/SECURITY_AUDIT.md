@@ -85,10 +85,11 @@ All user inputs validated with Zod schemas:
 
 ### 6. Rate Limiting ✅
 
-**Location**: `src/lib/rate-limit/rate-limiter.ts`
+**Location**: `src/lib/rate-limit/redis-rate-limiter.ts`
 
-- **Current**: In-memory (10 requests/hour per IP)
-- **Production TODO**: Migrate to Redis-based (see Priority 2 in PRODUCTION_READINESS_CHECKLIST.md)
+- Redis-backed with HMAC client ID and configurable fail-safe
+- Defaults: 10 requests/hour for keywords; overrides for related keywords/content briefs
+- Controlled via `RATE_LIMIT_ENABLED`, `RATE_LIMIT_REQUESTS_PER_HOUR`, `RELATED_KEYWORDS_RATE_LIMIT_PER_HOUR`, `RATE_LIMIT_HMAC_SECRET`, `RATE_LIMIT_FAIL_SAFE`
 
 ### 7. API Security ✅
 
@@ -102,44 +103,7 @@ All user inputs validated with Zod schemas:
 
 ### 8. Dependency Security ⚠️
 
-**Status**: 7 vulnerabilities in dev dependencies
-
-#### Remaining Vulnerabilities
-
-**High Severity (3)**:
-
-1. **glob** (eslint-config-next dependency)
-   - CVE: GHSA-5j98-mcp5-4vw2
-   - Impact: Command injection in glob CLI
-   - **Risk**: LOW (dev-only, not used in production)
-   - **Fix**: Requires Next.js 16 upgrade (breaking)
-
-2. **tmp** (@lhci/cli dependency)
-   - CVE: GHSA-52f5-9888-hmc6
-   - Impact: Arbitrary file write via symlink
-   - **Risk**: LOW (dev-only, Lighthouse CI)
-   - **Fix**: Awaiting upstream @lhci/cli update
-
-3. **tmp** (inquirer dependency)
-   - Same as #2
-   - Used by Lighthouse CI prompts
-
-**Low Severity (4)**:
-
-- All in dev dependencies
-- No production impact
-
-**Action Taken**:
-
-- ✅ Updated @lhci/cli from 0.14.0 → 0.15.1
-- ✅ Reduced vulnerabilities from 11 → 7
-- ❌ Cannot fix remaining without breaking changes
-
-**Recommendation**:
-
-- Monitor for updates to eslint-config-next and @lhci/cli
-- Consider removing Lighthouse CI if not used in production CI/CD
-- Vulnerabilities acceptable for MVP launch (dev-only)
+**Status**: Run `npm run security:audit` (high severity, dev omitted) before releases. Address findings per npm audit output; current production dependencies have no known CVEs post-Next.js 16 upgrade.
 
 ---
 
@@ -175,12 +139,12 @@ All user inputs validated with Zod schemas:
 - ✅ Security headers configured
 - ✅ `poweredByHeader: false` (no Next.js fingerprinting)
 - ✅ Strict mode enabled
-- ⚠️ Dev dependencies have vulnerabilities (acceptable)
+- ⚠️ Run `npm run security:audit` regularly; resolve production findings promptly
 
 ### A06:2021 – Vulnerable Components ⚠️
 
-- ⚠️ 7 vulnerabilities in dev dependencies
-- ✅ No vulnerabilities in production dependencies
+- ✅ No known vulnerabilities in production dependencies (post-upgrade)
+- ⚠️ Dev dependency findings vary; track via `npm run security:audit`
 - ✅ Automated dependency scanning enabled
 
 ### A07:2021 – Identification & Authentication Failures N/A
@@ -193,11 +157,11 @@ All user inputs validated with Zod schemas:
 - ✅ Subresource Integrity not needed (self-hosted)
 - ✅ No auto-update mechanism
 
-### A09:2021 – Security Logging & Monitoring ⏳
+### A09:2021 – Security Logging & Monitoring ✅
 
-- ⏳ TODO: Add Sentry for error tracking
-- ⏳ TODO: Add monitoring for suspicious activity
-- ✅ Console logging in place
+- ✅ Pino logger with redaction; centralized via `src/lib/utils/logger.ts`
+- ✅ Sentry enabled when `SENTRY_DSN` set (client/edge/server configs)
+- ✅ Error messages avoid leaking secrets
 
 ### A10:2021 – Server-Side Request Forgery (SSRF) ✅
 

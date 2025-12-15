@@ -73,7 +73,8 @@
 GOOGLE_ADS_CLIENT_ID=xxx
 GOOGLE_ADS_CLIENT_SECRET=xxx
 GOOGLE_ADS_DEVELOPER_TOKEN=xxx
-DATAFORSEO_API_KEY=xxx
+DATAFORSEO_API_LOGIN=xxx
+DATAFORSEO_API_PASSWORD=xxx
 
 # ❌ FORBIDDEN
 # - Hardcoded in source code
@@ -86,10 +87,11 @@ DATAFORSEO_API_KEY=xxx
 
 ```typescript
 // ✅ Server-side only (API routes)
-const apiKey = process.env.DATAFORSEO_API_KEY
+const login = process.env.DATAFORSEO_API_LOGIN
+const password = process.env.DATAFORSEO_API_PASSWORD
 
 // ❌ Never expose to client
-// const apiKey = window.ENV.DATAFORSEO_API_KEY; // WRONG!
+// const password = window.ENV.DATAFORSEO_API_PASSWORD; // WRONG!
 
 // ✅ Validate presence on startup
 if (!process.env.GOOGLE_ADS_CLIENT_ID) {
@@ -543,10 +545,10 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Run npm audit
-        run: pnpm audit --audit-level moderate
+        run: npm audit --audit-level moderate --omit=dev
 
       - name: Check for outdated dependencies
-        run: pnpm outdated
+        run: npm outdated
 ```
 
 #### Dependency Update Policy
@@ -560,7 +562,7 @@ jobs:
 
 ```bash
 # ✅ Always commit lock files
-pnpm-lock.yaml  # Ensures reproducible builds
+package-lock.json  # Ensures reproducible builds
 
 # ❌ Never use --no-lockfile
 ```
@@ -720,7 +722,7 @@ if (apiKeyMissing) {
 
 **Monthly**:
 
-- Update dependencies (pnpm update)
+- Update dependencies (npm update)
 - Review and rotate API keys if needed
 - Check for new vulnerabilities (Snyk)
 

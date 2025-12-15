@@ -112,7 +112,7 @@ export default defineConfig({
 - Encourages best practices
 
 ```bash
-pnpm add -D @testing-library/react @testing-library/jest-dom @testing-library/user-event
+npm install -D @testing-library/react @testing-library/jest-dom @testing-library/user-event
 ```
 
 ### E2E Tests
@@ -166,7 +166,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'pnpm dev',
+    command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
@@ -818,7 +818,7 @@ By Category:
 
 ```bash
 # Generate coverage report
-pnpm test:coverage
+npm run test:coverage
 
 # View HTML report
 open coverage/index.html
@@ -865,29 +865,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Run linter
-        run: pnpm lint
+        run: npm run lint
 
       - name: Run type check
-        run: pnpm type-check
+        run: npm run type-check:all
 
       - name: Run unit tests
-        run: pnpm test:unit
+        run: npm run test:unit
 
       - name: Run integration tests
-        run: pnpm test:integration
+        run: npm run test:integration
         env:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_TEST }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_TEST }}
@@ -903,21 +899,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm ci
 
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps
+        run: npx playwright install --with-deps
 
       - name: Run E2E tests
-        run: pnpm test:e2e
+        run: npm run test:e2e
         env:
           BASE_URL: http://localhost:3000
 
@@ -935,19 +929,20 @@ jobs:
 // package.json scripts
 {
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:commands": "vitest run tests/command-execution",
     "test:config": "vitest run tests/config-validation",
     "test:quality": "vitest run tests/quality-automation",
     "test:smoke": "vitest run tests/smoke",
-    "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:commands && npm run test:config && npm run test:quality && npm run test:smoke && npm run test:e2e",
     "test:ci": "npm run test:config && npm run test:commands && npm run test:quality && npm run test:unit && npm run test:integration && npm run test:smoke",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug"
   }
 }
@@ -960,13 +955,13 @@ jobs:
 npm run test:all
 
 # Run only specific test categories
-npm test:unit           # Unit tests only
-npm test:integration    # Integration tests only
-npm test:commands       # Command execution tests
-npm test:config         # Configuration validation
-npm test:quality        # Quality automation tests
-npm test:smoke          # Smoke tests
-npm test:e2e            # E2E tests
+npm run test:unit           # Unit tests only
+npm run test:integration    # Integration tests only
+npm run test:commands       # Command execution tests
+npm run test:config         # Configuration validation
+npm run test:quality        # Quality automation tests
+npm run test:smoke          # Smoke tests
+npm run test:e2e            # E2E tests
 
 # CI/CD optimized (runs critical tests first)
 npm run test:ci

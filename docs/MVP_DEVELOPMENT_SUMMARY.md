@@ -30,11 +30,11 @@ KeyFlash MVP has been successfully developed with a complete technical foundatio
 
 **Implemented**:
 
-- Next.js 14 with App Router and TypeScript 5
-- Tailwind CSS 3 styling with custom theme
+- Next.js 16 with App Router and TypeScript 5.9
+- Tailwind CSS 4 styling
 - Landing page (`/`) and search page (`/search`)
 - System font stack (Google Fonts removed due to network restrictions)
-- ESLint 8 + Next.js config (compatibility fix)
+- ESLint 9 + Next.js config
 
 **Key Files Created**:
 
@@ -42,13 +42,12 @@ KeyFlash MVP has been successfully developed with a complete technical foundatio
 src/app/layout.tsx
 src/app/page.tsx
 src/app/search/page.tsx
-tailwind.config.js
 ```
 
 **Technical Decisions**:
 
 - Used system fonts instead of Google Fonts for reliability
-- Downgraded to ESLint 8 for Next.js 14 compatibility
+- Upgraded to ESLint 9 with Next.js 16 compatibility
 - Strict TypeScript enabled from start
 
 ---
@@ -456,13 +455,13 @@ keyflash/
 
 ### Core Framework
 
-- **Next.js 14** - App Router, server components, API routes
-- **React 18** - UI components with hooks
-- **TypeScript 5** - Strict mode enabled
+- **Next.js 16** - App Router, server/serverless routes
+- **React 19** - UI components with hooks
+- **TypeScript 5.9** - Strict mode enabled
 
 ### Styling
 
-- **Tailwind CSS 3** - Utility-first styling
+- **Tailwind CSS 4** - Utility-first styling
 - **System Fonts** - Reliable font stack (no external dependencies)
 
 ### Data & Caching
@@ -479,7 +478,7 @@ keyflash/
 
 ### Quality Tools
 
-- **ESLint 8** - Linting (Next.js config)
+- **ESLint 9** - Linting (Next.js config)
 - **Prettier 3** - Code formatting
 - **Stylelint 16** - CSS linting
 - **Husky 9** - Git hooks
@@ -603,7 +602,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 **High Priority**:
 
-- [ ] Migrate rate limiting to Redis (currently in-memory)
+- [x] Redis-backed rate limiting shipped
 - [ ] Add user authentication (Auth0/NextAuth)
 - [ ] Implement saved searches feature
 - [ ] Add historical data tracking

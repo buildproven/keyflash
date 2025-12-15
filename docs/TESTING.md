@@ -2,13 +2,15 @@
 
 ## Quick Reference
 
-| Command              | Purpose                    |
-| -------------------- | -------------------------- |
-| `pnpm test`          | Run all tests              |
-| `pnpm test:unit`     | Unit tests only            |
-| `pnpm test:e2e`      | E2E tests with Playwright  |
-| `pnpm test:coverage` | Generate coverage report   |
-| `pnpm test:watch`    | Watch mode for development |
+| Command                    | Purpose                  |
+| -------------------------- | ------------------------ |
+| `npm test`                 | Run all Vitest suites    |
+| `npm run test:unit`        | Unit tests only          |
+| `npm run test:integration` | Integration tests        |
+| `npm run test:smoke`       | Smoke tests              |
+| `npm run test:e2e`         | Playwright E2E           |
+| `npm run test:coverage`    | Generate coverage report |
+| `npm run test:watch`       | Vitest watch mode        |
 
 ## Test Structure
 
@@ -124,35 +126,35 @@ it('submits form with user input', async () => {
 
 ```bash
 # All tests
-pnpm test
+npm test
 
 # Watch mode (development)
-pnpm test:watch
+npm run test:watch
 
 # Specific test file
-pnpm test -- keywords.test.ts
+npm test -- keywords.test.ts
 
 # Coverage report
-pnpm test:coverage
+npm run test:coverage
 
 # E2E tests
-pnpm test:e2e
+npm run test:e2e
 
 # E2E with UI
-pnpm test:e2e --ui
+npm run test:e2e:ui
 ```
 
 ## Debugging Tests
 
 ```bash
 # Run single test
-pnpm test -- --reporter=verbose
+npm test -- --reporter=verbose
 
 # Debug with inspector
 node --inspect-brk ./node_modules/vitest/vitest.mjs
 
 # Playwright debugging
-pnpm test:e2e --debug
+npm run test:e2e:debug
 ```
 
 ## CI/CD Integration

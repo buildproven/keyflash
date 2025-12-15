@@ -17,6 +17,8 @@ KeyFlash provides a RESTful API for keyword research with built-in rate limiting
 3. [Caching](#caching)
 4. [Endpoints](#endpoints)
    - [POST /api/keywords](#post-apikeywords)
+   - [POST /api/keywords/related](#post-apikeywordsrelated)
+   - [POST /api/content-brief](#post-apicontent-brief)
    - [GET /api/health](#get-apihealth)
 5. [Request Validation](#request-validation)
 6. [Error Handling](#error-handling)
@@ -35,13 +37,14 @@ KeyFlash provides a RESTful API for keyword research with built-in rate limiting
 
 ## Rate Limiting
 
-Rate limiting is enforced per IP address using Redis-based storage with HMAC-secured client identification.
+Rate limiting is enforced per IP address using the Redis-based limiter with HMAC-secured client identification.
 
 ### Configuration
 
-- **Default Limit**: 10 requests per hour per IP address
-- **Configurable via**: `RATE_LIMIT_REQUESTS_PER_HOUR` environment variable
-- **Enable/Disable**: `RATE_LIMIT_ENABLED` environment variable (default: `true`)
+- **Default Limit**: 10 requests/hour for keywords; 30/hour for related keywords; 20/hour for content briefs
+- **Configurable via**: `RATE_LIMIT_REQUESTS_PER_HOUR`, `RELATED_KEYWORDS_RATE_LIMIT_PER_HOUR`
+- **Enable/Disable**: `RATE_LIMIT_ENABLED` (`true` by default)
+- **HMAC Secret**: `RATE_LIMIT_HMAC_SECRET` (required in production)
 
 ### Rate Limit Headers
 
@@ -273,6 +276,51 @@ async function searchKeywords(
   return await response.json()
 }
 ```
+
+---
+
+### POST /api/keywords/related
+
+Get related keywords for a seed term.
+
+**Body**:
+
+```json
+{
+  "keyword": "seo",
+  "language": "en",
+  "location": "US",
+  "limit": 20
+}
+```
+
+**Notes**:
+
+- Validates input with `RelatedKeywordsSchema` (1-100 char keyword).
+- Rate limited (default 30/hour, configurable via `RELATED_KEYWORDS_RATE_LIMIT_PER_HOUR`).
+- Responses include `seedKeyword`, `relatedKeywords[]`, `provider`, `cached`, `timestamp`.
+
+---
+
+### POST /api/content-brief
+
+Generate a content brief for a keyword (SERP-driven outline and recommendations).
+
+**Body**:
+
+```json
+{
+  "keyword": "seo tools",
+  "language": "en",
+  "location": "US"
+}
+```
+
+**Notes**:
+
+- Rate limited to 20/hour (tied to global rate limit settings).
+- Cached for 24 hours by keyword + location; responses include `cached` and `timestamp`.
+- Requires valid provider configuration (mock, Google Ads, or DataForSEO) with env vars set.
 
 ---
 

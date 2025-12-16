@@ -129,14 +129,20 @@ export async function POST(request: NextRequest) {
       language
     )
 
-    // Cache the brief (1 day TTL - SERP data changes less frequently)
-    const briefCacheTTL = 24 * 60 * 60 // 1 day in seconds
-    await cache.set(
-      cacheKey,
-      brief as unknown as import('@/types/keyword').KeywordData[],
-      'ContentBrief',
-      briefCacheTTL
-    )
+    // Cache the brief (1 day TTL) only when using live data
+    if (!brief.mockData) {
+      const briefCacheTTL = 24 * 60 * 60 // 1 day in seconds
+      await cache.set(
+        cacheKey,
+        brief as unknown as import('@/types/keyword').KeywordData[],
+        'ContentBrief',
+        briefCacheTTL
+      )
+    } else {
+      logger.warn('Skipping cache write for mock content brief', {
+        module: 'ContentBrief',
+      })
+    }
 
     const response: ContentBriefResponse = {
       brief,

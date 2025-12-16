@@ -64,6 +64,13 @@ interface DataForSEOSerpResponse {
   tasks?: DataForSEOSerpTask[]
 }
 
+type SerpResultsPayload = {
+  results: SerpResult[]
+  paaQuestions: string[]
+  totalResults: number
+  source: 'live' | 'mock'
+}
+
 /**
  * Location code mapping for DataForSEO
  */
@@ -109,11 +116,7 @@ export class SerpService {
     keyword: string,
     location: string = 'US',
     language: string = 'en'
-  ): Promise<{
-    results: SerpResult[]
-    paaQuestions: string[]
-    totalResults: number
-  }> {
+  ): Promise<SerpResultsPayload> {
     if (!this.isConfigured()) {
       // Return mock data for development
       return this.getMockSerpResults(keyword)
@@ -161,7 +164,7 @@ export class SerpService {
         )
       }
 
-      return this.transformSerpResponse(data)
+      return { ...this.transformSerpResponse(data), source: 'live' }
     } catch (error) {
       logger.error('SERP API error', error, { module: 'SerpService' })
       // Fall back to mock data on error
@@ -172,11 +175,9 @@ export class SerpService {
   /**
    * Transform DataForSEO response to our format
    */
-  private transformSerpResponse(response: DataForSEOSerpResponse): {
-    results: SerpResult[]
-    paaQuestions: string[]
-    totalResults: number
-  } {
+  private transformSerpResponse(
+    response: DataForSEOSerpResponse
+  ): Omit<SerpResultsPayload, 'source'> {
     const task = response.tasks?.[0]
     const result = task?.result?.[0]
     const items = result?.items || []
@@ -224,11 +225,8 @@ export class SerpService {
     location: string = 'US',
     language: string = 'en'
   ): Promise<ContentBrief> {
-    const { results, paaQuestions, totalResults } = await this.getSerpResults(
-      keyword,
-      location,
-      language
-    )
+    const { results, paaQuestions, totalResults, source } =
+      await this.getSerpResults(keyword, location, language)
 
     // Calculate word count recommendations
     const wordCounts = results
@@ -256,6 +254,13 @@ export class SerpService {
     // Extract related keywords from descriptions
     const relatedKeywords = this.extractRelatedKeywords(results, keyword)
 
+    const isMock = source === 'mock'
+    const providerName = isMock
+      ? this.isConfigured()
+        ? 'DataForSEO (fallback to mock)'
+        : 'Mock'
+      : 'DataForSEO'
+
     const brief: ContentBrief = {
       keyword,
       location,
@@ -271,8 +276,8 @@ export class SerpService {
       suggestedHeadings,
       questionsToAnswer,
       relatedKeywords,
-      mockData: !this.isConfigured(),
-      provider: this.isConfigured() ? 'DataForSEO' : 'Mock',
+      mockData: isMock,
+      provider: providerName,
     }
 
     return brief
@@ -550,11 +555,7 @@ export class SerpService {
   /**
    * Mock SERP results for development/testing
    */
-  private getMockSerpResults(keyword: string): {
-    results: SerpResult[]
-    paaQuestions: string[]
-    totalResults: number
-  } {
+  private getMockSerpResults(keyword: string): SerpResultsPayload {
     const mockResults: SerpResult[] = [
       {
         position: 1,
@@ -610,6 +611,7 @@ export class SerpService {
       results: mockResults,
       paaQuestions: mockPAA,
       totalResults: 1250000,
+      source: 'mock',
     }
   }
 }

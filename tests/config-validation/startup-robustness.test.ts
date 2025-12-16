@@ -193,7 +193,7 @@ describe('Startup Robustness', () => {
           '../../src/lib/config/env-validation.js'
         )
         validateEnvironment()
-      } catch (error) {
+      } catch {
         didThrow = true
       }
 

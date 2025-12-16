@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
 
-// Initialize application configuration at startup
-import '@/lib/config/startup'
-
 /**
- * Middleware for security and request validation
+ * Middleware for security headers
  * Runs before all requests
+ *
+ * Note: Environment validation moved to API routes to avoid Edge runtime issues
  */
 export function middleware() {
   const response = NextResponse.next()

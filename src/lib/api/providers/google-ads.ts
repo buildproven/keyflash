@@ -115,6 +115,16 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       )
     }
 
+    // Validate match type and targeting upfront to avoid silently ignoring user input
+    if (options.matchType === 'exact') {
+      throw new Error(
+        'Google Ads provider currently supports phrase match only. Switch to DataForSEO or mock provider for exact match.'
+      )
+    }
+
+    const locationCode = this.getLocationCode(options.location)
+    const languageConstant = this.getLanguageConstant(options.language)
+
     try {
       // Get fresh access token
       const accessToken = await this.getAccessToken()
@@ -122,8 +132,9 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       // Call Google Ads Keyword Planner API
       const response = await this.callKeywordPlannerAPI(
         keywords,
-        options,
-        accessToken
+        accessToken,
+        locationCode,
+        languageConstant
       )
 
       // Transform response to KeywordData format
@@ -191,15 +202,12 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
    */
   private async callKeywordPlannerAPI(
     keywords: string[],
-    options: SearchOptions,
-    accessToken: string
+    accessToken: string,
+    locationCode: number,
+    languageConstant: string
   ): Promise<GoogleAdsKeywordResult> {
     // Format customer ID (remove dashes if present)
     const customerId = this.config.customerId.replace(/-/g, '')
-
-    // Build location code (Google Ads uses geotarget constant IDs)
-    // Default to United States (2840)
-    this.getLocationCode(options.location)
 
     // Build GAQL (Google Ads Query Language) query
     const query = `
@@ -228,6 +236,8 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
           body: JSON.stringify({
             query,
             customer_id: customerId,
+            geo_target_constants: [`geoTargetConstants/${locationCode}`],
+            language_constants: [languageConstant],
           }),
         }
       )
@@ -387,6 +397,41 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       Worldwide: 0, // Global targeting
     }
 
-    return locationMap[location || 'United States'] || 2840
+    const normalized = location || 'United States'
+    const code = locationMap[normalized]
+    if (code === undefined) {
+      throw new Error(
+        `Google Ads provider does not support location "${normalized}". Supported: ${Object.keys(locationMap).join(', ')}.`
+      )
+    }
+
+    return code
+  }
+
+  /**
+   * Get Google Ads language constant for language code
+   * @private
+   */
+  private getLanguageConstant(language?: string): string {
+    // Map of common language constants
+    // Full list: https://developers.google.com/google-ads/api/data/codes-formats#languages
+    const languageMap: Record<string, string> = {
+      en: 'languageConstants/1000',
+      'en-US': 'languageConstants/1000',
+      'en-GB': 'languageConstants/1000',
+      es: 'languageConstants/1003',
+      fr: 'languageConstants/1002',
+      de: 'languageConstants/1001',
+    }
+
+    const normalized = language || 'en'
+    const constant = languageMap[normalized]
+    if (!constant) {
+      throw new Error(
+        `Google Ads provider does not support language "${normalized}". Supported: ${Object.keys(languageMap).join(', ')}.`
+      )
+    }
+
+    return constant
   }
 }

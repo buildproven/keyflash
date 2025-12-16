@@ -120,7 +120,11 @@ export class SerpService {
     }
 
     try {
-      const locationCode = LOCATION_CODES[location] || 2840
+      const locationCode =
+        Object.prototype.hasOwnProperty.call(LOCATION_CODES, location) &&
+        location
+          ? LOCATION_CODES[location as keyof typeof LOCATION_CODES]
+          : 2840
 
       const response = await fetch(
         'https://api.dataforseo.com/v3/serp/google/organic/live/advanced',
@@ -405,8 +409,10 @@ export class SerpService {
     const phrases: string[] = []
 
     // Extract 2-word phrases
-    for (let i = 0; i < words.length - 1; i++) {
-      phrases.push(`${words[i]} ${words[i + 1]}`)
+    for (const [index, word] of words.entries()) {
+      const nextWord = words[index + 1]
+      if (!nextWord) break
+      phrases.push(`${word} ${nextWord}`)
     }
 
     return phrases

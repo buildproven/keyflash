@@ -64,7 +64,7 @@ export class IsolatedTestEnv {
         const srcPath = join(process.cwd(), config)
         const destPath = join(this.path, config)
         cpSync(srcPath, destPath)
-      } catch (error) {
+      } catch {
         // Config file might not exist yet - that's okay
         console.warn(`Warning: Could not copy ${config}`)
       }
@@ -97,7 +97,7 @@ export class IsolatedTestEnv {
       const huskyPath = join(process.cwd(), '.husky')
       const destPath = join(this.path, '.husky')
       cpSync(huskyPath, destPath, { recursive: true })
-    } catch (error) {
+    } catch {
       console.warn('Warning: Could not copy .husky directory')
     }
     return this
@@ -194,7 +194,7 @@ export class IsolatedTestEnv {
     if (this.cleanup) {
       try {
         rmSync(this.path, { recursive: true, force: true })
-      } catch (error) {
+      } catch {
         console.warn(`Warning: Could not clean up ${this.path}`)
       }
     }

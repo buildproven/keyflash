@@ -30,8 +30,8 @@ export const logger = pino({
 
   // Formatters
   formatters: {
-    level: (label) => ({ level: label }),
-    bindings: (bindings) => ({
+    level: label => ({ level: label }),
+    bindings: bindings => ({
       pid: bindings.pid,
       hostname: bindings.hostname,
     }),
@@ -106,9 +106,14 @@ export function logResponse(
   res: { statusCode: number },
   duration: number
 ) {
-  const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
+  const logFn =
+    res.statusCode >= 500
+      ? logger.error
+      : res.statusCode >= 400
+        ? logger.warn
+        : logger.info
 
-  logger[level](
+  logFn(
     {
       type: 'http.response',
       method: req.method,

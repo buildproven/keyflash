@@ -1,88 +1,78 @@
-# KeyFlash - Claude Guide
+# CLAUDE.md
 
-> AI-powered keyword research tool - 10x cheaper and faster than enterprise tools.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Status**: MVP Phase | **License**: AGPL-3.0
+## Overview
 
-## Tech Stack
-
-| Layer     | Technology                  |
-| --------- | --------------------------- |
-| Framework | Next.js 16 (App Router)     |
-| Language  | TypeScript 5+ (strict)      |
-| Styling   | Tailwind CSS v4             |
-| Cache     | Upstash Redis               |
-| APIs      | Google Ads API → DataForSEO |
-| Testing   | Vitest + Playwright         |
-| Hosting   | Vercel                      |
+KeyFlash is an AI-powered keyword research tool built with Next.js 16 (App Router), TypeScript 5+, and Tailwind CSS v4. It uses Upstash Redis for caching and supports multiple API providers (Google Ads, DataForSEO, or mock).
 
 ## Key Commands
 
 ```bash
-npm run dev              # Start dev server
-npm run build            # Production build
-npm test                 # Run all tests
-npm run lint             # Lint code
-npm run quality:check    # Full quality check
-npm run validate:all     # Comprehensive validation
+npm run dev                 # Start dev server (localhost:3000)
+npm run build               # Production build
+npm test                    # Run all Vitest tests
+npm run test:watch          # Watch mode for tests
+npm run test:unit           # Unit tests only (tests/unit/)
+npm run test:integration    # Integration tests (tests/integration/)
+npm run test:e2e            # Playwright E2E tests
+npm run lint                # ESLint + Stylelint
+npm run type-check:all      # TypeScript check (src + tests)
+npm run quality:check       # Type-check + lint + test (run before commits)
+npm run redis:start         # Start local Redis via Docker
 ```
 
-## Project Structure
+## Architecture
+
+### API Provider Pattern
+
+The codebase uses a factory pattern for keyword data providers (`src/lib/api/factory.ts`):
 
 ```
-src/
-├── app/                 # Next.js App Router pages
-├── lib/
-│   ├── api/            # Provider factory + implementations
-│   ├── cache/          # Redis caching
-│   ├── rate-limit/     # Rate limiting
-│   └── validation/     # Zod schemas
-└── types/              # TypeScript definitions
+createProvider() → GoogleAdsProvider | DataForSEOProvider | MockProvider
 ```
 
-## Critical Patterns
+Switch providers via `KEYWORD_API_PROVIDER` env var. All providers implement `KeywordAPIProvider` interface with `getKeywordData()`, `getRelatedKeywords()`, `getBatchLimit()`, and `getRateLimit()`.
 
-### API Provider Factory
+### API Routes
 
-```typescript
-// lib/api/factory.ts - switch providers via KEYWORD_API_PROVIDER env
-createProvider() // returns GoogleAdsProvider | DataForSEOProvider | MockProvider
-```
+- `POST /api/keywords` - Main keyword search endpoint
+- `POST /api/keywords/related` - Related keywords lookup
+- `POST /api/content-brief` - Content brief generation
+- `GET /api/health` - Health check
+
+### Security Layers
+
+1. **Rate limiting**: Redis-based, 10 req/hour per IP (`src/lib/rate-limit/`)
+2. **Input validation**: Zod schemas in `src/lib/validation/schemas.ts`
+3. **SSRF protection**: `src/lib/ssrf-protection.ts` for external URL fetching
+4. **Token encryption**: AES-256-GCM via `src/lib/encryption.ts`
 
 ### Caching
 
-- Key: `kw:${location}:${language}:${matchType}:${hash(keywords)}`
+- Redis cache key: `kw:${location}:${language}:${matchType}:${hash(keywords)}`
 - TTL: 7 days
-- Privacy mode: `PRIVACY_MODE=true` disables caching
+- `PRIVACY_MODE=true` disables all caching
 
-### Security (see docs/SECURITY.md)
+## Configuration
 
-- SSRF protection: `lib/ssrf-protection.ts`
-- Token encryption: `lib/encryption.ts` (AES-256-GCM)
-- Input validation: Zod schemas required
+Copy `.env.example` to `.env.local` for local development. Key variables:
 
-## What NOT to Do
+- `KEYWORD_API_PROVIDER` - `mock` (default), `google-ads`, or `dataforseo`
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis connection
+- `RATE_LIMIT_FAIL_SAFE` - `closed` (secure) or `open` (available when Redis fails)
+- `PRIVACY_MODE` - `true` to disable keyword caching
 
-- Don't commit secrets (pre-commit hook scans)
-- Don't skip rate limiting (10 req/hour per IP)
-- Don't store tokens unencrypted
-- Don't fetch URLs without SSRF protection
-- Don't use `any` types
-- Don't store user searches (privacy-first)
+## Constraints
 
-## Key Files
-
-- `lib/api/factory.ts` - Provider selection logic
-- `lib/ssrf-protection.ts` - External URL security
-- `lib/encryption.ts` - Token encryption
-- `.env.example` - Required environment variables
+- All external URL fetches must use SSRF protection utilities
+- Pre-commit hooks run lint, format, type-check, and secret scanning
+- 70% test coverage target
+- No `any` types - use proper TypeScript interfaces
+- No user search data stored (privacy-first design)
 
 ## Docs
 
-- `docs/REQUIREMENTS.md` - Feature scope
-- `docs/SECURITY.md` - Security controls (CRITICAL)
-- `docs/ARCHITECTURE.md` - Design decisions
-
----
-
-_70% test coverage target. See `docs/` for details. Global rules in `~/.claude/CLAUDE.md`._
+- `docs/SECURITY.md` - Security controls and threat model
+- `docs/ARCHITECTURE.md` - System design and scaling path
+- `docs/REQUIREMENTS.md` - Feature specifications

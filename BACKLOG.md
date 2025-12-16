@@ -1,6 +1,6 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2025-12-14
+**Last Updated**: 2025-12-15
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
 
 ---
@@ -79,5 +79,6 @@
 ## Stats
 
 - **MVP Status**: Complete
+- **Deployment**: https://keyflash.vibebuildlab.com (Live)
 - **Test Coverage**: 581 tests passing
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

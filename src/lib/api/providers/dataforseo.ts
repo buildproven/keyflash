@@ -193,9 +193,9 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       const data: DataForSEOResponse = await response.json()
 
       // Check for API-level errors
-      if (data.status_code !== 20000) {
+      if (data.status_code === undefined) {
         logger.warn(
-          `DataForSEO API returned non-success status (${data.status_code}) - falling back to empty results`,
+          'DataForSEO API returned no status_code; treating as empty result set',
           { module: 'DataForSEO' }
         )
         return {
@@ -203,6 +203,12 @@ export class DataForSEOProvider implements KeywordAPIProvider {
           status_message: data.status_message,
           tasks: data.tasks || [],
         }
+      }
+
+      if (data.status_code !== 20000) {
+        throw new Error(
+          `DataForSEO API error (${data.status_code}): ${data.status_message}`
+        )
       }
 
       return data

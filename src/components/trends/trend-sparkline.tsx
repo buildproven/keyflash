@@ -14,13 +14,20 @@ interface TrendSparklineProps {
  * Lightweight SVG sparkline for displaying search volume trends
  * Shows last 12 months of data with visual indication of trend direction
  */
+type TrendDirection = 'up' | 'down' | 'flat'
+interface TrendSparklineState {
+  path: string
+  color: string
+  trendDirection: TrendDirection
+}
+
 export const TrendSparkline = memo(function TrendSparkline({
   trends,
   width = 100,
   height = 24,
   className = '',
 }: TrendSparklineProps) {
-  const { path, color, trendDirection } = useMemo(() => {
+  const { path, color, trendDirection } = useMemo<TrendSparklineState>(() => {
     if (!trends || trends.length < 2) {
       return { path: '', color: 'text-gray-300', trendDirection: 'flat' }
     }
@@ -54,7 +61,7 @@ export const TrendSparkline = memo(function TrendSparkline({
     const changePercent = ((lastAvg - firstAvg) / (firstAvg || 1)) * 100
 
     let trendColor: string
-    let direction: 'up' | 'down' | 'flat'
+    let direction: TrendDirection
 
     if (changePercent > 10) {
       trendColor = 'text-green-500'
@@ -81,11 +88,14 @@ export const TrendSparkline = memo(function TrendSparkline({
     )
   }
 
-  const trendIcon = {
+  const trendIconMap: Record<TrendDirection, string> = {
     up: '↑',
     down: '↓',
     flat: '→',
-  }[trendDirection]
+  }
+  // trendDirection is constrained to the TrendDirection union
+  // eslint-disable-next-line security/detect-object-injection
+  const trendIcon = trendIconMap[trendDirection]
 
   return (
     <div className={`flex items-center gap-1 ${className}`}>
@@ -159,6 +169,8 @@ export const TrendChartExpanded = memo(function TrendChartExpanded({
   const points = chartData.volumes.map((vol, i) => {
     const x = paddingX + (i / (chartData.volumes.length - 1)) * chartWidth
     const y = paddingY + chartHeight - ((vol - minVol) / range) * chartHeight
+    // Index access is safe because trends and volumes are parallel arrays
+    // eslint-disable-next-line security/detect-object-injection
     return { x, y, vol, trend: chartData.trends[i] }
   })
 

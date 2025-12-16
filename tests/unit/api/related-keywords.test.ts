@@ -313,6 +313,10 @@ describe('/api/keywords/related', () => {
       // Mock provider to return many keywords
       vi.mocked(getProvider).mockReturnValue({
         name: 'Mock',
+        getKeywordData: vi.fn(),
+        getBatchLimit: vi.fn().mockReturnValue(100),
+        getRateLimit: vi.fn().mockReturnValue({ requests: 10, window: 3600 }),
+        validateConfiguration: vi.fn(),
         getRelatedKeywords: vi.fn().mockResolvedValue(
           Array(20)
             .fill(null)

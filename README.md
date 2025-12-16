@@ -2,6 +2,8 @@
 
 AI-powered keyword and content research tool. Get keyword data in under 3 seconds without enterprise pricing.
 
+**🚀 Live Demo**: [keyflash.vibebuildlab.com](https://keyflash.vibebuildlab.com)
+
 ---
 
 > **Maintainer & Ownership**

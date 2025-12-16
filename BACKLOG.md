@@ -79,5 +79,5 @@
 ## Stats
 
 - **MVP Status**: Complete
-- **Test Coverage**: 487 tests passing
+- **Test Coverage**: 581 tests passing
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

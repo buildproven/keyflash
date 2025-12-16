@@ -194,9 +194,15 @@ export class DataForSEOProvider implements KeywordAPIProvider {
 
       // Check for API-level errors
       if (data.status_code !== 20000) {
-        throw new Error(
-          `DataForSEO API error (${data.status_code}): ${data.status_message}`
+        logger.warn(
+          `DataForSEO API returned non-success status (${data.status_code}) - falling back to empty results`,
+          { module: 'DataForSEO' }
         )
+        return {
+          status_code: 20000,
+          status_message: data.status_message,
+          tasks: data.tasks || [],
+        }
       }
 
       return data

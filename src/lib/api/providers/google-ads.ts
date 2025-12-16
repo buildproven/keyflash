@@ -115,13 +115,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       )
     }
 
-    // Validate match type and targeting upfront to avoid silently ignoring user input
-    if (options.matchType === 'exact') {
-      throw new Error(
-        'Google Ads provider currently supports phrase match only. Switch to DataForSEO or mock provider for exact match.'
-      )
-    }
-
+    const matchType = options.matchType || 'phrase'
     const locationCode = this.getLocationCode(options.location)
     const languageConstant = this.getLanguageConstant(options.language)
 
@@ -134,7 +128,8 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
         keywords,
         accessToken,
         locationCode,
-        languageConstant
+        languageConstant,
+        matchType
       )
 
       // Transform response to KeywordData format
@@ -204,12 +199,18 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
     keywords: string[],
     accessToken: string,
     locationCode: number,
-    languageConstant: string
+    languageConstant: string,
+    matchType: 'phrase' | 'exact'
   ): Promise<GoogleAdsKeywordResult> {
     // Format customer ID (remove dashes if present)
     const customerId = this.config.customerId.replace(/-/g, '')
 
     // Build GAQL (Google Ads Query Language) query
+    const matchTypeClause =
+      matchType === 'exact'
+        ? 'keyword_plan_keyword.keyword_match_type = EXACT AND'
+        : ''
+
     const query = `
       SELECT
         keyword_plan_keyword_forecast_metrics.avg_monthly_searches,
@@ -219,7 +220,8 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
         keyword_plan_keyword_forecast_metrics.low_top_of_page_bid_micros,
         keyword_plan_keyword_forecast_metrics.high_top_of_page_bid_micros
       FROM keyword_plan_keyword
-      WHERE keyword_plan_keyword.text IN (${keywords.map(k => `'${k.replace(/'/g, "\\'")}'`).join(', ')})
+      WHERE ${matchTypeClause}
+        keyword_plan_keyword.text IN (${keywords.map(k => `'${k.replace(/'/g, "\\'")}'`).join(', ')})
     `.trim()
 
     try {
@@ -384,28 +386,32 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
    * @private
    */
   private getLocationCode(location?: string): number {
-    // Map of common location codes to Google Ads geotarget constant IDs
-    // Full list: https://developers.google.com/google-ads/api/data/geotargets
-    const locationMap: Record<string, number> = {
-      'United States': 2840,
-      'United Kingdom': 2826,
-      Canada: 2124,
-      Australia: 2036,
-      Germany: 2276,
-      France: 2250,
-      India: 2356,
-      Worldwide: 0, // Global targeting
-    }
-
     const normalized = location || 'United States'
-    const code = locationMap[normalized]
-    if (code === undefined) {
-      throw new Error(
-        `Google Ads provider does not support location "${normalized}". Supported: ${Object.keys(locationMap).join(', ')}.`
-      )
-    }
 
-    return code
+    switch (normalized) {
+      case 'United States':
+        return 2840
+      case 'United Kingdom':
+        return 2826
+      case 'Canada':
+        return 2124
+      case 'Australia':
+        return 2036
+      case 'Germany':
+        return 2276
+      case 'France':
+        return 2250
+      case 'India':
+        return 2356
+      case 'Worldwide':
+        return 0
+      default:
+        throw new Error(
+          'Google Ads provider does not support location "' +
+            normalized +
+            '". Supported: United States, United Kingdom, Canada, Australia, Germany, France, India, Worldwide.'
+        )
+    }
   }
 
   /**
@@ -413,25 +419,25 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
    * @private
    */
   private getLanguageConstant(language?: string): string {
-    // Map of common language constants
-    // Full list: https://developers.google.com/google-ads/api/data/codes-formats#languages
-    const languageMap: Record<string, string> = {
-      en: 'languageConstants/1000',
-      'en-US': 'languageConstants/1000',
-      'en-GB': 'languageConstants/1000',
-      es: 'languageConstants/1003',
-      fr: 'languageConstants/1002',
-      de: 'languageConstants/1001',
-    }
-
     const normalized = language || 'en'
-    const constant = languageMap[normalized]
-    if (!constant) {
-      throw new Error(
-        `Google Ads provider does not support language "${normalized}". Supported: ${Object.keys(languageMap).join(', ')}.`
-      )
-    }
 
-    return constant
+    switch (normalized) {
+      case 'en':
+      case 'en-US':
+      case 'en-GB':
+        return 'languageConstants/1000'
+      case 'es':
+        return 'languageConstants/1003'
+      case 'fr':
+        return 'languageConstants/1002'
+      case 'de':
+        return 'languageConstants/1001'
+      default:
+        throw new Error(
+          'Google Ads provider does not support language "' +
+            normalized +
+            '". Supported: en, en-US, en-GB, es, fr, de.'
+        )
+    }
   }
 }

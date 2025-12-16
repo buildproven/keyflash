@@ -32,7 +32,7 @@ The codebase uses a factory pattern for keyword data providers (`src/lib/api/fac
 createProvider() → GoogleAdsProvider | DataForSEOProvider | MockProvider
 ```
 
-Switch providers via `KEYWORD_API_PROVIDER` env var. All providers implement `KeywordAPIProvider` interface with `getKeywordData()`, `getRelatedKeywords()`, `getBatchLimit()`, and `getRateLimit()`.
+Switch providers via `KEYWORD_API_PROVIDER` env var. All providers implement `KeywordAPIProvider` interface with `getKeywordData()`, `getBatchLimit()`, `getRateLimit()`, `validateConfiguration()`, and optional `getRelatedKeywords()`.
 
 ### API Routes
 

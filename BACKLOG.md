@@ -1,6 +1,6 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2025-12-15
+**Last Updated**: 2025-12-17
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
 
 ---
@@ -57,6 +57,10 @@
 | **API-001/002**           | API abstraction layer, Google Ads integration       | 2025-11-20 |
 | **INFRA-001/002/003**     | Next.js 16, Google Ads credentials, Upstash Redis   | 2025-11-20 |
 | **SETUP-001/002/003/004** | Documentation, GitHub repo, quality automation      | 2025-11-19 |
+| **UI-004**                | Standard VibeBuildLab footer with legal links       | 2025-12-17 |
+| **COPY-001**              | Landing page copy improvements (accurate messaging) | 2025-12-17 |
+| **FIX-001**               | Tailwind CSS v4 import syntax fix                   | 2025-12-17 |
+| **FIX-002**               | DataForSEO response parsing fix                     | 2025-12-17 |
 
 ---
 

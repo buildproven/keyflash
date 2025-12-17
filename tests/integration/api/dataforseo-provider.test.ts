@@ -66,7 +66,61 @@ describe('DataForSEOProvider Integration Tests', () => {
   })
 
   describe('API Integration', () => {
-    it('should make successful API request', async () => {
+    it('should parse direct response format from search_volume/live endpoint', async () => {
+      // This is the actual response format from DataForSEO search_volume/live endpoint
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status_code: 20000,
+          status_message: 'Ok.',
+          tasks: [
+            {
+              status_code: 20000,
+              result: [
+                {
+                  keyword: 'nike shoes',
+                  spell: null,
+                  location_code: 2840,
+                  language_code: 'en',
+                  search_partners: false,
+                  competition: 'HIGH',
+                  competition_index: 100,
+                  search_volume: 823000,
+                  low_top_of_page_bid: 0.54,
+                  high_top_of_page_bid: 4.25,
+                  cpc: 0.88,
+                  monthly_searches: [
+                    { year: 2025, month: 11, search_volume: 823000 },
+                    { year: 2025, month: 10, search_volume: 673000 },
+                    { year: 2025, month: 9, search_volume: 550000 },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      })
+
+      const options: SearchOptions = {
+        matchType: 'phrase',
+        location: 'United States',
+        language: 'en',
+      }
+
+      const result = await provider.getKeywordData(['nike shoes'], options)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        keyword: 'nike shoes',
+        searchVolume: 823000,
+        cpc: 0.88,
+        competition: 'high',
+      })
+      expect(result[0].trends).toHaveLength(3)
+      expect(result[0].trends![0].volume).toBe(550000) // Sorted oldest first
+    })
+
+    it('should make successful API request with nested format (legacy)', async () => {
       fetchMock.mockResolvedValueOnce({
         ok: true,
         json: async () => ({

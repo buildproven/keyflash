@@ -1,8 +1,9 @@
 import Link from 'next/link'
+import { Footer } from '@/components/layout/footer'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
       {/* Hero */}
       <div className="mx-auto max-w-3xl px-6 pt-20 pb-16 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
@@ -75,10 +76,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Privacy note */}
       <div className="mx-auto max-w-3xl px-6 pb-12 text-center text-sm text-slate-500 dark:text-slate-400">
         <p>Privacy-focused • No searches stored</p>
       </div>
+
+      {/* Spacer to push footer down */}
+      <div className="grow" />
+
+      <Footer />
     </div>
   )
 }

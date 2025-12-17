@@ -15,6 +15,7 @@
         ]
       }
     ],
+    "import-notation": "string",
     "rule-empty-line-before": null
   }
 }

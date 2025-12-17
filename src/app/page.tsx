@@ -7,19 +7,24 @@ export default function Home() {
       {/* Hero */}
       <div className="mx-auto max-w-3xl px-6 pt-20 pb-16 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
-          KeyFlash
+          Keyword Research,
+          <br />
+          <span className="text-blue-600">Without the Bloat</span>
         </h1>
-        <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
-          Fast, simple keyword research. Get search volume, difficulty, and CPC
-          data in seconds.
+        <p className="mt-6 text-lg text-slate-600 dark:text-slate-300">
+          Get search volume, difficulty, CPC, and trends for up to 200 keywords
+          at once. No subscription required.
         </p>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
             href="/search"
-            className="inline-block rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            className="inline-block rounded-lg bg-blue-600 px-8 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
-            Start Researching
+            Try It Free
           </Link>
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            No signup needed
+          </span>
         </div>
       </div>
 
@@ -27,21 +32,21 @@ export default function Home() {
       <div className="mx-auto max-w-3xl px-6 pb-16">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-2xl font-bold text-blue-600">&lt;3s</div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Results
-            </div>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <div className="text-2xl font-bold text-blue-600">200</div>
             <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Keywords/batch
+              Keywords per search
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-2xl font-bold text-blue-600">10x</div>
+            <div className="text-2xl font-bold text-blue-600">Real</div>
             <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Cheaper
+              Google data
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+            <div className="text-2xl font-bold text-blue-600">$0</div>
+            <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              To get started
             </div>
           </div>
         </div>
@@ -50,35 +55,58 @@ export default function Home() {
       {/* Features */}
       <div className="mx-auto max-w-3xl px-6 pb-16">
         <h2 className="mb-6 text-center text-xl font-semibold text-slate-900 dark:text-white">
-          What you get
+          Everything you need for keyword research
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {[
-            'Search volume & trends',
-            'Keyword difficulty scores',
-            'CPC & competition data',
-            'Related keyword suggestions',
-            'Content brief generator',
-            'CSV export',
+            {
+              title: 'Search volume & trends',
+              desc: '12-month historical data',
+            },
+            { title: 'Keyword difficulty', desc: 'See how hard to rank' },
+            { title: 'CPC & competition', desc: 'Paid search insights' },
+            { title: 'Related keywords', desc: 'Discover new opportunities' },
+            { title: 'Content briefs', desc: 'AI-generated outlines' },
+            { title: 'CSV export', desc: 'Take your data anywhere' },
           ].map(feature => (
             <div
-              key={feature}
-              className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800"
+              key={feature.title}
+              className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800"
             >
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
                 ✓
               </span>
-              <span className="text-sm text-slate-700 dark:text-slate-300">
-                {feature}
-              </span>
+              <div>
+                <div className="text-sm font-medium text-slate-900 dark:text-white">
+                  {feature.title}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  {feature.desc}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Privacy note */}
-      <div className="mx-auto max-w-3xl px-6 pb-12 text-center text-sm text-slate-500 dark:text-slate-400">
-        <p>Privacy-focused • No searches stored</p>
+      {/* Trust signals */}
+      <div className="mx-auto max-w-3xl px-6 pb-12 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
+          </svg>
+          Privacy-first: Your searches are never stored
+        </div>
       </div>
 
       {/* Spacer to push footer down */}

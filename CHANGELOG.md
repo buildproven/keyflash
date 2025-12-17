@@ -7,10 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Standard VibeBuildLab footer component with legal links (Privacy, Terms)
+- Dynamic copyright year that auto-updates
+
 ### Changed
 
+- Improved landing page copy with accurate, compelling messaging
+- Removed vague claims ("10x cheaper", "<3s") in favor of verifiable benefits
+- Enhanced feature descriptions with contextual details
 - Optimized React component performance with `React.memo` for `KeywordResultsTable` to prevent unnecessary re-renders
 - Added `useCallback` hooks to all `SearchPage` handlers (`handleSearch`, `handleExport`, `handleRetry`) for stable function references
+
+### Fixed
+
+- Corrected Tailwind CSS v4 import syntax (`@import 'tailwindcss'` instead of `@import url('tailwindcss')`)
+- Fixed DataForSEO response parsing to handle direct field structure (`search_volume` vs nested `search_volume_info.search_volume`)
+- Updated copyright to "Vibe Build Lab LLC"
+- Removed GitHub link from footer (private repo)
 
 ## [1.0.0] - 2025-11-21
 

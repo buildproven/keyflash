@@ -77,17 +77,7 @@ export default function Home() {
 
       {/* Footer */}
       <div className="mx-auto max-w-3xl px-6 pb-12 text-center text-sm text-slate-500 dark:text-slate-400">
-        <p>Privacy-focused • No searches stored • Open source</p>
-        <p className="mt-2">
-          <a
-            href="https://github.com/brettstark73/keyflash"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            View on GitHub
-          </a>
-        </p>
+        <p>Privacy-focused • No searches stored</p>
       </div>
     </div>
   )

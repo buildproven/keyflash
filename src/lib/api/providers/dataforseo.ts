@@ -32,6 +32,19 @@ interface DataForSEOTask {
   status_message?: string
   result?: Array<{
     keyword?: string
+    // Direct response fields (search_volume/live endpoint)
+    search_volume?: number
+    competition?: string
+    competition_index?: number
+    cpc?: number
+    low_top_of_page_bid?: number
+    high_top_of_page_bid?: number
+    monthly_searches?: Array<{
+      month?: number
+      year?: number
+      search_volume?: number
+    }>
+    // Nested response fields (other endpoints)
     keyword_info?: {
       keyword?: string
       monthly_searches?: Array<{
@@ -258,22 +271,30 @@ export class DataForSEOProvider implements KeywordAPIProvider {
 
       if (!keyword) return
 
-      // Consolidate metrics from different response sections
+      // Consolidate metrics - check direct fields first, then nested
       const metrics: DataForSEOKeywordMetrics = {
         keyword,
         search_volume:
-          result.search_volume_info?.search_volume ||
-          result.keyword_info?.monthly_searches?.[0]?.search_volume ||
+          result.search_volume ??
+          result.search_volume_info?.search_volume ??
+          result.keyword_info?.monthly_searches?.[0]?.search_volume ??
           0,
-        competition: result.search_volume_info?.competition,
-        competition_level: result.search_volume_info?.competition_level,
-        cpc: result.search_volume_info?.cpc || 0,
+        competition:
+          result.competition_index ?? result.search_volume_info?.competition,
+        competition_level:
+          result.competition ?? result.search_volume_info?.competition_level,
+        cpc: result.cpc ?? result.search_volume_info?.cpc ?? 0,
         low_top_of_page_bid:
-          result.search_volume_info?.low_top_of_page_bid || 0,
+          result.low_top_of_page_bid ??
+          result.search_volume_info?.low_top_of_page_bid ??
+          0,
         high_top_of_page_bid:
-          result.search_volume_info?.high_top_of_page_bid || 0,
-        keyword_difficulty: result.keyword_properties?.keyword_difficulty || 50,
-        monthly_searches: result.keyword_info?.monthly_searches,
+          result.high_top_of_page_bid ??
+          result.search_volume_info?.high_top_of_page_bid ??
+          0,
+        keyword_difficulty: result.keyword_properties?.keyword_difficulty ?? 50,
+        monthly_searches:
+          result.monthly_searches ?? result.keyword_info?.monthly_searches,
       }
 
       resultMap.set(keyword.toLowerCase(), metrics)

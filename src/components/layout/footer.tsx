@@ -14,7 +14,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="font-medium text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
             >
-              VibeBuildLab
+              Vibe Build Lab
             </a>
           </div>
 
@@ -40,7 +40,7 @@ export function Footer() {
 
           {/* Copyright */}
           <div className="text-sm text-slate-500 dark:text-slate-500">
-            © {currentYear} VibeBuildLab
+            © {currentYear} Vibe Build Lab LLC
           </div>
         </div>
       </div>

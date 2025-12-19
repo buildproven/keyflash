@@ -9,6 +9,34 @@ const mockFetch = vi.fn()
 global.fetch = mockFetch
 
 describe('KeywordResultsTable', () => {
+  const mockBrief = {
+    keyword: 'seo tools',
+    location: 'US',
+    generatedAt: '2025-01-01T00:00:00Z',
+    serpResults: [
+      {
+        position: 1,
+        title: 'Best SEO Tools 2025',
+        url: 'https://example.com/seo-tools',
+        domain: 'example.com',
+        description: 'A comprehensive guide to SEO tools',
+        wordCount: 2500,
+      },
+    ],
+    recommendedWordCount: {
+      min: 1500,
+      max: 3000,
+      average: 2150,
+    },
+    topics: [{ topic: 'keyword research', frequency: 8, importance: 'high' }],
+    suggestedHeadings: [
+      { text: 'What are SEO Tools?', level: 'h2', source: 'competitor' },
+    ],
+    questionsToAnswer: [
+      { question: 'What is the best SEO tool?', source: 'paa' },
+    ],
+    relatedKeywords: ['seo software', 'keyword tool'],
+  }
   const generateTrends = (): MonthlyTrend[] =>
     Array.from({ length: 12 }, (_, i) => ({
       month: (i % 12) + 1,
@@ -58,9 +86,25 @@ describe('KeywordResultsTable', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ relatedKeywords: [], brief: {} }),
+    mockFetch.mockImplementation(url => {
+      if (url === '/api/content-brief') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ brief: mockBrief }),
+        })
+      }
+
+      if (url === '/api/keywords/related') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ relatedKeywords: [] }),
+        })
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({}),
+      })
     })
   })
 

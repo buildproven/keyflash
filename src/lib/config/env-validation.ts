@@ -48,6 +48,7 @@ const envSchema = z.object({
     .default(10)
     .refine(val => !isNaN(val), 'Must be a valid number'),
   RATE_LIMIT_HMAC_SECRET: z.string().min(16).optional(),
+  RATE_LIMIT_TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   RATE_LIMIT_FAIL_SAFE: z.enum(['open', 'closed']).default('closed'),
 
   // Package version for health checks
@@ -113,6 +114,16 @@ function validateRateLimitConfig(env: z.infer<typeof envSchema>): void {
       )
     }
 
+    if (
+      env.NODE_ENV === 'production' &&
+      env.RATE_LIMIT_TRUST_PROXY !== 'true'
+    ) {
+      throw new Error(
+        'RATE_LIMIT_TRUST_PROXY must be true in production when rate limiting is enabled. ' +
+          'Set RATE_LIMIT_TRUST_PROXY=true to only trust proxy-provided IP headers.'
+      )
+    }
+
     if (env.RATE_LIMIT_REQUESTS_PER_HOUR < 5) {
       logger.warn(
         `⚠️  Rate limit set very low (${env.RATE_LIMIT_REQUESTS_PER_HOUR}/hour). ` +
@@ -162,7 +173,11 @@ export function validateEnvironment() {
 
     return env
   } catch (error) {
-    console.error('❌ Environment configuration validation failed:')
+    const shouldLogErrors =
+      process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true'
+    if (shouldLogErrors) {
+      console.error('❌ Environment configuration validation failed:')
+    }
 
     let errorMessage = 'Environment validation failed'
 
@@ -170,15 +185,21 @@ export function validateEnvironment() {
       const issues = error.issues.map(
         issue => `${issue.path.join('.')}: ${issue.message}`
       )
-      console.error(issues.map(issue => `   • ${issue}`).join('\n'))
+      if (shouldLogErrors) {
+        console.error(issues.map(issue => `   • ${issue}`).join('\n'))
+      }
       errorMessage = `Environment validation failed: ${issues.join(', ')}`
     } else {
       const message = (error as Error).message
-      console.error(`   • ${message}`)
+      if (shouldLogErrors) {
+        console.error(`   • ${message}`)
+      }
       errorMessage = `Environment validation failed: ${message}`
     }
 
-    console.error('\n📖 See .env.example for required environment variables')
+    if (shouldLogErrors) {
+      console.error('\n📖 See .env.example for required environment variables')
+    }
 
     // Throw error instead of process.exit to allow proper error handling
     // In development, this will be caught by startup.ts try/catch

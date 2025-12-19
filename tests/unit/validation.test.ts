@@ -169,6 +169,15 @@ describe('RelatedKeywordsSchema', () => {
     expect(() => RelatedKeywordsSchema.parse(invalidData)).toThrow()
   })
 
+  it('should reject unsupported location codes', () => {
+    const invalidData = {
+      keyword: 'test',
+      location: 'JP',
+    }
+
+    expect(() => RelatedKeywordsSchema.parse(invalidData)).toThrow()
+  })
+
   it('should accept valid 2-letter country codes', () => {
     const validData = {
       keyword: 'test',

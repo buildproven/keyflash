@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { ContentBrief } from '@/types/content-brief'
 
 interface ContentBriefModalProps {
@@ -20,7 +20,7 @@ export function ContentBriefModal({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const generateBrief = async () => {
+  const generateBrief = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -43,12 +43,20 @@ export function ContentBriefModal({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [keyword, location])
 
-  // Generate brief when modal opens
-  if (isOpen && !brief && !isLoading && !error) {
-    generateBrief()
-  }
+  useEffect(() => {
+    if (!isOpen) {
+      setBrief(null)
+      setIsLoading(false)
+      setError(null)
+      return
+    }
+
+    if (!brief && !isLoading && !error) {
+      void generateBrief()
+    }
+  }, [brief, error, generateBrief, isLoading, isOpen])
 
   if (!isOpen) return null
 

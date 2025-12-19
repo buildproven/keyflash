@@ -153,7 +153,7 @@ describe('Keywords API Integration', () => {
       expect(data.message).toContain(
         'must contain only letters, numbers, spaces, hyphens'
       )
-      expect(data.message).toContain('2-letter country code')
+      expect(data.message).toContain('Location must be one of')
       expect(data.message).toContain('valid language code')
     })
 

@@ -119,7 +119,7 @@ describe('Strict Input Validation Schema', () => {
 
     describe('location validation', () => {
       it('accepts valid 2-letter country codes', () => {
-        const validCodes = ['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'JP', 'IN']
+        const validCodes = ['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IN', 'GL']
 
         validCodes.forEach(location => {
           const result = KeywordSearchSchema.safeParse({
@@ -153,7 +153,7 @@ describe('Strict Input Validation Schema', () => {
           expect(result.success).toBe(false)
           if (!result.success) {
             expect(result.error.issues[0].message).toContain(
-              '2-letter country code'
+              'Location must be one of'
             )
           }
         })
@@ -325,7 +325,7 @@ describe('Strict Input Validation Schema', () => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.issues[0].message).toContain(
-          '2-letter country code'
+          'Location must be one of'
         )
       }
     })

@@ -15,9 +15,8 @@ vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
 
 vi.mock('@/lib/cache/redis', () => ({
   cache: {
-    get: vi.fn().mockResolvedValue(null),
-    set: vi.fn().mockResolvedValue(true),
-    isAvailable: vi.fn().mockReturnValue(false),
+    getRaw: vi.fn().mockResolvedValue(null),
+    setRaw: vi.fn().mockResolvedValue(true),
   },
 }))
 
@@ -60,6 +59,7 @@ vi.mock('@/lib/api/serp-service', () => ({
 
 import { POST, GET } from '@/app/api/content-brief/route'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
+import { cache } from '@/lib/cache/redis'
 
 // Helper to create mock request
 function createMockRequest(body: object): NextRequest {
@@ -139,6 +139,37 @@ describe('/api/content-brief', () => {
       expect(response.status).toBe(400)
     })
 
+    it('returns cached brief when available', async () => {
+      const cachedBrief = {
+        keyword: 'test keyword',
+        location: 'US',
+        generatedAt: new Date().toISOString(),
+        serpResults: [],
+        totalResults: 0,
+        recommendedWordCount: { min: 1000, max: 2000, average: 1500 },
+        topics: [],
+        suggestedHeadings: [],
+        questionsToAnswer: [],
+        relatedKeywords: [],
+        mockData: false,
+        provider: 'DataForSEO',
+      }
+      vi.mocked(cache.getRaw).mockResolvedValueOnce(cachedBrief)
+
+      const request = createMockRequest({
+        keyword: 'test keyword',
+        location: 'US',
+        language: 'en',
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.cached).toBe(true)
+      expect(data.brief).toEqual(cachedBrief)
+    })
+
     it('returns 429 when rate limited', async () => {
       vi.mocked(rateLimiter.checkRateLimit).mockResolvedValueOnce({
         allowed: false,
@@ -177,6 +208,24 @@ describe('/api/content-brief', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(400)
+    })
+
+    it('rejects bodies larger than 1MB', async () => {
+      const largePayload = 'a'.repeat(1_100_000)
+      const request = new NextRequest(
+        'http://localhost:3000/api/content-brief',
+        {
+          method: 'POST',
+          body: largePayload,
+          headers: {
+            'content-type': 'application/json',
+            'content-length': largePayload.length.toString(),
+          },
+        }
+      )
+
+      const response = await POST(request)
+      expect(response.status).toBe(413)
     })
   })
 

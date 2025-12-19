@@ -30,6 +30,8 @@ export class RedisRateLimiter {
   private redis: Redis | null = null
   private fallbackStore = new Map<string, RateLimitEntry>()
   private isRedisAvailable = false
+  private isProduction = process.env.NODE_ENV === 'production'
+  private trustProxy = process.env.RATE_LIMIT_TRUST_PROXY === 'true'
   // Keep a typed error helper for attaching HTTP-friendly metadata
   private createConfigError(
     message: string,
@@ -77,24 +79,15 @@ export class RedisRateLimiter {
    * Includes HMAC of user-agent to make spoofing harder
    */
   private generateClientId(request: Request): string {
-    // Prefer CF-Connecting-IP (Cloudflare) as it's harder to spoof
-    const cfConnectingIp = request.headers.get('cf-connecting-ip')
-    const xForwardedFor = request.headers.get('x-forwarded-for')
-    const xRealIp = request.headers.get('x-real-ip')
     const userAgent = request.headers.get('user-agent') || ''
 
-    // Get the most reliable IP address
-    let clientIp =
-      cfConnectingIp ||
-      xForwardedFor?.split(',')[0].trim() ||
-      xRealIp ||
-      'unknown'
+    const clientIp = this.getTrustedClientIp(request) || 'unknown'
 
     // Create HMAC of user-agent to make spoofing more difficult
     const hmacKey = process.env.RATE_LIMIT_HMAC_SECRET
 
     // In production, require HMAC secret for security
-    if (process.env.NODE_ENV === 'production' && !hmacKey) {
+    if (this.isProduction && !hmacKey) {
       throw this.createConfigError(
         'RATE_LIMIT_HMAC_SECRET missing in production; rate limiting cannot safely identify clients.'
       )
@@ -109,6 +102,76 @@ export class RedisRateLimiter {
       .substring(0, 8) // First 8 chars for brevity
 
     return `${clientIp}:${userAgentHash}`
+  }
+
+  private getTrustedClientIp(request: Request): string | null {
+    if (!this.trustProxy) {
+      return null
+    }
+
+    const allowPrivate = !this.isProduction
+    const cfConnectingIp = request.headers.get('cf-connecting-ip')
+    const xRealIp = request.headers.get('x-real-ip')
+    const xForwardedFor = request.headers.get('x-forwarded-for')
+
+    const candidates = [
+      cfConnectingIp?.trim(),
+      xRealIp?.trim(),
+      xForwardedFor?.split(',')[0]?.trim(),
+    ].filter(Boolean) as string[]
+
+    for (const ip of candidates) {
+      if (allowPrivate ? this.isValidIP(ip) : this.isValidPublicIP(ip)) {
+        return ip
+      }
+    }
+
+    return null
+  }
+
+  private isValidIP(ip: string): boolean {
+    if (!ip || ip.length === 0) return false
+
+    const ipv4Parts = ip.split('.')
+    if (ipv4Parts.length === 4) {
+      const isValidIPv4 = ipv4Parts.every(part => {
+        const num = parseInt(part, 10)
+        return !isNaN(num) && num >= 0 && num <= 255 && part === String(num)
+      })
+      if (isValidIPv4) return true
+    }
+
+    const ipv6Parts = ip.split(':')
+    if (ipv6Parts.length >= 2) {
+      const isValidIPv6 = ipv6Parts.every(part => {
+        if (part.length === 0) return true
+        if (part.length > 4) return false
+        return /^[0-9a-fA-F]+$/.test(part)
+      })
+      if (isValidIPv6) return true
+    }
+
+    return false
+  }
+
+  private isPrivateIP(ip: string): boolean {
+    if (ip === '127.0.0.1' || ip === 'localhost') return true
+    if (ip.startsWith('10.')) return true
+    if (ip.startsWith('192.168.')) return true
+    if (ip.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)) return true
+    if (ip.startsWith('169.254.')) return true
+    if (ip === '0.0.0.0') return true
+    if (ip === '::1' || ip === '::') return true
+    if (ip.startsWith('fc00:') || ip.startsWith('fd00:')) return true
+    if (ip.startsWith('fe80:')) return true
+    if (ip.startsWith('::ffff:')) return true
+    return false
+  }
+
+  private isValidPublicIP(ip: string): boolean {
+    if (!this.isValidIP(ip)) return false
+    if (this.isPrivateIP(ip)) return false
+    return true
   }
 
   /**

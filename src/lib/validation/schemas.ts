@@ -1,5 +1,34 @@
 import { z } from 'zod'
 
+const SUPPORTED_LOCATION_CODES = [
+  'US',
+  'GB',
+  'CA',
+  'AU',
+  'DE',
+  'FR',
+  'IN',
+  'GL',
+] as const
+
+const LOCATION_ERROR_MESSAGE =
+  'Location must be one of US, GB, CA, AU, DE, FR, IN, or GL for Global'
+
+const LocationCodeSchema = z.preprocess(
+  value => {
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
+      return trimmed === '' ? undefined : trimmed
+    }
+    return value
+  },
+  z
+    .enum(SUPPORTED_LOCATION_CODES, {
+      message: LOCATION_ERROR_MESSAGE,
+    })
+    .optional()
+)
+
 /**
  * Schema for validating keyword search requests
  * Implements strict security controls from docs/SECURITY.md
@@ -20,15 +49,7 @@ export const KeywordSearchSchema = z.object({
     .min(1, 'At least one keyword is required')
     .max(200, 'Maximum 200 keywords allowed'),
   matchType: z.enum(['phrase', 'exact']),
-  location: z
-    .string()
-    .trim()
-    .regex(
-      /^([A-Z]{2}|GL)$/,
-      'Location must be a 2-letter country code (e.g., US, GB) or GL for Global'
-    )
-    .optional()
-    .or(z.literal('').transform(() => undefined)), // Allow empty string to be undefined
+  location: LocationCodeSchema,
   language: z
     .string()
     .trim()
@@ -51,15 +72,7 @@ export const KeywordInputSchema = z.object({
     .min(1, 'Please enter at least one keyword')
     .max(10000, 'Input too large'),
   matchType: z.enum(['phrase', 'exact']),
-  location: z
-    .string()
-    .trim()
-    .regex(
-      /^([A-Z]{2}|GL|)$/,
-      'Location must be a 2-letter country code, GL for Global, or empty'
-    )
-    .transform(val => val || 'US') // Default to US if empty
-    .default('US'),
+  location: LocationCodeSchema.default('US'),
 })
 
 /**
@@ -75,15 +88,7 @@ export const RelatedKeywordsSchema = z.object({
       /^[a-zA-Z0-9\s\-_]+$/,
       'Keyword must contain only letters, numbers, spaces, hyphens, and underscores'
     ),
-  location: z
-    .string()
-    .trim()
-    .regex(
-      /^([A-Z]{2}|GL)$/,
-      'Location must be a 2-letter country code (e.g., US, GB) or GL for Global'
-    )
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
+  location: LocationCodeSchema,
   language: z
     .string()
     .trim()

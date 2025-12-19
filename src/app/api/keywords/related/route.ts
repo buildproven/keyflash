@@ -9,6 +9,7 @@ import { getProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
 import { logger } from '@/lib/utils/logger'
 import { normalizeLocationForProvider } from '../route'
+import { readJsonWithLimit } from '@/lib/utils/request'
 import type {
   RelatedKeyword,
   RelatedKeywordsResponse,
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate request body
-    const body = await request.json()
+    const body = await readJsonWithLimit(request)
     const validated = RelatedKeywordsSchema.parse(body)
 
     const normalizedLocation = normalizeLocationForProvider(validated.location)
@@ -88,11 +89,12 @@ export async function POST(request: NextRequest) {
     const cachedData = await cache.getRaw<CachedRelatedKeywords>(cacheKey)
 
     let relatedKeywords: RelatedKeyword[]
+    let fullRelatedKeywords: RelatedKeyword[]
     let isCached = false
     let providerName = 'Unknown'
 
     if (cachedData) {
-      relatedKeywords = cachedData.data
+      fullRelatedKeywords = cachedData.data
       isCached = true
       providerName = cachedData.metadata?.provider ?? 'Unknown'
       logger.debug(`Cache HIT - ${cacheKey}`, { module: 'Cache' })
@@ -110,20 +112,18 @@ export async function POST(request: NextRequest) {
         return handleAPIError(error)
       }
 
-      relatedKeywords = await provider.getRelatedKeywords(validated.keyword, {
-        matchType: 'phrase',
-        location: normalizedLocation,
-        language: validated.language,
-      })
-
-      // Apply limit if specified
-      if (validated.limit) {
-        relatedKeywords = relatedKeywords.slice(0, validated.limit)
-      }
+      fullRelatedKeywords = await provider.getRelatedKeywords(
+        validated.keyword,
+        {
+          matchType: 'phrase',
+          location: normalizedLocation,
+          language: validated.language,
+        }
+      )
 
       // Cache results (7 days TTL for related keywords)
       const cacheData: CachedRelatedKeywords = {
-        data: relatedKeywords,
+        data: fullRelatedKeywords,
         metadata: {
           cachedAt: new Date().toISOString(),
           provider: providerName,
@@ -144,6 +144,10 @@ export async function POST(request: NextRequest) {
         })
       })
     }
+
+    relatedKeywords = validated.limit
+      ? fullRelatedKeywords.slice(0, validated.limit)
+      : fullRelatedKeywords
 
     const response: RelatedKeywordsResponse = {
       seedKeyword: validated.keyword,

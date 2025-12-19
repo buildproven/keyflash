@@ -345,6 +345,65 @@ describe('/api/keywords/related', () => {
       expect(response.status).toBe(200)
       expect(data.relatedKeywords.length).toBe(5)
     })
+
+    it('should cache full results even when limit is applied', async () => {
+      const fullResults = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          keyword: `keyword ${i}`,
+          searchVolume: 1000 - i * 10,
+          relevance: 100 - i,
+        }))
+
+      vi.mocked(getProvider).mockReturnValue({
+        name: 'Mock',
+        getKeywordData: vi.fn(),
+        getBatchLimit: vi.fn().mockReturnValue(100),
+        getRateLimit: vi.fn().mockReturnValue({ requests: 10, window: 3600 }),
+        validateConfiguration: vi.fn(),
+        getRelatedKeywords: vi.fn().mockResolvedValue(fullResults),
+      } as ReturnType<typeof getProvider>)
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/keywords/related',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            keyword: 'test',
+            limit: 3,
+          }),
+          headers: {
+            'content-type': 'application/json',
+          },
+        }
+      )
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.relatedKeywords.length).toBe(3)
+      const cacheCall = vi.mocked(cache.setRaw).mock.calls[0]
+      expect((cacheCall[1] as { data: unknown[] }).data.length).toBe(10)
+    })
+
+    it('should reject bodies larger than 1MB', async () => {
+      const largePayload = 'a'.repeat(1_100_000)
+      const request = new NextRequest(
+        'http://localhost:3000/api/keywords/related',
+        {
+          method: 'POST',
+          body: largePayload,
+          headers: {
+            'content-type': 'application/json',
+            'content-length': largePayload.length.toString(),
+          },
+        }
+      )
+
+      const response = await POST(request)
+      expect(response.status).toBe(413)
+    })
   })
 
   describe('GET', () => {

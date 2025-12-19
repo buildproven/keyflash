@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { RelatedKeyword } from '@/types/related-keywords'
 
 interface RelatedKeywordsModalProps {
@@ -23,7 +23,7 @@ export function RelatedKeywordsModal({
   const [error, setError] = useState<string | null>(null)
   const [isMockData, setIsMockData] = useState(false)
 
-  const fetchRelatedKeywords = async () => {
+  const fetchRelatedKeywords = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -47,12 +47,21 @@ export function RelatedKeywordsModal({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [keyword, location])
 
-  // Fetch when modal opens
-  if (isOpen && relatedKeywords.length === 0 && !isLoading && !error) {
-    fetchRelatedKeywords()
-  }
+  useEffect(() => {
+    if (!isOpen) {
+      setRelatedKeywords([])
+      setIsMockData(false)
+      setIsLoading(false)
+      setError(null)
+      return
+    }
+
+    if (relatedKeywords.length === 0 && !isLoading && !error) {
+      void fetchRelatedKeywords()
+    }
+  }, [error, fetchRelatedKeywords, isLoading, isOpen, relatedKeywords.length])
 
   if (!isOpen) return null
 

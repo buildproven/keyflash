@@ -4,6 +4,7 @@ import {
   getProvider,
   isProviderAvailable,
 } from '@/lib/api/factory'
+import { logger } from '@/lib/utils/logger'
 
 describe('API Provider Factory', () => {
   const originalEnv = process.env
@@ -55,19 +56,17 @@ describe('API Provider Factory', () => {
     })
 
     it('should fall back to mock provider for unknown provider', () => {
-      const consoleWarnSpy = vi
-        .spyOn(console, 'warn')
-        .mockImplementation(() => {})
+      const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {})
       process.env.KEYWORD_API_PROVIDER = 'unknown-provider'
 
       const provider = createProvider()
 
       expect(provider.name).toBe('Mock')
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Unknown provider "unknown-provider"')
       )
 
-      consoleWarnSpy.mockRestore()
+      warnSpy.mockRestore()
     })
 
     it('should return provider with correct interface', async () => {

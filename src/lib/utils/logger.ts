@@ -15,7 +15,10 @@ interface LogContext {
  */
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development'
-  private isTest = process.env.NODE_ENV === 'test'
+  private isTest =
+    process.env.NODE_ENV === 'test' ||
+    process.env.VITEST === 'true' ||
+    (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT === true
 
   /**
    * Log informational messages (startup, configuration, cache hits/misses)

@@ -88,6 +88,7 @@ const LOCATION_CODES: Record<string, number> = {
 export class SerpService {
   private login: string
   private password: string
+  private isProduction = process.env.NODE_ENV === 'production'
 
   constructor() {
     this.login = process.env.DATAFORSEO_API_LOGIN || ''
@@ -118,7 +119,13 @@ export class SerpService {
     language: string = 'en'
   ): Promise<SerpResultsPayload> {
     if (!this.isConfigured()) {
-      // Return mock data for development
+      if (this.isProduction) {
+        const error: Error & { status?: number } = new Error(
+          'SERP provider is not configured in production'
+        )
+        error.status = 503
+        throw error
+      }
       return this.getMockSerpResults(keyword)
     }
 
@@ -167,7 +174,13 @@ export class SerpService {
       return { ...this.transformSerpResponse(data), source: 'live' }
     } catch (error) {
       logger.error('SERP API error', error, { module: 'SerpService' })
-      // Fall back to mock data on error
+      if (this.isProduction) {
+        const err: Error & { status?: number } = new Error(
+          'SERP provider request failed'
+        )
+        err.status = 502
+        throw err
+      }
       return this.getMockSerpResults(keyword)
     }
   }

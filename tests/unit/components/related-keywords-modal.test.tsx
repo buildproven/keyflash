@@ -75,6 +75,7 @@ describe('RelatedKeywordsModal', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument()
       expect(screen.getByText('Related Keywords')).toBeInTheDocument()
       expect(screen.getByText(/seo tools/)).toBeInTheDocument()
+      await screen.findByText('Keyword')
     })
 
     it('has correct accessibility attributes', async () => {
@@ -88,6 +89,7 @@ describe('RelatedKeywordsModal', () => {
       const dialog = screen.getByRole('dialog')
       expect(dialog).toHaveAttribute('aria-modal', 'true')
       expect(dialog).toHaveAttribute('aria-labelledby', 'related-title')
+      await screen.findByText('Keyword')
     })
   })
 
@@ -110,6 +112,7 @@ describe('RelatedKeywordsModal', () => {
       render(<RelatedKeywordsModal {...defaultProps} />)
 
       expect(screen.getByText(/finding related keywords/i)).toBeInTheDocument()
+      await screen.findByText('Keyword')
     })
 
     it('shows spinner during loading', async () => {
@@ -131,6 +134,7 @@ describe('RelatedKeywordsModal', () => {
 
       const spinner = document.querySelector('.animate-spin')
       expect(spinner).toBeInTheDocument()
+      await screen.findByText('Keyword')
     })
   })
 
@@ -390,6 +394,8 @@ describe('RelatedKeywordsModal', () => {
 
       render(<RelatedKeywordsModal {...defaultProps} />)
 
+      await screen.findByText('Keyword')
+
       const closeButton = screen.getByLabelText(/close modal/i)
       fireEvent.click(closeButton)
 
@@ -403,6 +409,8 @@ describe('RelatedKeywordsModal', () => {
       })
 
       render(<RelatedKeywordsModal {...defaultProps} />)
+
+      await screen.findByText('Keyword')
 
       const backdrop = screen.getByRole('dialog')
       fireEvent.click(backdrop)

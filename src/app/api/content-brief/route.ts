@@ -9,6 +9,7 @@ import { serpService } from '@/lib/api/serp-service'
 import { cache } from '@/lib/cache/redis'
 import { logger } from '@/lib/utils/logger'
 import type { ContentBriefResponse } from '@/types/content-brief'
+import { readJsonWithLimit } from '@/lib/utils/request'
 
 type HttpError = Error & {
   status?: number
@@ -33,9 +34,10 @@ const ContentBriefRequestSchema = z.object({
       'Keyword can only contain letters, numbers, spaces, hyphens, and underscores'
     ),
   location: z
-    .string()
-    .length(2, 'Location must be a 2-letter country code')
-    .regex(/^[A-Z]{2}$/, 'Location must be an uppercase 2-letter code')
+    .enum(['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IN', 'GL'], {
+      message:
+        'Location must be one of US, GB, CA, AU, DE, FR, IN, or GL for Global',
+    })
     .optional()
     .default('US'),
   language: z.string().min(2).max(5).optional().default('en'),
@@ -57,12 +59,16 @@ const RATE_LIMIT_CONFIG = {
 /**
  * Generate cache key for content brief
  */
-function generateCacheKey(keyword: string, location: string): string {
+function generateCacheKey(
+  keyword: string,
+  location: string,
+  language: string
+): string {
   const normalizedKeyword = keyword.toLowerCase().trim()
   const hash = Buffer.from(normalizedKeyword)
     .toString('base64')
     .substring(0, 12)
-  return `brief:${location}:${hash}`
+  return `brief:${location}:${language}:${hash}`
 }
 
 /**
@@ -91,21 +97,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse and validate request
-    const body = await request.json()
+    const body = await readJsonWithLimit(request)
     const validated = ContentBriefRequestSchema.parse(body)
 
     const { keyword, location, language } = validated
 
     // Check cache first
-    const cacheKey = generateCacheKey(keyword, location)
-    const cachedBrief = await cache.get(cacheKey)
+    const cacheKey = generateCacheKey(keyword, location, language)
+    const cachedBrief =
+      await cache.getRaw<ContentBriefResponse['brief']>(cacheKey)
 
     if (cachedBrief) {
       logger.debug(`Content brief cache HIT - ${cacheKey}`, {
         module: 'ContentBrief',
       })
       const response: ContentBriefResponse = {
-        brief: cachedBrief.data as unknown as ContentBriefResponse['brief'],
+        brief: cachedBrief,
         cached: true,
         timestamp: new Date().toISOString(),
       }
@@ -132,12 +139,7 @@ export async function POST(request: NextRequest) {
     // Cache the brief (1 day TTL) only when using live data
     if (!brief.mockData) {
       const briefCacheTTL = 24 * 60 * 60 // 1 day in seconds
-      await cache.set(
-        cacheKey,
-        brief as unknown as import('@/types/keyword').KeywordData[],
-        'ContentBrief',
-        briefCacheTTL
-      )
+      await cache.setRaw(cacheKey, brief, briefCacheTTL)
     } else {
       logger.warn('Skipping cache write for mock content brief', {
         module: 'ContentBrief',

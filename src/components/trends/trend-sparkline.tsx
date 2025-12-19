@@ -149,7 +149,7 @@ export const TrendChartExpanded = memo(function TrendChartExpanded({
     }
   }, [trends])
 
-  if (!chartData) {
+  if (!chartData || chartData.volumes.length < 2) {
     return (
       <div className={`text-center text-sm text-gray-500 ${className}`}>
         No trend data available

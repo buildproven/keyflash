@@ -1,4 +1,2 @@
-#!/bin/sh
-
 # Run lint-staged on staged files (uses local devDependency)
 npm run lint-staged

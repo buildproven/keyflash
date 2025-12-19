@@ -3,6 +3,7 @@ import type { MonthlyTrend } from '@/types/keyword'
 import type { RelatedKeyword } from '@/types/related-keywords'
 import { GoogleAdsProvider } from './providers/google-ads'
 import { DataForSEOProvider } from './providers/dataforseo'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Supported API provider names
@@ -163,7 +164,7 @@ export function createProvider(): KeywordAPIProvider {
       return new MockProvider()
 
     default:
-      console.warn(
+      logger.warn(
         `Unknown provider "${providerName}". Falling back to mock provider.`
       )
       return new MockProvider()

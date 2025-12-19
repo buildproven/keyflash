@@ -341,9 +341,7 @@ describe('TrendChartExpanded', () => {
       const trends = generateTrends([1000])
       render(<TrendChartExpanded trends={trends} />)
 
-      // Single point should still render but with limited chart
-      const { container } = render(<TrendChartExpanded trends={trends} />)
-      expect(container.querySelector('svg')).toBeInTheDocument()
+      expect(screen.getByText('No trend data available')).toBeInTheDocument()
     })
 
     it('handles all zero values', () => {

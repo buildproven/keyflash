@@ -69,6 +69,7 @@ describe('Environment Validation', () => {
     ;(process.env as Record<string, string>).NODE_ENV = 'production'
     process.env.PRIVACY_MODE = 'false'
     process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret-at-least-16-chars'
+    process.env.RATE_LIMIT_TRUST_PROXY = 'true'
     delete process.env.UPSTASH_REDIS_REST_URL
 
     const { validateEnvironment } = await import('@/lib/config/env-validation')

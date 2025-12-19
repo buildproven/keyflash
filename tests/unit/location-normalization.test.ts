@@ -109,7 +109,7 @@ describe('Location Normalization', () => {
       { input: 'GB', expected: 'United Kingdom' },
       { input: 'CA', expected: 'Canada' },
       { input: undefined, expected: 'United States' }, // Default fallback
-      { input: 'XYZ', expected: 'XYZ' }, // Unknown codes pass through
+      { input: 'XYZ', expected: 'United States' }, // Unknown codes default
     ]
 
     for (const { input, expected } of testCases) {

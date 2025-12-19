@@ -86,6 +86,7 @@ describe('ContentBriefModal', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument()
       expect(screen.getByText('Content Brief')).toBeInTheDocument()
       expect(screen.getByText(/seo tools/)).toBeInTheDocument()
+      await screen.findByText('Recommended Word Count')
     })
 
     it('has correct accessibility attributes', async () => {
@@ -99,6 +100,7 @@ describe('ContentBriefModal', () => {
       const dialog = screen.getByRole('dialog')
       expect(dialog).toHaveAttribute('aria-modal', 'true')
       expect(dialog).toHaveAttribute('aria-labelledby', 'brief-title')
+      await screen.findByText('Recommended Word Count')
     })
   })
 
@@ -123,6 +125,7 @@ describe('ContentBriefModal', () => {
       expect(
         screen.getByText(/analyzing top search results/i)
       ).toBeInTheDocument()
+      await screen.findByText('Recommended Word Count')
     })
 
     it('shows spinner during loading', async () => {
@@ -145,6 +148,7 @@ describe('ContentBriefModal', () => {
       // Check for the spinner element (has animate-spin class)
       const spinner = document.querySelector('.animate-spin')
       expect(spinner).toBeInTheDocument()
+      await screen.findByText('Recommended Word Count')
     })
   })
 
@@ -320,6 +324,8 @@ describe('ContentBriefModal', () => {
 
       render(<ContentBriefModal {...defaultProps} />)
 
+      await screen.findByText('Recommended Word Count')
+
       const closeButton = screen.getByLabelText(/close modal/i)
       fireEvent.click(closeButton)
 
@@ -333,6 +339,8 @@ describe('ContentBriefModal', () => {
       })
 
       render(<ContentBriefModal {...defaultProps} />)
+
+      await screen.findByText('Recommended Word Count')
 
       const backdrop = screen.getByRole('dialog')
       fireEvent.click(backdrop)

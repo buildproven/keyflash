@@ -43,6 +43,7 @@ describe('RedisRateLimiter', () => {
     process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io'
     process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
     process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret'
+    process.env.RATE_LIMIT_TRUST_PROXY = 'true'
 
     // Set up default mock behaviors for atomic operations
     // Default: key doesn't exist (new rate limit window)
@@ -85,7 +86,6 @@ describe('RedisRateLimiter', () => {
       const request = new Request('https://example.com', {
         headers: {
           'x-forwarded-for': '5.6.7.8, 192.168.1.1',
-          'x-real-ip': '9.10.11.12',
           'user-agent': 'test-browser',
         },
       })
@@ -116,6 +116,26 @@ describe('RedisRateLimiter', () => {
 
       // Should include HMAC hash of user-agent (truncated to 8 chars)
       expect(mockRedis.incr).toHaveBeenCalledWith('rate:1.2.3.4:mockedha')
+    })
+
+    it('falls back to unknown when proxy trust is disabled', async () => {
+      process.env.RATE_LIMIT_TRUST_PROXY = 'false'
+      const untrustedLimiter = new RedisRateLimiter()
+      const request = new Request('https://example.com', {
+        headers: {
+          'cf-connecting-ip': '1.2.3.4',
+          'user-agent': 'test-browser',
+        },
+      })
+
+      const config = { requestsPerHour: 10, enabled: true }
+      mockRedis.ttl.mockResolvedValueOnce(-2)
+      mockRedis.incr.mockResolvedValueOnce(1)
+      mockRedis.expire.mockResolvedValueOnce(true)
+
+      await untrustedLimiter.checkRateLimit(request, config)
+
+      expect(mockRedis.incr).toHaveBeenCalledWith('rate:unknown:mockedha')
     })
   })
 

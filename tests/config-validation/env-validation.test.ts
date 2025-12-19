@@ -94,6 +94,7 @@ describe('Environment Validation CI Coverage', () => {
         'RATE_LIMIT_ENABLED',
         'RATE_LIMIT_REQUESTS_PER_HOUR',
         'RATE_LIMIT_HMAC_SECRET',
+        'RATE_LIMIT_TRUST_PROXY',
       ]
 
       rateLimitVars.forEach(varName => {
@@ -184,6 +185,7 @@ describe('Environment Validation CI Coverage', () => {
 
     it('should validate boolean environment variables', () => {
       const booleanVars = ['RATE_LIMIT_ENABLED', 'PRIVACY_MODE']
+      booleanVars.push('RATE_LIMIT_TRUST_PROXY')
 
       booleanVars.forEach(varName => {
         const value = process.env[varName]

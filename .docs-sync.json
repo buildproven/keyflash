@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tracks external documentation that must stay in sync with this project",
+  "lastChecked": "2025-12-19",
+  "externalDocs": [
+    {
+      "project": "vibebuildlab",
+      "path": "apps/marketing/src/app/keyflash/page.tsx",
+      "description": "KeyFlash product page on vibebuildlab.com",
+      "syncWith": ["src/app/page.tsx", "CHANGELOG.md"],
+      "checkFrequency": "on-release"
+    }
+  ],
+  "internalDocs": [
+    {
+      "path": "CHANGELOG.md",
+      "updateOn": ["feature", "fix", "breaking"],
+      "autoUpdate": true
+    },
+    {
+      "path": "BACKLOG.md",
+      "updateOn": ["feature-complete", "weekly"],
+      "autoUpdate": false
+    }
+  ]
+}

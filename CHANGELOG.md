@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Standard VibeBuildLab footer component with legal links (Privacy, Terms)
 - Dynamic copyright year that auto-updates
+- Request body size limiting utility (`src/lib/utils/request.ts`)
 
 ### Changed
 
@@ -19,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced feature descriptions with contextual details
 - Optimized React component performance with `React.memo` for `KeywordResultsTable` to prevent unnecessary re-renders
 - Added `useCallback` hooks to all `SearchPage` handlers (`handleSearch`, `handleExport`, `handleRetry`) for stable function references
+- Logger now suppresses output in test environment to reduce noise
+- TrendChartExpanded treats <2 data points as "no data" for cleaner UX
 
 ### Fixed
 
@@ -26,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed DataForSEO response parsing to handle direct field structure (`search_volume` vs nested `search_volume_info.search_volume`)
 - Updated copyright to "Vibe Build Lab LLC"
 - Removed GitHub link from footer (private repo)
+- Modal components (Related Keywords, Content Brief) now use proper `useEffect` pattern with state reset on close to avoid React render-side-effects and act warnings
+- Zod 4 compatibility: replaced deprecated `errorMap` with `message` option for enum validation
+- Updated test expectations to match new Zod 4 error message format
 
 ## [1.0.0] - 2025-11-21
 

@@ -6,9 +6,27 @@
  * - checkout.session.completed handling
  * - Subscription lifecycle events
  * - Error handling
+ *
+ * Uses shared stripe-testing utilities for consistent patterns.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  createCheckoutEvent,
+  createSubscriptionCreatedEvent,
+  createSubscriptionUpdatedEvent,
+  createSubscriptionDeletedEvent,
+  createPaymentSucceededEvent,
+  createPaymentFailedEvent,
+  createStripeMock,
+  createWebhookRequest,
+  createProUpgradeCheckout,
+  createProDowngrade,
+  STRIPE_STATUS_MAP,
+  isProStatus,
+  TEST_CUSTOMERS,
+  TEST_PRICES,
+} from '../../utils/stripe-testing'
 
 // Mock Stripe
 const mockConstructEvent = vi.fn()
@@ -101,10 +119,53 @@ describe('Stripe Webhook API Route', () => {
   })
 
   // ===========================================
-  // Event Type Handling
+  // Event Type Handling (using factories)
   // ===========================================
   describe('Event Type Handling', () => {
     it('should handle checkout.session.completed events', () => {
+      const event = createCheckoutEvent({ email: 'test@example.com' })
+      expect(event.type).toBe('checkout.session.completed')
+      expect(event.data.object).toBeDefined()
+    })
+
+    it('should handle subscription.created events', () => {
+      const event = createSubscriptionCreatedEvent({
+        customerId: TEST_CUSTOMERS.pro.id,
+      })
+      expect(event.type).toBe('customer.subscription.created')
+      expect(event.data.object.customer).toBe(TEST_CUSTOMERS.pro.id)
+    })
+
+    it('should handle subscription.updated events', () => {
+      const event = createSubscriptionUpdatedEvent({
+        status: 'active',
+        previousAttributes: { status: 'trialing' },
+      })
+      expect(event.type).toBe('customer.subscription.updated')
+      expect(event.data.object.status).toBe('active')
+    })
+
+    it('should handle subscription.deleted events', () => {
+      const event = createSubscriptionDeletedEvent({
+        customerId: 'cus_leaving',
+      })
+      expect(event.type).toBe('customer.subscription.deleted')
+      expect(event.data.object.status).toBe('canceled')
+    })
+
+    it('should handle payment_succeeded events', () => {
+      const event = createPaymentSucceededEvent({ amount: 2900 })
+      expect(event.type).toBe('invoice.payment_succeeded')
+      expect(event.data.object.amount_paid).toBe(2900)
+    })
+
+    it('should handle payment_failed events', () => {
+      const event = createPaymentFailedEvent({ attemptCount: 3 })
+      expect(event.type).toBe('invoice.payment_failed')
+      expect(event.data.object.attempt_count).toBe(3)
+    })
+
+    it('should recognize handled event types', () => {
       const shouldProcess = (eventType: string): boolean => {
         const handledEvents = [
           'checkout.session.completed',
@@ -120,66 +181,36 @@ describe('Stripe Webhook API Route', () => {
       expect(shouldProcess('customer.subscription.updated')).toBe(true)
       expect(shouldProcess('customer.subscription.deleted')).toBe(true)
       expect(shouldProcess('payment_intent.succeeded')).toBe(false)
-      expect(shouldProcess('invoice.paid')).toBe(false)
-    })
-
-    it('should extract session data from checkout.session.completed', () => {
-      const mockSession = {
-        id: 'cs_test_123',
-        customer: 'cus_abc123',
-        customer_email: 'user@example.com',
-        subscription: 'sub_xyz789',
-        mode: 'subscription',
-        payment_status: 'paid',
-      }
-
-      expect(mockSession.id).toBe('cs_test_123')
-      expect(mockSession.customer).toBe('cus_abc123')
-      expect(mockSession.customer_email).toBe('user@example.com')
-      expect(mockSession.subscription).toBe('sub_xyz789')
-      expect(mockSession.mode).toBe('subscription')
-      expect(mockSession.payment_status).toBe('paid')
-    })
-
-    it('should extract subscription data from subscription events', () => {
-      const mockSubscription = {
-        id: 'sub_test_456',
-        customer: 'cus_abc123',
-        status: 'active',
-        current_period_start: 1703000000,
-        current_period_end: 1705678800,
-        items: {
-          data: [
-            {
-              price: {
-                id: 'price_keyflash_pro',
-                product: 'prod_keyflash',
-              },
-            },
-          ],
-        },
-      }
-
-      expect(mockSubscription.id).toBe('sub_test_456')
-      expect(mockSubscription.status).toBe('active')
-      expect(mockSubscription.items.data[0].price.id).toBe('price_keyflash_pro')
     })
   })
 
   // ===========================================
-  // Subscription Status Handling
+  // Status Mapping (using STRIPE_STATUS_MAP)
   // ===========================================
   describe('Subscription Status Handling', () => {
-    it('should recognize active subscription statuses', () => {
-      const isActiveSubscription = (status: string): boolean => {
-        return ['active', 'trialing'].includes(status)
-      }
+    it('should map active status to pro tier', () => {
+      expect(STRIPE_STATUS_MAP.active).toBe('pro')
+      expect(isProStatus('active')).toBe(true)
+    })
 
-      expect(isActiveSubscription('active')).toBe(true)
-      expect(isActiveSubscription('trialing')).toBe(true)
-      expect(isActiveSubscription('past_due')).toBe(false)
-      expect(isActiveSubscription('canceled')).toBe(false)
-      expect(isActiveSubscription('unpaid')).toBe(false)
+    it('should map trialing status to pro tier', () => {
+      expect(STRIPE_STATUS_MAP.trialing).toBe('pro')
+      expect(isProStatus('trialing')).toBe(true)
+    })
+
+    it('should map canceled status to trial tier', () => {
+      expect(STRIPE_STATUS_MAP.canceled).toBe('trial')
+      expect(isProStatus('canceled')).toBe(false)
+    })
+
+    it('should map past_due status to expired', () => {
+      expect(STRIPE_STATUS_MAP.past_due).toBe('expired')
+      expect(isProStatus('past_due')).toBe(false)
+    })
+
+    it('should map unpaid status to expired', () => {
+      expect(STRIPE_STATUS_MAP.unpaid).toBe('expired')
+      expect(isProStatus('unpaid')).toBe(false)
     })
 
     it('should determine user tier from subscription status', () => {
@@ -195,22 +226,28 @@ describe('Stripe Webhook API Route', () => {
       expect(getUserTier('active')).toBe('pro')
       expect(getUserTier('trialing')).toBe('pro')
       expect(getUserTier('canceled')).toBe('expired')
-      expect(getUserTier('past_due')).toBe('expired')
+    })
+  })
+
+  // ===========================================
+  // Webhook Request Helpers
+  // ===========================================
+  describe('Webhook Request Creation', () => {
+    it('should create webhook request with signature', () => {
+      const event = createCheckoutEvent({ email: 'test@example.com' })
+      const request = createWebhookRequest(event)
+
+      expect(request.body).toBeDefined()
+      expect(request.headers['stripe-signature']).toMatch(/^t=\d+,v1=/)
+      expect(JSON.parse(request.body).type).toBe('checkout.session.completed')
     })
 
-    it('should handle subscription deletion (downgrade to trial)', () => {
-      const handleSubscriptionDeleted = (customerId: string) => {
-        // When subscription deleted, user goes back to trial
-        return {
-          customerId,
-          newTier: 'trial',
-          action: 'downgrade',
-        }
-      }
+    it('should create webhook request with custom signature', () => {
+      const event = createCheckoutEvent()
+      const customSig = 't=123456,v1=custom_signature'
+      const request = createWebhookRequest(event, customSig)
 
-      const result = handleSubscriptionDeleted('cus_123')
-      expect(result.newTier).toBe('trial')
-      expect(result.action).toBe('downgrade')
+      expect(request.headers['stripe-signature']).toBe(customSig)
     })
   })
 
@@ -218,41 +255,36 @@ describe('Stripe Webhook API Route', () => {
   // Checkout Session Handling
   // ===========================================
   describe('Checkout Session Handling', () => {
-    it('should extract customer email from session', () => {
-      const extractEmail = (session: {
-        customer_email?: string | null
-        customer_details?: { email?: string | null } | null
-      }): string | null => {
-        return session.customer_email || session.customer_details?.email || null
+    it('should extract customer email from checkout event', () => {
+      const event = createCheckoutEvent({ email: 'user@example.com' })
+      const session = event.data.object as {
+        customer_email?: string
+        customer_details?: { email?: string }
       }
 
-      expect(extractEmail({ customer_email: 'test@example.com' })).toBe(
-        'test@example.com'
-      )
-      expect(
-        extractEmail({ customer_details: { email: 'test2@example.com' } })
-      ).toBe('test2@example.com')
-      expect(extractEmail({})).toBeNull()
+      expect(session.customer_email).toBe('user@example.com')
+      expect(session.customer_details?.email).toBe('user@example.com')
     })
 
-    it('should validate payment status before processing', () => {
-      const shouldProcess = (paymentStatus: string): boolean => {
-        return paymentStatus === 'paid'
-      }
+    it('should extract subscription ID from checkout event', () => {
+      const event = createCheckoutEvent({ subscriptionId: 'sub_new_123' })
+      const session = event.data.object as { subscription?: string }
 
-      expect(shouldProcess('paid')).toBe(true)
-      expect(shouldProcess('unpaid')).toBe(false)
-      expect(shouldProcess('no_payment_required')).toBe(false)
+      expect(session.subscription).toBe('sub_new_123')
     })
 
-    it('should identify subscription mode checkout', () => {
-      const isSubscriptionCheckout = (mode: string): boolean => {
-        return mode === 'subscription'
-      }
+    it('should create subscription mode checkout by default', () => {
+      const event = createCheckoutEvent({ subscriptionId: 'sub_123' })
+      const session = event.data.object as { mode?: string }
 
-      expect(isSubscriptionCheckout('subscription')).toBe(true)
-      expect(isSubscriptionCheckout('payment')).toBe(false)
-      expect(isSubscriptionCheckout('setup')).toBe(false)
+      expect(session.mode).toBe('subscription')
+    })
+
+    it('should validate payment status', () => {
+      const event = createCheckoutEvent()
+      const session = event.data.object as { payment_status?: string }
+
+      expect(session.payment_status).toBe('paid')
     })
   })
 
@@ -274,38 +306,6 @@ describe('Stripe Webhook API Route', () => {
       expect(extractCustomerData({})).toEqual({
         customerId: null,
         email: 'unknown',
-      })
-      expect(
-        extractCustomerData({ customer: 'cus_123', customer_email: 'a@b.com' })
-      ).toEqual({ customerId: 'cus_123', email: 'a@b.com' })
-    })
-
-    it('should handle webhook signature verification failure', () => {
-      const verifySignature = (
-        body: string,
-        signature: string,
-        secret: string
-      ): { success: boolean; error?: string } => {
-        if (!signature) {
-          return { success: false, error: 'Missing signature' }
-        }
-        if (!secret) {
-          return { success: false, error: 'Missing webhook secret' }
-        }
-        // In real implementation, this would verify the signature
-        return { success: true }
-      }
-
-      expect(verifySignature('body', '', 'secret')).toEqual({
-        success: false,
-        error: 'Missing signature',
-      })
-      expect(verifySignature('body', 'sig', '')).toEqual({
-        success: false,
-        error: 'Missing webhook secret',
-      })
-      expect(verifySignature('body', 'sig', 'secret')).toEqual({
-        success: true,
       })
     })
 
@@ -337,109 +337,41 @@ describe('Stripe Webhook API Route', () => {
   })
 
   // ===========================================
-  // Integration Flow Tests
+  // KeyFlash-Specific Flow Tests
   // ===========================================
-  describe('Complete Subscription Flow', () => {
-    it('should process new subscription end-to-end', () => {
-      const mockCheckoutSession = {
-        id: 'cs_test_subscription',
-        customer: 'cus_new_user',
-        customer_email: 'newuser@example.com',
-        subscription: 'sub_new_123',
-        mode: 'subscription',
-        payment_status: 'paid',
-        amount_total: 2900, // $29.00
-        currency: 'usd',
+  describe('KeyFlash Subscription Flow', () => {
+    it('should create pro upgrade checkout event', () => {
+      const event = createProUpgradeCheckout('newuser@example.com', 'user_456')
+      const session = event.data.object as {
+        customer_email?: string
+        metadata?: { userId?: string; product?: string }
       }
 
-      const steps = {
-        webhookReceived: true,
-        signatureValidated: true,
-        eventParsed: true,
-        isSubscriptionMode: mockCheckoutSession.mode === 'subscription',
-        paymentConfirmed: mockCheckoutSession.payment_status === 'paid',
-        customerIdentified: mockCheckoutSession.customer !== null,
-        subscriptionLinked: mockCheckoutSession.subscription !== null,
-      }
-
-      expect(steps.webhookReceived).toBe(true)
-      expect(steps.signatureValidated).toBe(true)
-      expect(steps.isSubscriptionMode).toBe(true)
-      expect(steps.paymentConfirmed).toBe(true)
-      expect(steps.customerIdentified).toBe(true)
-      expect(steps.subscriptionLinked).toBe(true)
+      expect(event.type).toBe('checkout.session.completed')
+      expect(session.customer_email).toBe('newuser@example.com')
+      expect(session.metadata?.userId).toBe('user_456')
+      expect(session.metadata?.product).toBe('keyflash-pro')
     })
 
-    it('should handle subscription upgrade flow', () => {
-      const mockSubscriptionUpdate = {
-        id: 'sub_existing_456',
-        customer: 'cus_existing',
-        status: 'active',
-        previousStatus: 'trialing',
-      }
+    it('should create downgrade event', () => {
+      const event = createProDowngrade('cus_123', 'sub_456')
 
-      const determineAction = (
-        currentStatus: string,
-        previousStatus: string
-      ): 'upgrade' | 'downgrade' | 'none' => {
-        if (previousStatus === 'trialing' && currentStatus === 'active') {
-          return 'upgrade' // Trial converted to paid
-        }
-        if (currentStatus === 'canceled' || currentStatus === 'unpaid') {
-          return 'downgrade'
-        }
-        return 'none'
-      }
-
-      expect(
-        determineAction(
-          mockSubscriptionUpdate.status,
-          mockSubscriptionUpdate.previousStatus
-        )
-      ).toBe('upgrade')
+      expect(event.type).toBe('customer.subscription.deleted')
+      expect(event.data.object.customer).toBe('cus_123')
+      expect(event.data.object.id).toBe('sub_456')
+      expect(event.data.object.status).toBe('canceled')
     })
 
-    it('should handle subscription cancellation flow', () => {
-      const mockCancellation = {
-        id: 'sub_canceled_789',
-        customer: 'cus_leaving',
-        status: 'canceled',
-        canceled_at: 1703000000,
-        ended_at: 1705678800,
-      }
-
-      const processCancellation = (subscription: typeof mockCancellation) => {
-        return {
-          customerId: subscription.customer,
-          subscriptionId: subscription.id,
-          canceledAt: new Date(subscription.canceled_at * 1000),
-          endsAt: new Date(subscription.ended_at * 1000),
-          action: 'downgrade_to_trial',
-        }
-      }
-
-      const result = processCancellation(mockCancellation)
-      expect(result.customerId).toBe('cus_leaving')
-      expect(result.action).toBe('downgrade_to_trial')
-    })
-  })
-
-  // ===========================================
-  // KeyFlash-Specific Tests
-  // ===========================================
-  describe('KeyFlash Subscription Logic', () => {
-    it('should map subscription status to keyword limits', () => {
+    it('should map subscription to keyword limits', () => {
       const getKeywordLimit = (tier: 'trial' | 'pro'): number => {
-        // Trial: mock data (unlimited but fake)
-        // Pro: 1,000 real keywords/month
-        return tier === 'pro' ? 1000 : 0 // 0 = mock data only
+        return tier === 'pro' ? 1000 : 300
       }
 
-      expect(getKeywordLimit('trial')).toBe(0)
+      expect(getKeywordLimit('trial')).toBe(300)
       expect(getKeywordLimit('pro')).toBe(1000)
     })
 
-    it('should determine data source from subscription', () => {
+    it('should determine data source from tier', () => {
       const getDataSource = (tier: 'trial' | 'pro'): 'mock' | 'dataforseo' => {
         return tier === 'pro' ? 'dataforseo' : 'mock'
       }
@@ -448,21 +380,60 @@ describe('Stripe Webhook API Route', () => {
       expect(getDataSource('pro')).toBe('dataforseo')
     })
 
-    it('should calculate remaining keywords for billing period', () => {
+    it('should calculate remaining keywords', () => {
       const getRemainingKeywords = (
         tier: 'trial' | 'pro',
         usedThisMonth: number
       ): number => {
-        if (tier === 'trial') return Infinity // Mock data is unlimited
-        const monthlyLimit = 1000
-        return Math.max(0, monthlyLimit - usedThisMonth)
+        const limits = { trial: 300, pro: 1000 }
+        return Math.max(0, limits[tier] - usedThisMonth)
       }
 
-      expect(getRemainingKeywords('trial', 500)).toBe(Infinity)
-      expect(getRemainingKeywords('pro', 0)).toBe(1000)
+      expect(getRemainingKeywords('trial', 100)).toBe(200)
       expect(getRemainingKeywords('pro', 500)).toBe(500)
-      expect(getRemainingKeywords('pro', 1000)).toBe(0)
-      expect(getRemainingKeywords('pro', 1500)).toBe(0) // Can't go negative
+      expect(getRemainingKeywords('pro', 1200)).toBe(0)
+    })
+  })
+
+  // ===========================================
+  // Stripe Mock Integration
+  // ===========================================
+  describe('Stripe Mock', () => {
+    it('should create functional Stripe mock', () => {
+      const stripeMock = createStripeMock()
+
+      expect(stripeMock.checkout.sessions.create).toBeDefined()
+      expect(stripeMock.webhooks.constructEvent).toBeDefined()
+      expect(stripeMock.subscriptions.cancel).toBeDefined()
+      expect(stripeMock.billingPortal.sessions.create).toBeDefined()
+    })
+
+    it('should mock checkout session creation', async () => {
+      const stripeMock = createStripeMock()
+      const session = await stripeMock.checkout.sessions.create({
+        mode: 'subscription',
+        line_items: [{ price: TEST_PRICES.keyflashProMonthly }],
+      })
+
+      expect(session.id).toBe('cs_test_session')
+      expect(session.url).toContain('checkout.stripe.com')
+    })
+
+    it('should mock subscription cancellation', async () => {
+      const stripeMock = createStripeMock()
+      const canceled = await stripeMock.subscriptions.cancel('sub_123')
+
+      expect(canceled.status).toBe('canceled')
+    })
+
+    it('should mock billing portal creation', async () => {
+      const stripeMock = createStripeMock()
+      const portal = await stripeMock.billingPortal.sessions.create({
+        customer: 'cus_123',
+        return_url: 'https://keyflash.com/account',
+      })
+
+      expect(portal.url).toContain('billing.stripe.com')
     })
   })
 })

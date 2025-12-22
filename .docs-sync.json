@@ -1,7 +1,0 @@
-{
-  "description": "Cross-project docs sync config",
-  "lastChecked": "2025-12-21",
-  "marketingSite": "vibebuildlab",
-  "localLandingPage": "src/app/page.tsx",
-  "changelog": "CHANGELOG.md"
-}

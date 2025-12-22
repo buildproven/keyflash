@@ -220,3 +220,11 @@ export function isProviderAvailable(providerName: ProviderName): boolean {
     return false
   }
 }
+
+/**
+ * Get mock provider instance (for trial users who only get mock data)
+ * @returns Mock provider instance
+ */
+export function getMockProvider(): KeywordAPIProvider {
+  return new MockProvider()
+}

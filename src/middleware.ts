@@ -1,12 +1,25 @@
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
 /**
- * Middleware for security headers
- * Runs before all requests
- *
- * Note: Environment validation moved to API routes to avoid Edge runtime issues
+ * Routes that require authentication
+ * Add routes here as we build out protected features
  */
-export function middleware() {
+const isProtectedRoute = createRouteMatcher([
+  // Protected routes will be added here
+  // '/dashboard(.*)',
+  // '/settings(.*)',
+])
+
+// Public routes (default - no protection needed):
+// /, /search, /sign-in, /sign-up, /api/webhooks/*, /api/health
+
+export default clerkMiddleware(async (auth, req) => {
+  // Protect routes that require authentication
+  if (isProtectedRoute(req)) {
+    await auth.protect()
+  }
+
   const response = NextResponse.next()
 
   // Add HSTS (HTTP Strict Transport Security) in production
@@ -17,21 +30,14 @@ export function middleware() {
     )
   }
 
-  // Note: Request size limits are now enforced at the route level
-  // via Next.js route segment config (bodyParser.sizeLimit) to prevent header spoofing
-
   return response
-}
+})
 
-// Configure which paths the middleware runs on
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 }

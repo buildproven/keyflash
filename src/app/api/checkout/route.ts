@@ -2,16 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { logger } from '@/lib/utils/logger'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-})
-
-// KeyFlash Pro subscription price ID
-const PRICE_ID = process.env.STRIPE_PRICE_PRO
+// Lazy initialization to avoid build-time errors
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY not configured')
+  }
+  return new Stripe(key, {
+    apiVersion: '2025-12-15.clover',
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
-    if (!PRICE_ID) {
+    const priceId = process.env.STRIPE_PRICE_PRO
+    if (!priceId) {
       logger.error('Checkout: STRIPE_PRICE_PRO not configured')
       return NextResponse.json(
         { error: 'Checkout not configured' },
@@ -19,6 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const stripe = getStripe()
     const origin =
       request.headers.get('origin') || 'https://keyflash.vibebuildlab.com'
 
@@ -26,7 +32,7 @@ export async function POST(request: NextRequest) {
       mode: 'subscription',
       line_items: [
         {
-          price: PRICE_ID,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -46,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     logger.info('Checkout session created', {
       sessionId: session.id,
-      priceId: PRICE_ID,
+      priceId,
     })
 
     return NextResponse.json({ url: session.url })

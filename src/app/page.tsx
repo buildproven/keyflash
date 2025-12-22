@@ -13,17 +13,17 @@ export default function Home() {
         </h1>
         <p className="mt-6 text-lg text-slate-600 dark:text-slate-300">
           Get search volume, difficulty, CPC, and trends for up to 200 keywords
-          at once. No subscription required.
+          at once. Start with a free 7-day trial.
         </p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Link
             href="/search"
             className="inline-block rounded-lg bg-blue-600 px-8 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
-            Try It Free
+            Start Free Trial
           </Link>
           <span className="text-sm text-slate-500 dark:text-slate-400">
-            No signup needed
+            7 days free, then $29/mo
           </span>
         </div>
       </div>
@@ -44,9 +44,9 @@ export default function Home() {
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-2xl font-bold text-blue-600">$0</div>
+            <div className="text-2xl font-bold text-blue-600">7 days</div>
             <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              To get started
+              Free trial
             </div>
           </div>
         </div>

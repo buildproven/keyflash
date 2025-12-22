@@ -41,9 +41,10 @@ const config: PricingConfig = {
       name: 'Pro',
       price: 29,
       targetMargin: 0.9, // 90% margin target
-      // Max variable cost: $2.90/mo
+      // Realistic usage: quick/cheap research, not enterprise
+      // 1,000 kw/mo × $0.002 = $2/mo cost = 93% margin
       limits: {
-        keyword_lookup: 1450, // ~$2.90 at $0.002/keyword
+        keyword_lookup: 1000, // 1,000 keywords/month
       },
     },
   ],
@@ -66,15 +67,18 @@ export default config
  * Pricing Summary:
  *
  * TRIAL (7 days):
- * - 6 searches/day × 50 keywords = 300 keywords/day
  * - Uses MOCK DATA only - $0 operating cost
+ * - Unlimited searches with sample data
  * - Requires: Email signup (for trial tracking)
  *
  * PRO ($29/month):
  * - Real API data from DataForSEO
- * - ~30 searches/day × 50 keywords = 1,500 keywords/day
- * - Monthly: ~1,450 keywords (capped for 90% margin)
- * - Cost: ~$2.90/mo → 90% margin
+ * - 1,000 keywords/month (quick/cheap research use case)
+ * - ~20 searches × 50 keywords = typical monthly usage
+ * - Cost: $2/mo → 93% margin
+ *
+ * Target user: Content creators doing occasional keyword research,
+ * NOT enterprise SEO teams (they use Ahrefs/SEMrush at $129+/mo).
  *
  * NOTE: Trial requires AUTH-001 implementation to track trial start dates.
  * Until auth is implemented, use IP-based rate limiting as stopgap.

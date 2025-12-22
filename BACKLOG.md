@@ -1,20 +1,18 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2025-12-21
+**Last Updated**: 2025-12-22
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
 
 ---
 
 ## 🔥 High Value - Next Up
 
-| ID           | Feature                           | Value Drivers                                             | Effort | Status                         |
-| ------------ | --------------------------------- | --------------------------------------------------------- | ------ | ------------------------------ |
-| **PAY-001**  | Stripe checkout + subscriptions   | Revenue: enables $49/mo Pro tier, gates premium features  | M      | 💡 Planned                     |
-| **AUTH-001** | User authentication (NextAuth.js) | Revenue: enables paid tiers, Retention: personalization   | L      | 💡 Planned                     |
-| **FEAT-001** | Saved searches                    | Retention: saves user work, Revenue: premium feature      | M      | 💡 Planned (requires AUTH-001) |
-| **FEAT-005** | Bulk CSV upload                   | Revenue: enterprise/agency appeal, Retention: power users | M      | 💡 Planned                     |
+| ID           | Feature         | Value Drivers                                             | Effort | Status     |
+| ------------ | --------------- | --------------------------------------------------------- | ------ | ---------- |
+| **FEAT-001** | Saved searches  | Retention: saves user work, Revenue: premium feature      | M      | 💡 Planned |
+| **FEAT-005** | Bulk CSV upload | Revenue: enterprise/agency appeal, Retention: power users | M      | 💡 Planned |
 
-**Recommended order**: PAY-001 → AUTH-001 → FEAT-001 → FEAT-005 (Stripe first, then auth gates features)
+**Recommended next**: FEAT-001 (Saved searches) - auth is now in place to support it
 
 ---
 
@@ -40,6 +38,8 @@
 
 | ID                        | Feature                                             | Completed  |
 | ------------------------- | --------------------------------------------------- | ---------- |
+| **AUTH-001**              | User authentication (Clerk) + tier tracking         | 2025-12-22 |
+| **PAY-001**               | Stripe checkout + subscriptions ($29/mo Pro)        | 2025-12-22 |
 | **FEAT-008**              | Content Brief Generator with SERP analysis          | 2025-12-13 |
 | **FEAT-006**              | Related keywords suggestions with relevance scoring | 2025-12-14 |
 | **FEAT-007**              | Historical trend data visualization (sparklines)    | 2025-12-14 |
@@ -85,5 +85,5 @@
 
 - **MVP Status**: Complete
 - **Deployment**: https://keyflash.vibebuildlab.com (Live)
-- **Test Coverage**: 581 tests passing
+- **Test Coverage**: 505 unit tests + integration + E2E
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

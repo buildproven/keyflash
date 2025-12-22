@@ -135,6 +135,7 @@
     "npm": "10.2.4"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.36.5",
     "@sentry/nextjs": "^10.29.0",
     "@upstash/redis": "^1.35.6",
     "pino": "^10.1.0",

@@ -1,6 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
+// Mock Clerk auth BEFORE importing the route
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: vi.fn(() => Promise.resolve({ userId: null, sessionClaims: null })),
+}))
+
+// Mock userService BEFORE importing the route
+vi.mock('@/lib/user/user-service', () => ({
+  userService: {
+    getUser: vi.fn(() => Promise.resolve(null)),
+    createUser: vi.fn(() => Promise.resolve(null)),
+    checkKeywordLimit: vi.fn(() =>
+      Promise.resolve({ allowed: true, used: 0, limit: 300, tier: 'trial' })
+    ),
+    incrementKeywordUsage: vi.fn(() => Promise.resolve(1)),
+  },
+}))
+
 // Mock the cache module BEFORE importing the route
 vi.mock('@/lib/cache/redis', () => ({
   cache: {
@@ -32,6 +49,8 @@ vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
 import { POST, GET } from '@/app/api/keywords/route'
 import { cache } from '@/lib/cache/redis'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
+import { auth } from '@clerk/nextjs/server'
+import { userService } from '@/lib/user/user-service'
 
 describe('/api/keywords', () => {
   beforeEach(() => {
@@ -143,6 +162,29 @@ describe('/api/keywords', () => {
     })
 
     it('should return cached data when cache hit occurs', async () => {
+      // Simulate a Pro user who can use the cache
+      vi.mocked(auth).mockResolvedValue({
+        userId: 'user_pro123',
+        sessionClaims: { email: 'pro@test.com' },
+      } as any)
+      vi.mocked(userService.getUser).mockResolvedValue({
+        clerkUserId: 'user_pro123',
+        email: 'pro@test.com',
+        tier: 'pro',
+        trialStartedAt: '2025-01-01T00:00:00Z',
+        trialExpiresAt: '2025-01-08T00:00:00Z',
+        keywordsUsedThisMonth: 0,
+        monthlyResetAt: '2026-01-01T00:00:00Z',
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-01-01T00:00:00Z',
+      })
+      vi.mocked(userService.checkKeywordLimit).mockResolvedValue({
+        allowed: true,
+        used: 0,
+        limit: 1000,
+        tier: 'pro',
+      })
+
       const cachedData = {
         data: [
           {
@@ -157,7 +199,7 @@ describe('/api/keywords', () => {
         metadata: {
           cachedAt: '2025-11-19T00:00:00Z',
           ttl: 604800,
-          provider: 'mock',
+          provider: 'DataForSEO',
         },
       }
 
@@ -183,6 +225,29 @@ describe('/api/keywords', () => {
     })
 
     it('should cache data on cache miss', async () => {
+      // Simulate a Pro user who can use the cache
+      vi.mocked(auth).mockResolvedValue({
+        userId: 'user_pro123',
+        sessionClaims: { email: 'pro@test.com' },
+      } as any)
+      vi.mocked(userService.getUser).mockResolvedValue({
+        clerkUserId: 'user_pro123',
+        email: 'pro@test.com',
+        tier: 'pro',
+        trialStartedAt: '2025-01-01T00:00:00Z',
+        trialExpiresAt: '2025-01-08T00:00:00Z',
+        keywordsUsedThisMonth: 0,
+        monthlyResetAt: '2026-01-01T00:00:00Z',
+        createdAt: '2025-01-01T00:00:00Z',
+        updatedAt: '2025-01-01T00:00:00Z',
+      })
+      vi.mocked(userService.checkKeywordLimit).mockResolvedValue({
+        allowed: true,
+        used: 0,
+        limit: 1000,
+        tier: 'pro',
+      })
+
       vi.mocked(cache.get).mockResolvedValue(null) // Cache miss
       vi.mocked(cache.set).mockResolvedValue(true)
 

@@ -8,6 +8,23 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
+// Mock Clerk auth BEFORE importing the route
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: vi.fn(() => Promise.resolve({ userId: null, sessionClaims: null })),
+}))
+
+// Mock userService BEFORE importing the route
+vi.mock('@/lib/user/user-service', () => ({
+  userService: {
+    getUser: vi.fn(() => Promise.resolve(null)),
+    createUser: vi.fn(() => Promise.resolve(null)),
+    checkKeywordLimit: vi.fn(() =>
+      Promise.resolve({ allowed: true, used: 0, limit: 300, tier: 'trial' })
+    ),
+    incrementKeywordUsage: vi.fn(() => Promise.resolve(1)),
+  },
+}))
+
 // Mock the cache and provider modules
 vi.mock('@/lib/cache/redis', () => ({
   cache: {
@@ -21,6 +38,18 @@ vi.mock('@/lib/api/factory', () => ({
   getProvider: vi.fn(() => ({
     name: 'Mock',
     getKeywordData: vi.fn(),
+  })),
+  getMockProvider: vi.fn(() => ({
+    name: 'Mock',
+    getKeywordData: vi.fn().mockResolvedValue([
+      {
+        keyword: 'test keyword',
+        searchVolume: 1000,
+        difficulty: 50,
+        cpc: 1.5,
+        intent: 'informational',
+      },
+    ]),
   })),
 }))
 

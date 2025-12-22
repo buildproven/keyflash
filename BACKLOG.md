@@ -1,6 +1,6 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2025-12-17
+**Last Updated**: 2025-12-21
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
 
 ---
@@ -9,11 +9,12 @@
 
 | ID           | Feature                           | Value Drivers                                             | Effort | Status                         |
 | ------------ | --------------------------------- | --------------------------------------------------------- | ------ | ------------------------------ |
+| **PAY-001**  | Stripe checkout + subscriptions   | Revenue: enables $49/mo Pro tier, gates premium features  | M      | 💡 Planned                     |
 | **AUTH-001** | User authentication (NextAuth.js) | Revenue: enables paid tiers, Retention: personalization   | L      | 💡 Planned                     |
 | **FEAT-001** | Saved searches                    | Retention: saves user work, Revenue: premium feature      | M      | 💡 Planned (requires AUTH-001) |
 | **FEAT-005** | Bulk CSV upload                   | Revenue: enterprise/agency appeal, Retention: power users | M      | 💡 Planned                     |
 
-**Recommended order**: AUTH-001 → FEAT-001 → FEAT-005 (auth unlocks saved searches)
+**Recommended order**: PAY-001 → AUTH-001 → FEAT-001 → FEAT-005 (Stripe first, then auth gates features)
 
 ---
 

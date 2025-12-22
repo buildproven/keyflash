@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { KeywordSearchSchema } from '@/lib/validation/schemas'
 import {
   handleAPIError,
   createSuccessResponse,
 } from '@/lib/utils/error-handler'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
-import { getProvider } from '@/lib/api/factory'
+import { getProvider, getMockProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
 import { logger } from '@/lib/utils/logger'
+import { userService } from '@/lib/user/user-service'
 import type { KeywordSearchResponse } from '@/types/keyword'
 import { readJsonWithLimit } from '@/lib/utils/request'
 
@@ -107,6 +109,57 @@ export async function POST(request: NextRequest) {
     const body = await readJsonWithLimit(request)
     const validated = KeywordSearchSchema.parse(body)
 
+    // Check user authentication and tier
+    const authResult = await auth()
+    const userId = authResult.userId
+    let userTier: 'trial' | 'pro' = 'trial'
+    let useMockData = true // Default: unauthenticated users get mock data
+
+    if (userId) {
+      // Get user from database (or create if new)
+      let user = await userService.getUser(userId)
+
+      // Create user on first access
+      if (!user) {
+        // Get email from Clerk session
+        const sessionClaims = authResult.sessionClaims as
+          | { email?: string }
+          | undefined
+        const email = sessionClaims?.email || `${userId}@keyflash.local`
+        user = await userService.createUser(userId, email)
+      }
+
+      if (user) {
+        // Check keyword limit
+        const limitCheck = await userService.checkKeywordLimit(userId)
+
+        if (limitCheck) {
+          if (limitCheck.trialExpired) {
+            const error: HttpError = new Error(
+              'Your 7-day free trial has expired. Upgrade to Pro to continue using KeyFlash.'
+            )
+            error.status = 403
+            return handleAPIError(error)
+          }
+
+          if (!limitCheck.allowed) {
+            const error: HttpError = new Error(
+              `Monthly keyword limit reached (${limitCheck.used}/${limitCheck.limit}). ` +
+                (limitCheck.tier === 'trial'
+                  ? 'Upgrade to Pro for 1,000 keywords/month.'
+                  : 'Your limit resets at the start of next month.')
+            )
+            error.status = 429
+            return handleAPIError(error)
+          }
+
+          userTier = limitCheck.tier
+          // Pro users get real data, trial users get mock data
+          useMockData = userTier === 'trial'
+        }
+      }
+    }
+
     // Normalize location codes for provider compatibility
     // UI uses ISO codes (US, GB, GL) but providers expect descriptive names
     const normalizedLocation = normalizeLocationForProvider(validated.location)
@@ -119,8 +172,8 @@ export async function POST(request: NextRequest) {
       validated.matchType
     )
 
-    // Try to get from cache first
-    const cachedData = await cache.get(cacheKey)
+    // Try to get from cache first (only for Pro users with real data)
+    const cachedData = useMockData ? null : await cache.get(cacheKey)
 
     let keywordData
     let isCached = false
@@ -134,32 +187,40 @@ export async function POST(request: NextRequest) {
     } else {
       // Cache miss - fetch from provider
       logger.debug(`Cache MISS - ${cacheKey}`, { module: 'Cache' })
-      provider = getProvider()
+      // Trial users always get mock data, Pro users get configured provider
+      provider = useMockData ? getMockProvider() : getProvider()
       keywordData = await provider.getKeywordData(validated.keywords, {
         matchType: validated.matchType,
         location: normalizedLocation,
         language: validated.language,
       })
 
-      // Store in cache with short timeout to avoid hanging request
-      const cacheWrite = cache.set(cacheKey, keywordData, provider.name)
-      const timeout = new Promise(resolve =>
-        setTimeout(() => {
-          logger.warn(`Cache write taking too long for key ${cacheKey}`, {
-            module: 'Cache',
-          })
-          resolve(null)
-        }, 150)
-      )
-      await Promise.race([cacheWrite, timeout]).catch(error => {
-        logger.error('Failed to cache data', error, { module: 'Cache' })
-      })
+      // Store in cache (only for real data from Pro users)
+      if (!useMockData) {
+        const cacheWrite = cache.set(cacheKey, keywordData, provider.name)
+        const timeout = new Promise(resolve =>
+          setTimeout(() => {
+            logger.warn(`Cache write taking too long for key ${cacheKey}`, {
+              module: 'Cache',
+            })
+            resolve(null)
+          }, 150)
+        )
+        await Promise.race([cacheWrite, timeout]).catch(error => {
+          logger.error('Failed to cache data', error, { module: 'Cache' })
+        })
+      }
+    }
+
+    // Track keyword usage for authenticated users
+    if (userId) {
+      await userService.incrementKeywordUsage(userId, validated.keywords.length)
     }
 
     // Determine provider name and mock status
     const providerName =
       provider?.name || (cachedData?.metadata.provider ?? 'Unknown')
-    const isMockData = providerName === 'Mock'
+    const isMockData = providerName === 'Mock' || useMockData
 
     const response: KeywordSearchResponse = {
       data: keywordData,

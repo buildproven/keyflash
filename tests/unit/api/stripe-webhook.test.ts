@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type Stripe from 'stripe'
 import {
   createCheckoutEvent,
   createSubscriptionCreatedEvent,
@@ -133,7 +134,9 @@ describe('Stripe Webhook API Route', () => {
         customerId: TEST_CUSTOMERS.pro.id,
       })
       expect(event.type).toBe('customer.subscription.created')
-      expect(event.data.object.customer).toBe(TEST_CUSTOMERS.pro.id)
+      expect((event.data.object as Stripe.Subscription).customer).toBe(
+        TEST_CUSTOMERS.pro.id
+      )
     })
 
     it('should handle subscription.updated events', () => {
@@ -142,7 +145,7 @@ describe('Stripe Webhook API Route', () => {
         previousAttributes: { status: 'trialing' },
       })
       expect(event.type).toBe('customer.subscription.updated')
-      expect(event.data.object.status).toBe('active')
+      expect((event.data.object as Stripe.Subscription).status).toBe('active')
     })
 
     it('should handle subscription.deleted events', () => {
@@ -150,19 +153,19 @@ describe('Stripe Webhook API Route', () => {
         customerId: 'cus_leaving',
       })
       expect(event.type).toBe('customer.subscription.deleted')
-      expect(event.data.object.status).toBe('canceled')
+      expect((event.data.object as Stripe.Subscription).status).toBe('canceled')
     })
 
     it('should handle payment_succeeded events', () => {
       const event = createPaymentSucceededEvent({ amount: 2900 })
       expect(event.type).toBe('invoice.payment_succeeded')
-      expect(event.data.object.amount_paid).toBe(2900)
+      expect((event.data.object as Stripe.Invoice).amount_paid).toBe(2900)
     })
 
     it('should handle payment_failed events', () => {
       const event = createPaymentFailedEvent({ attemptCount: 3 })
       expect(event.type).toBe('invoice.payment_failed')
-      expect(event.data.object.attempt_count).toBe(3)
+      expect((event.data.object as Stripe.Invoice).attempt_count).toBe(3)
     })
 
     it('should recognize handled event types', () => {
@@ -355,11 +358,12 @@ describe('Stripe Webhook API Route', () => {
 
     it('should create downgrade event', () => {
       const event = createProDowngrade('cus_123', 'sub_456')
+      const subscription = event.data.object as Stripe.Subscription
 
       expect(event.type).toBe('customer.subscription.deleted')
-      expect(event.data.object.customer).toBe('cus_123')
-      expect(event.data.object.id).toBe('sub_456')
-      expect(event.data.object.status).toBe('canceled')
+      expect(subscription.customer).toBe('cus_123')
+      expect(subscription.id).toBe('sub_456')
+      expect(subscription.status).toBe('canceled')
     })
 
     it('should map subscription to keyword limits', () => {

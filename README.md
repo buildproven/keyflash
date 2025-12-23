@@ -41,17 +41,14 @@ AI-powered keyword and content research tool. Get keyword data in under 3 second
 
 ## Pricing
 
-| Tier     | Price                             | Features                                         |
-| -------- | --------------------------------- | ------------------------------------------------ |
-| **Free** | $0                                | 5 searches/day, 50/month                         |
-| **Pro**  | Included in Vibe Lab Pro ($49/mo) | Unlimited searches, up to 200 keywords per batch |
+| Tier      | Price  | Features                                   |
+| --------- | ------ | ------------------------------------------ |
+| **Trial** | Free   | 7 days, 300 keywords, sample data          |
+| **Pro**   | $29/mo | 1,000 keywords/month, real DataForSEO data |
 
-### Pro Access
-
-Full KeyFlash access is included in [Vibe Lab Pro](https://vibebuildlab.com/pro) membership:
-
-- $49/month or $399/year
-- Includes KeyFlash, AI Prompt Library, ShipArchitect, and more
+- Trial uses mock data so you can explore without cost
+- Pro unlocks real Google-sourced keyword metrics
+- Cancel anytime, no contracts
 
 ## Tech Stack
 

@@ -57,29 +57,31 @@ export const TEST_PRICES = {
 // Mock Factories
 // ============================================
 
+type MockFn = ReturnType<typeof vi.fn<(...args: any[]) => any>>
+
 export interface StripeMock {
   checkout: {
     sessions: {
-      create: ReturnType<typeof vi.fn>
-      retrieve: ReturnType<typeof vi.fn>
+      create: MockFn
+      retrieve: MockFn
     }
   }
   webhooks: {
-    constructEvent: ReturnType<typeof vi.fn>
+    constructEvent: MockFn
   }
   customers: {
-    create: ReturnType<typeof vi.fn>
-    retrieve: ReturnType<typeof vi.fn>
+    create: MockFn
+    retrieve: MockFn
   }
   subscriptions: {
-    create: ReturnType<typeof vi.fn>
-    retrieve: ReturnType<typeof vi.fn>
-    update: ReturnType<typeof vi.fn>
-    cancel: ReturnType<typeof vi.fn>
+    create: MockFn
+    retrieve: MockFn
+    update: MockFn
+    cancel: MockFn
   }
   billingPortal: {
     sessions: {
-      create: ReturnType<typeof vi.fn>
+      create: MockFn
     }
   }
 }
@@ -388,7 +390,7 @@ export function isProStatus(status: Stripe.Subscription.Status): boolean {
  * Generate a valid Stripe signature for testing
  */
 export function generateTestSignature(
-  payload: string,
+  _payload: string,
   timestamp = Math.floor(Date.now() / 1000)
 ): string {
   return `t=${timestamp},v1=test_signature_${timestamp}`

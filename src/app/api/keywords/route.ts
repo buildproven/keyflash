@@ -33,25 +33,20 @@ export const bodyParser = {
  * Normalize location codes for provider and cache compatibility
  * UI uses ISO codes (US, GB, GL) but providers expect descriptive names
  */
+const LOCATION_MAP = new Map<string, string>([
+  ['US', 'United States'],
+  ['GB', 'United Kingdom'],
+  ['CA', 'Canada'],
+  ['AU', 'Australia'],
+  ['DE', 'Germany'],
+  ['FR', 'France'],
+  ['IN', 'India'],
+  ['GL', 'Worldwide'], // Global maps to provider-friendly term
+])
+
 export function normalizeLocationForProvider(location?: string): string {
   if (!location) return 'United States' // Default fallback
-
-  const locationMap: Record<string, string> = {
-    US: 'United States',
-    GB: 'United Kingdom',
-    CA: 'Canada',
-    AU: 'Australia',
-    DE: 'Germany',
-    FR: 'France',
-    IN: 'India',
-    GL: 'Worldwide', // Global maps to provider-friendly term
-  }
-
-  if (Object.prototype.hasOwnProperty.call(locationMap, location)) {
-    return locationMap[location]
-  }
-
-  return 'United States'
+  return LOCATION_MAP.get(location) ?? 'United States'
 }
 
 /**

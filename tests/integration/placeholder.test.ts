@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { POST } from '@/app/api/keywords/route'
 import { NextRequest } from 'next/server'
 
 /**
@@ -13,6 +12,23 @@ import { NextRequest } from 'next/server'
  *
  * Target: 20% of total test coverage (per TESTING_STRATEGY.md)
  */
+
+// Mock Clerk auth BEFORE importing the route
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: vi.fn(() => Promise.resolve({ userId: null, sessionClaims: null })),
+}))
+
+// Mock userService BEFORE importing the route
+vi.mock('@/lib/user/user-service', () => ({
+  userService: {
+    getUser: vi.fn(() => Promise.resolve(null)),
+    createUser: vi.fn(() => Promise.resolve(null)),
+    checkKeywordLimit: vi.fn(() =>
+      Promise.resolve({ allowed: true, used: 0, limit: 300, tier: 'trial' })
+    ),
+    incrementKeywordUsage: vi.fn(() => Promise.resolve(1)),
+  },
+}))
 
 // Mock the rate limiter for integration tests
 vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
@@ -33,6 +49,9 @@ vi.mock('@/lib/cache/redis', () => ({
     set: vi.fn().mockResolvedValue(true),
   },
 }))
+
+// Import AFTER mocks are defined
+import { POST } from '@/app/api/keywords/route'
 
 describe('Keywords API Integration', () => {
   beforeEach(() => {

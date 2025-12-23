@@ -39,7 +39,16 @@ Switch providers via `KEYWORD_API_PROVIDER` env var. All providers implement `Ke
 - `POST /api/keywords` - Main keyword search endpoint
 - `POST /api/keywords/related` - Related keywords lookup
 - `POST /api/content-brief` - Content brief generation
+- `POST /api/checkout` - Stripe checkout session creation
+- `POST /api/webhooks/stripe` - Stripe webhook handler
 - `GET /api/health` - Health check
+
+### Authentication & Payments
+
+- **Auth**: Clerk (`@clerk/nextjs`) - handles sign up, sign in, user management
+- **Payments**: Stripe subscriptions - $29/mo Pro tier
+- **User tiers**: Trial (7 days, mock data) → Pro (real DataForSEO data)
+- **User storage**: Redis via `src/lib/user/user-service.ts`
 
 ### Security Layers
 
@@ -60,6 +69,8 @@ Copy `.env.example` to `.env.local` for local development. Key variables:
 
 - `KEYWORD_API_PROVIDER` - `mock` (default), `google-ads`, or `dataforseo`
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis connection
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` - Clerk auth
+- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRICE_PRO` - Stripe payments
 - `RATE_LIMIT_FAIL_SAFE` - `closed` (secure) or `open` (available when Redis fails)
 - `PRIVACY_MODE` - `true` to disable keyword caching
 

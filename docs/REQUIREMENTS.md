@@ -195,12 +195,14 @@ These features are explicitly NOT included in MVP:
 - Saved searches and collections
 - Team workspaces
 
-**Monetization Expansion**:
+**Current Monetization** (Implemented):
 
-- Free tier: 10 searches/month, 10 keywords each
-- Basic: $9/month - 100 searches/month, up to 50 keywords each
-- Pro: $29/month - Unlimited searches, up to 200 keywords each
-- Agency: $99/month - Multiple users, API access, priority support
+- Trial: 7 days free, 300 keywords total, mock data only
+- Pro: $29/month - 1,000 keywords/month, real DataForSEO data
+
+**Future Expansion** (Not implemented):
+
+- Agency: Team workspaces, API access, higher limits
 
 ## Technical Constraints
 

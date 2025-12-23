@@ -182,6 +182,8 @@ describe('UserService', () => {
         monthlyResetAt: '2025-02-01T00:00:00.000Z',
         createdAt: '2025-01-01T00:00:00.000Z',
         updatedAt: '2025-01-01T00:00:00.000Z',
+        stripeCustomerId: undefined,
+        subscriptionId: undefined,
       }
 
       expect(trialUser.tier).toBe('trial')

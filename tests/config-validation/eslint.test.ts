@@ -125,16 +125,36 @@ describe('ESLint ignore configuration', () => {
 
   it('eslintignore file exists or ignores configured in config', () => {
     const hasIgnoreFile = existsSync(ignorePath)
-    const configPath = join(process.cwd(), '.eslintrc.json')
 
-    let hasIgnoreInConfig = false
-    if (existsSync(configPath)) {
-      const configContent = readFileSync(configPath, 'utf-8')
-      hasIgnoreInConfig = configContent.includes('ignorePatterns')
+    // Check for flat config (eslint.config.cjs/js/mjs)
+    const flatConfigPaths = [
+      join(process.cwd(), 'eslint.config.cjs'),
+      join(process.cwd(), 'eslint.config.js'),
+      join(process.cwd(), 'eslint.config.mjs'),
+    ]
+
+    let hasIgnoreInFlatConfig = false
+    for (const configPath of flatConfigPaths) {
+      if (existsSync(configPath)) {
+        const configContent = readFileSync(configPath, 'utf-8')
+        // Flat config uses 'ignores' array in the config
+        hasIgnoreInFlatConfig = configContent.includes('ignores')
+        if (hasIgnoreInFlatConfig) break
+      }
     }
 
-    // Either .eslintignore exists OR ignores are in config
-    expect(hasIgnoreFile || hasIgnoreInConfig).toBe(true)
+    // Check for legacy .eslintrc.json
+    const legacyConfigPath = join(process.cwd(), '.eslintrc.json')
+    let hasIgnoreInLegacyConfig = false
+    if (existsSync(legacyConfigPath)) {
+      const configContent = readFileSync(legacyConfigPath, 'utf-8')
+      hasIgnoreInLegacyConfig = configContent.includes('ignorePatterns')
+    }
+
+    // Either .eslintignore exists OR ignores are in flat/legacy config
+    expect(
+      hasIgnoreFile || hasIgnoreInFlatConfig || hasIgnoreInLegacyConfig
+    ).toBe(true)
   })
 
   it('ignores node_modules', () => {

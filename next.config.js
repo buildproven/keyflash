@@ -61,14 +61,16 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-eval for dev
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev", // Next.js + Clerk
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
-              "img-src 'self' data: https:",
+              "img-src 'self' data: https: https://img.clerk.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://upstash.io https://*.upstash.io",
+              "connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev",
+              "frame-src 'self' https://*.clerk.accounts.dev", // Clerk auth modals
+              "worker-src 'self' blob:", // Clerk service workers
               "frame-ancestors 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://*.clerk.accounts.dev",
             ].join('; '),
           },
         ],

@@ -4,6 +4,15 @@
   "regions": ["iad1"],
   "headers": [
     {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://img.clerk.com; font-src 'self' data:; connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev; frame-src 'self' https://*.clerk.accounts.dev; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://*.clerk.accounts.dev"
+        }
+      ]
+    },
+    {
       "source": "/api/(.*)",
       "headers": [
         {

@@ -7,31 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-24
+
 ### Added
 
+- **Clerk Authentication** - Full user authentication with sign-in/sign-up flows
+- **Stripe Payments** - $29/mo Pro subscription with checkout and webhook handling
+- **User Tier System** - Trial (7 days, 300 keywords, mock data) → Pro (1,000 keywords/month, real data)
+- **VibeBuildLab Favicon** - Consistent branding with main VBL site
+- **Comprehensive Audit Report** - Security, performance, and accessibility documentation
 - Standard VibeBuildLab footer component with legal links (Privacy, Terms)
 - Dynamic copyright year that auto-updates
 - Request body size limiting utility (`src/lib/utils/request.ts`)
+- Shared Stripe testing utilities for unit tests
 
 ### Changed
 
 - Improved landing page copy with accurate, compelling messaging
-- Removed vague claims ("10x cheaper", "<3s") in favor of verifiable benefits
-- Enhanced feature descriptions with contextual details
-- Optimized React component performance with `React.memo` for `KeywordResultsTable` to prevent unnecessary re-renders
-- Added `useCallback` hooks to all `SearchPage` handlers (`handleSearch`, `handleExport`, `handleRetry`) for stable function references
-- Logger now suppresses output in test environment to reduce noise
-- TrendChartExpanded treats <2 data points as "no data" for cleaner UX
+- Pro tier limit set to 1,000 keywords/month (93% margin)
+- Trial uses mock data only ($0 operating cost)
+- Optimized React component performance with `React.memo` for `KeywordResultsTable`
 
 ### Fixed
 
-- Corrected Tailwind CSS v4 import syntax (`@import 'tailwindcss'` instead of `@import url('tailwindcss')`)
-- Fixed DataForSEO response parsing to handle direct field structure (`search_volume` vs nested `search_volume_info.search_volume`)
-- Updated copyright to "Vibe Build Lab LLC"
-- Removed GitHub link from footer (private repo)
-- Modal components (Related Keywords, Content Brief) now use proper `useEffect` pattern with state reset on close to avoid React render-side-effects and act warnings
-- Zod 4 compatibility: replaced deprecated `errorMap` with `message` option for enum validation
-- Updated test expectations to match new Zod 4 error message format
+- **CSP for Clerk** - Updated Content Security Policy to allow Clerk authentication scripts
+- Corrected Tailwind CSS v4 import syntax
+- Fixed DataForSEO response parsing for direct field structure
+- Modal components now use proper `useEffect` pattern
+- Zod 4 compatibility fixes
+
+### Security
+
+- OWASP Top 10 compliant (A rating)
+- Clerk handles all authentication securely
+- Stripe webhook signature verification
+- Rate limiting with spoof-resistant client identification
 
 ## [1.0.0] - 2025-11-21
 

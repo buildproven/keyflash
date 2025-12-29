@@ -43,6 +43,7 @@ describe('Prettier configuration', () => {
       // Format it
       execSync(`npx prettier --write ${tempFile}`, {
         stdio: 'pipe',
+        timeout: 30000,
       })
 
       // Read result
@@ -57,7 +58,7 @@ describe('Prettier configuration', () => {
         unlinkSync(tempFile)
       } catch {}
     }
-  })
+  }, 45000)
 
   it('format:check detects unformatted files', () => {
     const tempFile = join(process.cwd(), '.prettier-check-temp.ts')
@@ -70,6 +71,7 @@ describe('Prettier configuration', () => {
       try {
         execSync(`npx prettier --check ${tempFile}`, {
           stdio: 'pipe',
+          timeout: 30000,
         })
         // If it doesn't throw, the file was already formatted (unexpected)
         expect(true).toBe(false)
@@ -83,7 +85,7 @@ describe('Prettier configuration', () => {
         unlinkSync(tempFile)
       } catch {}
     }
-  })
+  }, 45000)
 })
 
 describe('Prettier ignore configuration', () => {

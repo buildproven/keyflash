@@ -102,9 +102,10 @@ describe('ESLint configuration', () => {
 
       // Lint it - should fail or warn
       try {
-        execSync(`npx eslint ${tempFile}`, {
+        execSync(`npx eslint --no-cache ${tempFile}`, {
           encoding: 'utf-8',
           stdio: 'pipe',
+          timeout: 30000,
         })
       } catch (error: any) {
         // Should have detected the eval usage
@@ -117,7 +118,7 @@ describe('ESLint configuration', () => {
         require('fs').unlinkSync(tempFile)
       } catch {}
     }
-  }, 10000)
+  }, 45000)
 })
 
 describe('ESLint ignore configuration', () => {

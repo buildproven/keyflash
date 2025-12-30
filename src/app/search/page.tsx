@@ -1,26 +1,35 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { useAuth } from '@clerk/nextjs'
 import { KeywordSearchForm } from '@/components/forms/keyword-search-form'
 import { KeywordResultsTable } from '@/components/tables/keyword-results-table'
 import { LoadingState } from '@/components/ui/loading-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Footer } from '@/components/layout/footer'
+import { SavedSearchesList } from '@/components/saved-searches/saved-searches-list'
+import { SaveSearchModal } from '@/components/saved-searches/save-search-modal'
 import { exportToCSV } from '@/lib/utils/csv-export'
 import type {
   KeywordSearchFormData,
   KeywordData,
   KeywordSearchResponse,
 } from '@/types/keyword'
+import type { SavedSearchParams, SavedSearch } from '@/types/saved-search'
 
 export default function SearchPage() {
+  const { isSignedIn } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<KeywordData[]>([])
   const [mockData, setMockData] = useState<boolean>(false)
   const [provider, setProvider] = useState<string | undefined>()
   const [searchLocation, setSearchLocation] = useState<string>('US')
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [currentSearchParams, setCurrentSearchParams] =
+    useState<SavedSearchParams | null>(null)
+  const savedSearchesListRef = useRef<{ refresh: () => void } | null>(null)
 
   const handleSearch = useCallback(async (formData: KeywordSearchFormData) => {
     setIsLoading(true)
@@ -67,6 +76,13 @@ export default function SearchPage() {
       setMockData(data.mockData || false)
       setProvider(data.provider)
       setSearchLocation(formData.location || 'US')
+
+      // Save current search params for potential saving
+      setCurrentSearchParams({
+        keywords,
+        matchType: formData.matchType,
+        location: formData.location || 'US',
+      })
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -84,6 +100,88 @@ export default function SearchPage() {
 
   const handleRetry = useCallback(() => {
     setError(null)
+  }, [])
+
+  const handleSaveSearch = useCallback(
+    async (name: string, description?: string) => {
+      if (!currentSearchParams) {
+        throw new Error('No search to save')
+      }
+
+      const response = await fetch('/api/searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          description,
+          searchParams: currentSearchParams,
+          results,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to save search')
+      }
+
+      // Trigger refresh of saved searches list
+      savedSearchesListRef.current?.refresh()
+    },
+    [currentSearchParams, results]
+  )
+
+  const handleLoadSearch = useCallback(async (searchId: string) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/searches/${searchId}`)
+      if (!response.ok) {
+        throw new Error('Failed to load saved search')
+      }
+
+      const data = await response.json()
+      const search: SavedSearch = data.search
+
+      // If the search has cached results, use them
+      if (search.results && search.results.length > 0) {
+        setResults(search.results)
+        setMockData(false)
+        setProvider(undefined)
+        setSearchLocation(search.searchParams.location)
+        setCurrentSearchParams(search.searchParams)
+      } else {
+        // Otherwise, run the search again
+        const keywordsResponse = await fetch('/api/keywords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            keywords: search.searchParams.keywords,
+            matchType: search.searchParams.matchType,
+            location: search.searchParams.location,
+          }),
+        })
+
+        if (!keywordsResponse.ok) {
+          const errorData = await keywordsResponse.json()
+          throw new Error(errorData.message || 'Failed to run search')
+        }
+
+        const keywordsData: KeywordSearchResponse =
+          await keywordsResponse.json()
+        setResults(keywordsData.data)
+        setMockData(keywordsData.mockData || false)
+        setProvider(keywordsData.provider)
+        setSearchLocation(search.searchParams.location)
+        setCurrentSearchParams(search.searchParams)
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to load saved search'
+      )
+    } finally {
+      setIsLoading(false)
+    }
   }, [])
 
   return (
@@ -117,13 +215,21 @@ export default function SearchPage() {
 
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Search Form */}
-            <aside className="lg:col-span-1" aria-label="Keyword search form">
+            <aside
+              className="lg:col-span-1 space-y-4"
+              aria-label="Keyword search form"
+            >
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                 <h2 className="sr-only">Search Parameters</h2>
                 <KeywordSearchForm
                   onSubmit={handleSearch}
                   isLoading={isLoading}
                 />
+              </div>
+
+              {/* Saved Searches */}
+              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <SavedSearchesList onLoadSearch={handleLoadSearch} />
               </div>
             </aside>
 
@@ -155,6 +261,30 @@ export default function SearchPage() {
                   aria-live="polite"
                   aria-label="Keyword search results"
                 >
+                  {/* Save Search Button */}
+                  {isSignedIn && currentSearchParams && (
+                    <div className="mb-4 flex justify-end">
+                      <button
+                        onClick={() => setShowSaveModal(true)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                          />
+                        </svg>
+                        Save Search
+                      </button>
+                    </div>
+                  )}
                   <KeywordResultsTable
                     data={results}
                     onExport={handleExport}
@@ -198,6 +328,17 @@ export default function SearchPage() {
         </main>
       </div>
       <Footer />
+
+      {/* Save Search Modal */}
+      {currentSearchParams && (
+        <SaveSearchModal
+          isOpen={showSaveModal}
+          onClose={() => setShowSaveModal(false)}
+          onSave={handleSaveSearch}
+          searchParams={currentSearchParams}
+          results={results}
+        />
+      )}
     </div>
   )
 }

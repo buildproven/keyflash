@@ -1,13 +1,20 @@
 import type { Metadata } from 'next'
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs'
+import dynamic from 'next/dynamic'
+import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
+
+// Lazy load auth header to reduce initial bundle size
+const AuthHeader = dynamic(
+  () => import('@/components/layout/auth-header').then(mod => mod.AuthHeader),
+  {
+    ssr: false,
+    loading: () => (
+      <header className="fixed top-0 right-0 p-4 z-50">
+        <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+      </header>
+    ),
+  }
+)
 
 const baseUrl = 'https://keyflash.vibebuildlab.com'
 
@@ -86,33 +93,7 @@ export default function RootLayout({
           />
         </head>
         <body className="font-sans antialiased">
-          {/* Auth header - shown on all pages */}
-          <header className="fixed top-0 right-0 p-4 z-50">
-            <SignedOut>
-              <div className="flex items-center gap-2">
-                <SignInButton mode="modal">
-                  <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors">
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-                    Start Free Trial
-                  </button>
-                </SignUpButton>
-              </div>
-            </SignedOut>
-            <SignedIn>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: 'w-10 h-10',
-                  },
-                }}
-              />
-            </SignedIn>
-          </header>
+          <AuthHeader />
           <main className="min-h-screen">{children}</main>
         </body>
       </html>

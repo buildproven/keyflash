@@ -36,13 +36,14 @@ describe('Error Handler', () => {
       expect(response).toBeDefined()
     })
 
-    it('should handle generic errors', () => {
+    it('should handle generic errors', async () => {
       const error = new Error('Something went wrong')
 
       const response = handleAPIError(error)
+      const body = await response.json()
 
       expect(response.status).toBe(500)
-      expect(response).toBeDefined()
+      expect(body.message).toBe('An unexpected error occurred')
     })
 
     it('should handle unknown error types', () => {

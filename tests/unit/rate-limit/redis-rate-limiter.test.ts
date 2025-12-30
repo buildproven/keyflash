@@ -137,6 +137,28 @@ describe('RedisRateLimiter', () => {
 
       expect(mockRedis.incr).toHaveBeenCalledWith('rate:unknown:mockedha')
     })
+
+    it('defaults to trusting proxy headers in production when unset', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      delete process.env.RATE_LIMIT_TRUST_PROXY
+      const productionLimiter = new RedisRateLimiter()
+
+      const request = new Request('https://example.com', {
+        headers: {
+          'cf-connecting-ip': '1.2.3.4',
+          'user-agent': 'test-browser',
+        },
+      })
+
+      const config = { requestsPerHour: 10, enabled: true }
+      mockRedis.ttl.mockResolvedValueOnce(-2)
+      mockRedis.incr.mockResolvedValueOnce(1)
+      mockRedis.expire.mockResolvedValueOnce(true)
+
+      await productionLimiter.checkRateLimit(request, config)
+
+      expect(mockRedis.incr).toHaveBeenCalledWith('rate:1.2.3.4:mockedha')
+    })
   })
 
   describe('Rate Limiting Logic', () => {

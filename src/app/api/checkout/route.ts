@@ -13,6 +13,46 @@ function getStripe() {
   })
 }
 
+function normalizeOrigin(value: string): string | null {
+  try {
+    const url = new URL(value)
+    return `${url.protocol}//${url.host}`
+  } catch {
+    return null
+  }
+}
+
+export function resolveCheckoutOrigin(request: NextRequest): string {
+  const headerOrigin = request.headers.get('origin')
+  const allowedOrigins = new Set<string>()
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (appUrl) {
+    const normalized = normalizeOrigin(appUrl)
+    if (normalized) allowedOrigins.add(normalized)
+  }
+
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) {
+    const normalized = normalizeOrigin(`https://${vercelUrl}`)
+    if (normalized) allowedOrigins.add(normalized)
+  }
+
+  const fallbackOrigin =
+    Array.from(allowedOrigins)[0] || 'https://keyflash.vibebuildlab.com'
+
+  if (!headerOrigin) {
+    return fallbackOrigin
+  }
+
+  const normalizedHeader = normalizeOrigin(headerOrigin)
+  if (normalizedHeader && allowedOrigins.has(normalizedHeader)) {
+    return normalizedHeader
+  }
+
+  return fallbackOrigin
+}
+
 export async function POST(request: NextRequest) {
   try {
     const priceId = process.env.STRIPE_PRICE_PRO
@@ -25,8 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getStripe()
-    const origin =
-      request.headers.get('origin') || 'https://keyflash.vibebuildlab.com'
+    const origin = resolveCheckoutOrigin(request)
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

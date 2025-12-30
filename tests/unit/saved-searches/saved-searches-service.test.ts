@@ -118,7 +118,22 @@ describe('SavedSearchesService', () => {
     })
 
     it('should allow optional description', () => {
-      const savedSearch = {
+      const savedSearch: {
+        id: string
+        clerkUserId: string
+        name: string
+        description?: string
+        searchParams: {
+          keywords: string[]
+          location: string
+          language: string
+          matchType: 'phrase'
+        }
+        metadata: {
+          createdAt: string
+          updatedAt: string
+        }
+      } = {
         id: '1735000000-abc123',
         clerkUserId: 'user_123',
         name: 'Quick Search',
@@ -138,7 +153,22 @@ describe('SavedSearchesService', () => {
     })
 
     it('should allow optional results', () => {
-      const savedSearch = {
+      const savedSearch: {
+        id: string
+        clerkUserId: string
+        name: string
+        results?: unknown[]
+        searchParams: {
+          keywords: string[]
+          location: string
+          language: string
+          matchType: 'phrase'
+        }
+        metadata: {
+          createdAt: string
+          updatedAt: string
+        }
+      } = {
         id: '1735000000-abc123',
         clerkUserId: 'user_123',
         name: 'Search Without Results',

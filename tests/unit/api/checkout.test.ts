@@ -8,6 +8,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { NextRequest } from 'next/server'
+import { resolveCheckoutOrigin } from '@/app/api/checkout/route'
 
 // Mock Stripe
 const mockCheckoutCreate = vi.fn()
@@ -35,6 +37,8 @@ describe('Checkout API Route', () => {
     vi.clearAllMocks()
     process.env.STRIPE_SECRET_KEY = 'sk_test_123'
     process.env.STRIPE_PRICE_PRO = 'price_keyflash_pro_123'
+    process.env.NEXT_PUBLIC_APP_URL = 'https://keyflash.vibebuildlab.com'
+    delete process.env.VERCEL_URL
   })
 
   // ===========================================
@@ -195,6 +199,30 @@ describe('Checkout API Route', () => {
 
       expect(errorResponse).toHaveProperty('error')
       expect(typeof errorResponse.error).toBe('string')
+    })
+  })
+
+  describe('Origin Resolution', () => {
+    it('uses the allowed origin when it matches the allowlist', () => {
+      const request = new NextRequest('https://example.com/api/checkout', {
+        headers: {
+          origin: 'https://keyflash.vibebuildlab.com',
+        },
+      })
+
+      const origin = resolveCheckoutOrigin(request)
+      expect(origin).toBe('https://keyflash.vibebuildlab.com')
+    })
+
+    it('falls back to the configured app URL when origin is untrusted', () => {
+      const request = new NextRequest('https://example.com/api/checkout', {
+        headers: {
+          origin: 'https://evil.example.com',
+        },
+      })
+
+      const origin = resolveCheckoutOrigin(request)
+      expect(origin).toBe('https://keyflash.vibebuildlab.com')
     })
   })
 

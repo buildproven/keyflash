@@ -42,13 +42,26 @@ Switch providers via `KEYWORD_API_PROVIDER` env var. All providers implement `Ke
 - `POST /api/checkout` - Stripe checkout session creation
 - `POST /api/webhooks/stripe` - Stripe webhook handler
 - `GET /api/health` - Health check
+- `GET /api/searches` - List user's saved searches
+- `POST /api/searches` - Create saved search
+- `GET /api/searches/[id]` - Get saved search by ID
+- `PUT /api/searches/[id]` - Update saved search
+- `DELETE /api/searches/[id]` - Delete saved search
 
 ### Authentication & Payments
 
 - **Auth**: Clerk (`@clerk/nextjs`) - handles sign up, sign in, user management
+- **Auth lazy loading**: Clerk UI components dynamically imported (`src/components/layout/auth-header-wrapper.tsx`)
 - **Payments**: Stripe subscriptions - $29/mo Pro tier
 - **User tiers**: Trial (7 days, mock data) → Pro (real DataForSEO data)
 - **User storage**: Redis via `src/lib/user/user-service.ts`
+
+### Saved Searches
+
+- **Service**: `src/lib/saved-searches/saved-searches-service.ts`
+- **Storage**: Redis with 1-year TTL
+- **Limit**: 50 saved searches per user
+- **Key pattern**: `saved-search:{userId}:{searchId}`
 
 ### Security Layers
 

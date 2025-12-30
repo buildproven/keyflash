@@ -1,20 +1,7 @@
 import type { Metadata } from 'next'
-import dynamic from 'next/dynamic'
 import { ClerkProvider } from '@clerk/nextjs'
+import { AuthHeaderWrapper } from '@/components/layout/auth-header-wrapper'
 import './globals.css'
-
-// Lazy load auth header to reduce initial bundle size
-const AuthHeader = dynamic(
-  () => import('@/components/layout/auth-header').then(mod => mod.AuthHeader),
-  {
-    ssr: false,
-    loading: () => (
-      <header className="fixed top-0 right-0 p-4 z-50">
-        <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
-      </header>
-    ),
-  }
-)
 
 const baseUrl = 'https://keyflash.vibebuildlab.com'
 
@@ -93,7 +80,7 @@ export default function RootLayout({
           />
         </head>
         <body className="font-sans antialiased">
-          <AuthHeader />
+          <AuthHeaderWrapper />
           <main className="min-h-screen">{children}</main>
         </body>
       </html>

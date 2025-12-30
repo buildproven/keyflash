@@ -101,6 +101,27 @@ export const RelatedKeywordsSchema = z.object({
   limit: z.number().int().min(1).max(50).optional(),
 })
 
+const MonthlyTrendSchema = z.object({
+  month: z.number().int().min(1).max(12),
+  year: z.number().int().min(2000).max(2100),
+  volume: z.number().min(0),
+})
+
+const KeywordDataSchema = z.object({
+  keyword: z.string().trim().min(1).max(200),
+  searchVolume: z.number().min(0),
+  difficulty: z.number().min(0).max(100),
+  cpc: z.number().min(0),
+  competition: z.enum(['low', 'medium', 'high']),
+  intent: z.enum([
+    'informational',
+    'commercial',
+    'transactional',
+    'navigational',
+  ]),
+  trends: z.array(MonthlyTrendSchema).optional(),
+})
+
 /**
  * Schema for creating a saved search
  */
@@ -120,7 +141,7 @@ export const CreateSavedSearchSchema = z.object({
     location: z.string().min(2).max(5),
     language: z.string().optional(),
   }),
-  results: z.array(z.any()).optional(),
+  results: z.array(KeywordDataSchema).optional(),
 })
 
 /**

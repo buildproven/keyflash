@@ -76,18 +76,21 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
       )
     }
 
-    const errorLabel =
-      status >= 500
-        ? 'Internal Server Error'
-        : status >= 400
-          ? 'Client Error'
-          : 'Error'
+    const isServerError = status >= 500
+    const errorLabel = isServerError
+      ? 'Internal Server Error'
+      : status >= 400
+        ? 'Client Error'
+        : 'Error'
+    const message = isServerError
+      ? 'An unexpected error occurred'
+      : error.message
 
     // Generic error
     return NextResponse.json(
       {
         error: errorLabel,
-        message: error.message,
+        message,
         statusCode: status,
         timestamp,
       },

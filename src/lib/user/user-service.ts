@@ -286,10 +286,7 @@ class UserService {
       if (now >= resetDate) {
         // Reset the counter
         newCount = count
-        const nextReset = new Date(now)
-        nextReset.setMonth(nextReset.getMonth() + 1)
-        nextReset.setDate(1)
-        nextReset.setHours(0, 0, 0, 0)
+        const nextReset = this.getNextMonthlyResetDate(now)
         monthlyResetAt = nextReset.toISOString()
       }
 
@@ -323,6 +320,19 @@ class UserService {
       return null
     }
 
+    const now = new Date()
+    const resetDate = new Date(user.monthlyResetAt)
+    let effectiveUsed = user.keywordsUsedThisMonth
+
+    if (now >= resetDate) {
+      effectiveUsed = 0
+      const nextReset = this.getNextMonthlyResetDate(now)
+      await this.updateUser(clerkUserId, {
+        keywordsUsedThisMonth: effectiveUsed,
+        monthlyResetAt: nextReset.toISOString(),
+      })
+    }
+
     // Trial users: 300 keywords during 7-day trial
     // Pro users: 1,000 keywords/month
     const limits = {
@@ -331,17 +341,24 @@ class UserService {
     }
 
     const limit = limits[user.tier]
-    const now = new Date()
     const trialExpired =
       user.tier === 'trial' && now > new Date(user.trialExpiresAt)
 
     return {
-      allowed: !trialExpired && user.keywordsUsedThisMonth < limit,
-      used: user.keywordsUsedThisMonth,
+      allowed: !trialExpired && effectiveUsed < limit,
+      used: effectiveUsed,
       limit,
       tier: user.tier,
       trialExpired,
     }
+  }
+
+  private getNextMonthlyResetDate(now: Date): Date {
+    const nextReset = new Date(now)
+    nextReset.setMonth(nextReset.getMonth() + 1)
+    nextReset.setDate(1)
+    nextReset.setHours(0, 0, 0, 0)
+    return nextReset
   }
 
   /**

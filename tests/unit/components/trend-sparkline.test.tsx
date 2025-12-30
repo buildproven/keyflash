@@ -132,7 +132,7 @@ describe('TrendSparkline', () => {
       const { container } = render(<TrendSparkline trends={trends} />)
 
       const svg = container.querySelector('svg')
-      expect(svg).toHaveClass('text-green-500')
+      expect(svg).toHaveClass('text-green-600')
     })
 
     it('applies red color for downward trend', () => {
@@ -142,7 +142,7 @@ describe('TrendSparkline', () => {
       const { container } = render(<TrendSparkline trends={trends} />)
 
       const svg = container.querySelector('svg')
-      expect(svg).toHaveClass('text-red-500')
+      expect(svg).toHaveClass('text-red-600')
     })
 
     it('applies gray color for flat trend', () => {
@@ -152,7 +152,7 @@ describe('TrendSparkline', () => {
       const { container } = render(<TrendSparkline trends={trends} />)
 
       const svg = container.querySelector('svg')
-      expect(svg).toHaveClass('text-gray-400')
+      expect(svg).toHaveClass('text-gray-600')
     })
   })
 

@@ -31,7 +31,9 @@ export class RedisRateLimiter {
   private fallbackStore = new Map<string, RateLimitEntry>()
   private isRedisAvailable = false
   private isProduction = process.env.NODE_ENV === 'production'
-  private trustProxy = process.env.RATE_LIMIT_TRUST_PROXY === 'true'
+  private trustProxy =
+    process.env.RATE_LIMIT_TRUST_PROXY === 'true' ||
+    (process.env.RATE_LIMIT_TRUST_PROXY !== 'false' && this.isProduction)
   // Keep a typed error helper for attaching HTTP-friendly metadata
   private createConfigError(
     message: string,

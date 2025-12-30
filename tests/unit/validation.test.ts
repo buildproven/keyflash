@@ -3,6 +3,7 @@ import {
   KeywordSearchSchema,
   KeywordInputSchema,
   RelatedKeywordsSchema,
+  CreateSavedSearchSchema,
 } from '@/lib/validation/schemas'
 
 describe('KeywordSearchSchema', () => {
@@ -272,5 +273,55 @@ describe('RelatedKeywordsSchema', () => {
 
     const result = RelatedKeywordsSchema.parse(validData)
     expect(result.limit).toBeUndefined()
+  })
+})
+
+describe('CreateSavedSearchSchema', () => {
+  it('should accept saved search results that match keyword data shape', () => {
+    const validData = {
+      name: 'My search',
+      searchParams: {
+        keywords: ['seo tools'],
+        matchType: 'phrase',
+        location: 'US',
+        language: 'en',
+      },
+      results: [
+        {
+          keyword: 'seo tools',
+          searchVolume: 1000,
+          difficulty: 45,
+          cpc: 2.5,
+          competition: 'medium',
+          intent: 'informational',
+          trends: [
+            {
+              month: 1,
+              year: 2024,
+              volume: 900,
+            },
+          ],
+        },
+      ],
+    }
+
+    const result = CreateSavedSearchSchema.safeParse(validData)
+    expect(result.success).toBe(true)
+  })
+
+  it('should reject saved search results with invalid keyword data', () => {
+    const invalidData = {
+      name: 'Invalid search',
+      searchParams: {
+        keywords: ['seo tools'],
+        matchType: 'phrase',
+        location: 'US',
+        language: 'en',
+      },
+      results: ['not-an-object'],
+    }
+
+    const result = CreateSavedSearchSchema.safeParse(invalidData)
+    expect(result.success).toBe(false)
   })
 })

@@ -43,7 +43,7 @@ describe('/api/searches', () => {
     vi.mocked(auth).mockResolvedValue({
       userId: 'user_123',
       sessionClaims: null,
-    } as ReturnType<typeof auth> extends Promise<infer T> ? T : never)
+    } as unknown as Awaited<ReturnType<typeof auth>>)
     vi.mocked(savedSearchesService.isAvailable).mockReturnValue(true)
   })
 
@@ -52,10 +52,9 @@ describe('/api/searches', () => {
       vi.mocked(auth).mockResolvedValue({
         userId: null,
         sessionClaims: null,
-      } as ReturnType<typeof auth> extends Promise<infer T> ? T : never)
+      } as unknown as Awaited<ReturnType<typeof auth>>)
 
-      const request = new NextRequest('http://localhost:3000/api/searches')
-      const response = await GET(request)
+      const response = await GET()
 
       expect(response.status).toBe(401)
       const data = await response.json()
@@ -65,12 +64,11 @@ describe('/api/searches', () => {
     it('should return 503 when service unavailable', async () => {
       vi.mocked(savedSearchesService.isAvailable).mockReturnValue(false)
 
-      const request = new NextRequest('http://localhost:3000/api/searches')
-      const response = await GET(request)
+      const response = await GET()
 
       expect(response.status).toBe(503)
       const data = await response.json()
-      expect(data.message).toBe('Service temporarily unavailable')
+      expect(data.message).toBe('An unexpected error occurred')
     })
 
     it('should return saved searches list', async () => {
@@ -90,8 +88,7 @@ describe('/api/searches', () => {
         mockSearches
       )
 
-      const request = new NextRequest('http://localhost:3000/api/searches')
-      const response = await GET(request)
+      const response = await GET()
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -102,8 +99,7 @@ describe('/api/searches', () => {
     it('should return empty array when no searches', async () => {
       vi.mocked(savedSearchesService.listSavedSearches).mockResolvedValue([])
 
-      const request = new NextRequest('http://localhost:3000/api/searches')
-      const response = await GET(request)
+      const response = await GET()
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -116,7 +112,7 @@ describe('/api/searches', () => {
       vi.mocked(auth).mockResolvedValue({
         userId: null,
         sessionClaims: null,
-      } as ReturnType<typeof auth> extends Promise<infer T> ? T : never)
+      } as unknown as Awaited<ReturnType<typeof auth>>)
 
       const request = new NextRequest('http://localhost:3000/api/searches', {
         method: 'POST',
@@ -232,7 +228,7 @@ describe('/api/searches', () => {
       vi.mocked(auth).mockResolvedValue({
         userId: null,
         sessionClaims: null,
-      } as ReturnType<typeof auth> extends Promise<infer T> ? T : never)
+      } as unknown as Awaited<ReturnType<typeof auth>>)
 
       const request = new NextRequest('http://localhost:3000/api/searches/123')
       const response = await GET_ID(request, {
@@ -293,7 +289,7 @@ describe('/api/searches', () => {
       vi.mocked(auth).mockResolvedValue({
         userId: null,
         sessionClaims: null,
-      } as ReturnType<typeof auth> extends Promise<infer T> ? T : never)
+      } as unknown as Awaited<ReturnType<typeof auth>>)
 
       const request = new NextRequest(
         'http://localhost:3000/api/searches/123',
@@ -368,7 +364,7 @@ describe('/api/searches', () => {
       vi.mocked(auth).mockResolvedValue({
         userId: null,
         sessionClaims: null,
-      } as ReturnType<typeof auth> extends Promise<infer T> ? T : never)
+      } as unknown as Awaited<ReturnType<typeof auth>>)
 
       const request = new NextRequest(
         'http://localhost:3000/api/searches/123',

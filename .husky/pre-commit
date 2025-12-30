@@ -1,3 +1,6 @@
 #!/bin/sh
 # Run lint-staged on staged files (uses local devDependency)
 npm run lint-staged
+
+# Check test coverage for new files (warning only)
+./scripts/check-test-coverage.sh

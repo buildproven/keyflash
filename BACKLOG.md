@@ -7,17 +7,17 @@
 
 ## 🚨 Critical - SOTA Audit Fixes (2025-12-30)
 
-| ID           | Feature                           | Category    | Effort | Status     |
-| ------------ | --------------------------------- | ----------- | ------ | ---------- |
-| **SEO-001**  | Create sitemap.ts                 | SEO         | S      | ✅ Done    |
-| **SEO-002**  | Create robots.ts                  | SEO         | S      | ✅ Done    |
-| **SEO-003**  | Add metadataBase + canonical URLs | SEO         | S      | ✅ Done    |
-| **SEO-004**  | Add JSON-LD structured data       | SEO         | S      | ✅ Done    |
-| **A11Y-001** | Fix modal focus (Escape + trap)   | A11y        | M      | ✅ Done    |
-| **A11Y-002** | Fix color contrast (gray-400→600) | A11y        | S      | ✅ Done    |
-| **A11Y-003** | Add prefers-reduced-motion CSS    | A11y        | S      | ✅ Done    |
-| **PERF-001** | Lazy load Clerk authentication    | Performance | M      | 💡 Planned |
-| **PERF-002** | Dynamic import modals             | Performance | S      | ✅ Done    |
+| ID           | Feature                           | Category    | Effort | Status  |
+| ------------ | --------------------------------- | ----------- | ------ | ------- |
+| **SEO-001**  | Create sitemap.ts                 | SEO         | S      | ✅ Done |
+| **SEO-002**  | Create robots.ts                  | SEO         | S      | ✅ Done |
+| **SEO-003**  | Add metadataBase + canonical URLs | SEO         | S      | ✅ Done |
+| **SEO-004**  | Add JSON-LD structured data       | SEO         | S      | ✅ Done |
+| **A11Y-001** | Fix modal focus (Escape + trap)   | A11y        | M      | ✅ Done |
+| **A11Y-002** | Fix color contrast (gray-400→600) | A11y        | S      | ✅ Done |
+| **A11Y-003** | Add prefers-reduced-motion CSS    | A11y        | S      | ✅ Done |
+| **PERF-001** | Lazy load Clerk authentication    | Performance | M      | ✅ Done |
+| **PERF-002** | Dynamic import modals             | Performance | S      | ✅ Done |
 
 ---
 
@@ -25,10 +25,10 @@
 
 | ID           | Feature         | Value Drivers                                             | Effort | Status     |
 | ------------ | --------------- | --------------------------------------------------------- | ------ | ---------- |
-| **FEAT-001** | Saved searches  | Retention: saves user work, Revenue: premium feature      | M      | 💡 Planned |
+| **FEAT-001** | Saved searches  | Retention: saves user work, Revenue: premium feature      | M      | ✅ Done    |
 | **FEAT-005** | Bulk CSV upload | Revenue: enterprise/agency appeal, Retention: power users | M      | 💡 Planned |
 
-**Recommended next**: Complete SOTA fixes, then FEAT-001 (Saved searches)
+**Recommended next**: FEAT-005 (Bulk CSV upload) for enterprise/agency appeal
 
 ---
 
@@ -54,6 +54,8 @@
 
 | ID                        | Feature                                             | Completed  |
 | ------------------------- | --------------------------------------------------- | ---------- |
+| **PERF-001**              | Lazy load Clerk authentication                      | 2025-12-30 |
+| **FEAT-001**              | Saved searches (Redis storage, list, load, delete)  | 2025-12-30 |
 | **AUTH-001**              | User authentication (Clerk) + tier tracking         | 2025-12-22 |
 | **PAY-001**               | Stripe checkout + subscriptions ($29/mo Pro)        | 2025-12-22 |
 | **FEAT-008**              | Content Brief Generator with SERP analysis          | 2025-12-13 |

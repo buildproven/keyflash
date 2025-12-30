@@ -12,6 +12,14 @@ export interface APIError {
 }
 
 /**
+ * Error type with optional status and headers for API responses
+ */
+export type HttpError = Error & {
+  status?: number
+  headers?: Record<string, string>
+}
+
+/**
  * Handles errors and returns formatted NextResponse
  * @param error - The error to handle
  * @returns NextResponse with error details

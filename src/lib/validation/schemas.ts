@@ -101,6 +101,43 @@ export const RelatedKeywordsSchema = z.object({
   limit: z.number().int().min(1).max(50).optional(),
 })
 
+/**
+ * Schema for creating a saved search
+ */
+export const CreateSavedSearchSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(100, 'Name too long (max 100 chars)'),
+  description: z.string().trim().max(500, 'Description too long').optional(),
+  searchParams: z.object({
+    keywords: z
+      .array(z.string().trim().min(1).max(100))
+      .min(1, 'At least one keyword required')
+      .max(200, 'Maximum 200 keywords'),
+    matchType: z.enum(['phrase', 'exact']),
+    location: z.string().min(2).max(5),
+    language: z.string().optional(),
+  }),
+  results: z.array(z.any()).optional(),
+})
+
+/**
+ * Schema for updating a saved search
+ */
+export const UpdateSavedSearchSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(100, 'Name too long')
+    .optional(),
+  description: z.string().trim().max(500).optional(),
+})
+
 export type KeywordSearchInput = z.infer<typeof KeywordSearchSchema>
 export type KeywordFormInput = z.infer<typeof KeywordInputSchema>
 export type RelatedKeywordsInput = z.infer<typeof RelatedKeywordsSchema>
+export type CreateSavedSearchInput = z.infer<typeof CreateSavedSearchSchema>
+export type UpdateSavedSearchInput = z.infer<typeof UpdateSavedSearchSchema>

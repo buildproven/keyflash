@@ -29,7 +29,7 @@ export const TrendSparkline = memo(function TrendSparkline({
 }: TrendSparklineProps) {
   const { path, color, trendDirection } = useMemo<TrendSparklineState>(() => {
     if (!trends || trends.length < 2) {
-      return { path: '', color: 'text-gray-300', trendDirection: 'flat' }
+      return { path: '', color: 'text-gray-500', trendDirection: 'flat' }
     }
 
     const volumes = trends.map(t => t.volume)
@@ -64,13 +64,13 @@ export const TrendSparkline = memo(function TrendSparkline({
     let direction: TrendDirection
 
     if (changePercent > 10) {
-      trendColor = 'text-green-500'
+      trendColor = 'text-green-600'
       direction = 'up'
     } else if (changePercent < -10) {
-      trendColor = 'text-red-500'
+      trendColor = 'text-red-600'
       direction = 'down'
     } else {
-      trendColor = 'text-gray-400'
+      trendColor = 'text-gray-600'
       direction = 'flat'
     }
 
@@ -83,7 +83,7 @@ export const TrendSparkline = memo(function TrendSparkline({
         className={`flex items-center justify-center ${className}`}
         style={{ width, height }}
       >
-        <span className="text-xs text-gray-400">—</span>
+        <span className="text-xs text-gray-500">—</span>
       </div>
     )
   }

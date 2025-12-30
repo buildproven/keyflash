@@ -1,13 +1,29 @@
 'use client'
 
 import React, { memo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { KeywordData } from '@/types/keyword'
-import { ContentBriefModal } from '@/components/content-brief/content-brief-modal'
 import {
   TrendSparkline,
   TrendChartExpanded,
 } from '@/components/trends/trend-sparkline'
-import { RelatedKeywordsModal } from '@/components/related-keywords/related-keywords-modal'
+
+// Dynamic imports for modals to reduce initial bundle size
+const ContentBriefModal = dynamic(
+  () =>
+    import('@/components/content-brief/content-brief-modal').then(
+      mod => mod.ContentBriefModal
+    ),
+  { ssr: false }
+)
+
+const RelatedKeywordsModal = dynamic(
+  () =>
+    import('@/components/related-keywords/related-keywords-modal').then(
+      mod => mod.RelatedKeywordsModal
+    ),
+  { ssr: false }
+)
 
 interface KeywordResultsTableProps {
   data: KeywordData[]

@@ -34,9 +34,16 @@
 
 ## 📊 Medium Value - Worth Doing
 
-| ID           | Feature            | Value Drivers                                                  | Effort | Status  |
-| ------------ | ------------------ | -------------------------------------------------------------- | ------ | ------- |
-| **FEAT-003** | Keyword clustering | Differentiation: unique vs competitors, Retention: power users | L      | 💭 Idea |
+| ID           | Feature                    | Value Drivers                                                  | Effort | Status     |
+| ------------ | -------------------------- | -------------------------------------------------------------- | ------ | ---------- |
+| **TEST-004** | Improve test coverage >85% | Quality: reduce bugs, Retention: reliability                   | M      | 💡 Planned |
+| **FEAT-003** | Keyword clustering         | Differentiation: unique vs competitors, Retention: power users | L      | 💭 Idea    |
+
+**TEST-004 Details**: Current coverage 79%. Gaps:
+
+- `lib/user/user-service.ts` (9%) - needs Redis mocking
+- `lib/api/serp-service.ts` (68%) - external API mocking
+- `lib/rate-limit/` (66-74%) - Redis integration tests
 
 ---
 
@@ -103,5 +110,5 @@
 
 - **MVP Status**: Complete
 - **Deployment**: https://keyflash.vibebuildlab.com (Live)
-- **Test Coverage**: 666 tests (unit + integration + E2E)
+- **Test Coverage**: 705 tests passing, 79% line coverage
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

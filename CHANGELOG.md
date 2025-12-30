@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Monthly reset test coverage for user service (`user-service-reset.test.ts`)
+- Checkout origin allowlist tests
+- Saved search validation tests for KeywordData shape
+
+### Changed
+
+- Rate limiter now defaults to trusting proxy headers in production (required for Vercel/Cloudflare)
+- 5xx error messages are now redacted to "An unexpected error occurred" (prevents information leakage)
+- Saved search results validation changed from `z.any()` to proper `KeywordDataSchema`
+
+### Fixed
+
+- **[Bug]** Monthly keyword usage now resets in `checkKeywordLimit()` not just `incrementKeywordUsage()`
+- TypeScript test file errors (auth mock types, NODE_ENV assignment, optional property checks)
+
+### Security
+
+- Added checkout origin allowlist to prevent open redirect via origin header manipulation
+- Hardened rate limiter with production-aware proxy trust defaults
+- Redacted 5xx error messages to prevent internal error leakage
+- Strengthened saved search validation (removed `z.any()`)
+- Fixed high-severity `qs` vulnerability (CVE: DoS via memory exhaustion)
+
 ## [0.2.0] - 2025-12-24
 
 ### Added

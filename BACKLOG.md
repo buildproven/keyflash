@@ -59,34 +59,36 @@
 
 ## Completed ✅
 
-| ID                        | Feature                                             | Completed  |
-| ------------------------- | --------------------------------------------------- | ---------- |
-| **PERF-001**              | Lazy load Clerk authentication                      | 2025-12-30 |
-| **FEAT-001**              | Saved searches (Redis storage, list, load, delete)  | 2025-12-30 |
-| **AUTH-001**              | User authentication (Clerk) + tier tracking         | 2025-12-22 |
-| **PAY-001**               | Stripe checkout + subscriptions ($29/mo Pro)        | 2025-12-22 |
-| **FEAT-008**              | Content Brief Generator with SERP analysis          | 2025-12-13 |
-| **FEAT-006**              | Related keywords suggestions with relevance scoring | 2025-12-14 |
-| **FEAT-007**              | Historical trend data visualization (sparklines)    | 2025-12-14 |
-| **FEAT-002**              | DataForSEO API integration for scaling              | 2025-11-28 |
-| **MONITOR-001**           | Sentry error tracking                               | 2025-12-05 |
-| **STYLE-001**             | Tailwind CSS v4 migration                           | 2025-12-05 |
-| **CI-001**                | Dependabot auto-merge workflow                      | 2025-12-13 |
-| **CI-002**                | Weekly audit and daily deploy check workflows       | 2025-12-05 |
-| **DEPLOY-001**            | Vercel deployment configuration                     | 2025-11-22 |
-| **TEST-001/002/003**      | Unit, integration, and E2E tests                    | 2025-11-21 |
-| **EXPORT-001**            | CSV export functionality                            | 2025-11-20 |
-| **VALID-001**             | Input validation with Zod schemas                   | 2025-11-20 |
-| **RATE-001**              | Rate limiting middleware                            | 2025-11-20 |
-| **CACHE-001**             | Redis caching strategy                              | 2025-11-20 |
-| **UI-001/002/003**        | Landing page, search form, results table            | 2025-11-20 |
-| **API-001/002**           | API abstraction layer, Google Ads integration       | 2025-11-20 |
-| **INFRA-001/002/003**     | Next.js 16, Google Ads credentials, Upstash Redis   | 2025-11-20 |
-| **SETUP-001/002/003/004** | Documentation, GitHub repo, quality automation      | 2025-11-19 |
-| **UI-004**                | Standard VibeBuildLab footer with legal links       | 2025-12-17 |
-| **COPY-001**              | Landing page copy improvements (accurate messaging) | 2025-12-17 |
-| **FIX-001**               | Tailwind CSS v4 import syntax fix                   | 2025-12-17 |
-| **FIX-002**               | DataForSEO response parsing fix                     | 2025-12-17 |
+| ID                        | Feature                                                          | Completed  |
+| ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **PERF-001**              | Lazy load Clerk authentication                                   | 2025-12-30 |
+| **SEC-001**               | Security hardening (origin allowlist, 5xx redaction, validation) | 2025-12-30 |
+| **FIX-003**               | Monthly keyword reset bug fix                                    | 2025-12-30 |
+| **FEAT-001**              | Saved searches (Redis storage, list, load, delete)               | 2025-12-30 |
+| **AUTH-001**              | User authentication (Clerk) + tier tracking                      | 2025-12-22 |
+| **PAY-001**               | Stripe checkout + subscriptions ($29/mo Pro)                     | 2025-12-22 |
+| **FEAT-008**              | Content Brief Generator with SERP analysis                       | 2025-12-13 |
+| **FEAT-006**              | Related keywords suggestions with relevance scoring              | 2025-12-14 |
+| **FEAT-007**              | Historical trend data visualization (sparklines)                 | 2025-12-14 |
+| **FEAT-002**              | DataForSEO API integration for scaling                           | 2025-11-28 |
+| **MONITOR-001**           | Sentry error tracking                                            | 2025-12-05 |
+| **STYLE-001**             | Tailwind CSS v4 migration                                        | 2025-12-05 |
+| **CI-001**                | Dependabot auto-merge workflow                                   | 2025-12-13 |
+| **CI-002**                | Weekly audit and daily deploy check workflows                    | 2025-12-05 |
+| **DEPLOY-001**            | Vercel deployment configuration                                  | 2025-11-22 |
+| **TEST-001/002/003**      | Unit, integration, and E2E tests                                 | 2025-11-21 |
+| **EXPORT-001**            | CSV export functionality                                         | 2025-11-20 |
+| **VALID-001**             | Input validation with Zod schemas                                | 2025-11-20 |
+| **RATE-001**              | Rate limiting middleware                                         | 2025-11-20 |
+| **CACHE-001**             | Redis caching strategy                                           | 2025-11-20 |
+| **UI-001/002/003**        | Landing page, search form, results table                         | 2025-11-20 |
+| **API-001/002**           | API abstraction layer, Google Ads integration                    | 2025-11-20 |
+| **INFRA-001/002/003**     | Next.js 16, Google Ads credentials, Upstash Redis                | 2025-11-20 |
+| **SETUP-001/002/003/004** | Documentation, GitHub repo, quality automation                   | 2025-11-19 |
+| **UI-004**                | Standard VibeBuildLab footer with legal links                    | 2025-12-17 |
+| **COPY-001**              | Landing page copy improvements (accurate messaging)              | 2025-12-17 |
+| **FIX-001**               | Tailwind CSS v4 import syntax fix                                | 2025-12-17 |
+| **FIX-002**               | DataForSEO response parsing fix                                  | 2025-12-17 |
 
 ---
 
@@ -110,5 +112,5 @@
 
 - **MVP Status**: Complete
 - **Deployment**: https://keyflash.vibebuildlab.com (Live)
-- **Test Coverage**: 705 tests passing, 79% line coverage
+- **Test Coverage**: 711 tests passing, ~79% line coverage
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

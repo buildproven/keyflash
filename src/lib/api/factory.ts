@@ -10,6 +10,20 @@ import { logger } from '@/lib/utils/logger'
  */
 export type ProviderName = 'google-ads' | 'dataforseo' | 'mock'
 
+// FIX-015: Valid provider names for type guard
+const VALID_PROVIDER_NAMES: readonly ProviderName[] = [
+  'google-ads',
+  'dataforseo',
+  'mock',
+] as const
+
+/**
+ * FIX-015: Type guard to validate provider name
+ */
+function isValidProviderName(name: string): name is ProviderName {
+  return VALID_PROVIDER_NAMES.includes(name as ProviderName)
+}
+
 /**
  * Mock provider for development and testing
  * Returns randomized data without requiring API credentials
@@ -149,11 +163,24 @@ class MockProvider implements KeywordAPIProvider {
  * @throws Error if provider configuration is invalid
  */
 export function createProvider(): KeywordAPIProvider {
-  const providerName = (
-    process.env.KEYWORD_API_PROVIDER || 'mock'
-  ).toLowerCase() as ProviderName
+  const rawName = (process.env.KEYWORD_API_PROVIDER || 'mock').toLowerCase()
 
-  switch (providerName) {
+  // FIX-015: Use type guard instead of unsafe type assertion
+  // FIX-017: In production, unknown provider should throw (not silently serve mock data)
+  if (!isValidProviderName(rawName)) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        `Invalid KEYWORD_API_PROVIDER "${rawName}". ` +
+          `Valid options: ${VALID_PROVIDER_NAMES.join(', ')}`
+      )
+    }
+    logger.warn(
+      `Unknown provider "${rawName}". Falling back to mock provider (dev only).`
+    )
+    return new MockProvider()
+  }
+
+  switch (rawName) {
     case 'google-ads':
       return new GoogleAdsProvider()
 
@@ -161,12 +188,6 @@ export function createProvider(): KeywordAPIProvider {
       return new DataForSEOProvider()
 
     case 'mock':
-      return new MockProvider()
-
-    default:
-      logger.warn(
-        `Unknown provider "${providerName}". Falling back to mock provider.`
-      )
       return new MockProvider()
   }
 }

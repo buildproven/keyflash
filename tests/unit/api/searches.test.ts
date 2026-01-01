@@ -19,23 +19,36 @@ vi.mock('@clerk/nextjs/server', () => ({
   ),
 }))
 
-// Mock savedSearchesService
-vi.mock('@/lib/saved-searches/saved-searches-service', () => ({
-  savedSearchesService: {
-    isAvailable: vi.fn(() => true),
-    listSavedSearches: vi.fn(),
-    createSavedSearch: vi.fn(),
-    getSavedSearch: vi.fn(),
-    updateSavedSearch: vi.fn(),
-    deleteSavedSearch: vi.fn(),
-  },
-}))
+// Mock savedSearchesService - use importOriginal to get error classes for error-handler.ts
+vi.mock('@/lib/saved-searches/saved-searches-service', async importOriginal => {
+  const actual =
+    await importOriginal<
+      typeof import('@/lib/saved-searches/saved-searches-service')
+    >()
+  return {
+    ...actual, // Keep ServiceUnavailableError and ServiceOperationError
+    savedSearchesService: {
+      isAvailable: vi.fn(() => true),
+      listSavedSearches: vi.fn(),
+      createSavedSearch: vi.fn(),
+      getSavedSearch: vi.fn(),
+      updateSavedSearch: vi.fn(),
+      deleteSavedSearch: vi.fn(),
+    },
+  }
+})
 
 // Import after mocks
 import { GET, POST } from '@/app/api/searches/route'
 import { GET as GET_ID, PUT, DELETE } from '@/app/api/searches/[id]/route'
 import { auth } from '@clerk/nextjs/server'
 import { savedSearchesService } from '@/lib/saved-searches/saved-searches-service'
+
+// FIX-011: Use valid search IDs that match SearchIdSchema
+// UUID format: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000'
+// Legacy format: /^\d{13}-[a-z0-9]{7}$/ (13-digit timestamp + 7 alphanumeric)
+const VALID_LEGACY_ID = '1735000000000-abc1234'
 
 describe('/api/searches', () => {
   beforeEach(() => {
@@ -74,7 +87,7 @@ describe('/api/searches', () => {
     it('should return saved searches list', async () => {
       const mockSearches = [
         {
-          id: '1735000000-abc123',
+          id: VALID_LEGACY_ID,
           name: 'Test Search',
           keywordCount: 5,
           location: 'US',
@@ -162,7 +175,7 @@ describe('/api/searches', () => {
 
     it('should create saved search successfully', async () => {
       const mockCreated = {
-        id: '1735000000-abc123',
+        id: VALID_LEGACY_ID,
         clerkUserId: 'user_123',
         name: 'My Search',
         searchParams: {
@@ -196,7 +209,7 @@ describe('/api/searches', () => {
 
       expect(response.status).toBe(201)
       const data = await response.json()
-      expect(data.search.id).toBe('1735000000-abc123')
+      expect(data.search.id).toBe(VALID_LEGACY_ID)
       expect(data.search.name).toBe('My Search')
     })
 
@@ -230,9 +243,11 @@ describe('/api/searches', () => {
         sessionClaims: null,
       } as unknown as Awaited<ReturnType<typeof auth>>)
 
-      const request = new NextRequest('http://localhost:3000/api/searches/123')
+      const request = new NextRequest(
+        `http://localhost:3000/api/searches/${VALID_UUID}`
+      )
       const response = await GET_ID(request, {
-        params: Promise.resolve({ id: '123' }),
+        params: Promise.resolve({ id: VALID_UUID }),
       })
 
       expect(response.status).toBe(401)
@@ -242,10 +257,10 @@ describe('/api/searches', () => {
       vi.mocked(savedSearchesService.getSavedSearch).mockResolvedValue(null)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/nonexistent'
+        `http://localhost:3000/api/searches/${VALID_UUID}`
       )
       const response = await GET_ID(request, {
-        params: Promise.resolve({ id: 'nonexistent' }),
+        params: Promise.resolve({ id: VALID_UUID }),
       })
 
       expect(response.status).toBe(404)
@@ -253,7 +268,7 @@ describe('/api/searches', () => {
 
     it('should return saved search', async () => {
       const mockSearch = {
-        id: '1735000000-abc123',
+        id: VALID_LEGACY_ID,
         clerkUserId: 'user_123',
         name: 'Test Search',
         searchParams: {
@@ -272,10 +287,10 @@ describe('/api/searches', () => {
       )
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/1735000000-abc123'
+        `http://localhost:3000/api/searches/${VALID_LEGACY_ID}`
       )
       const response = await GET_ID(request, {
-        params: Promise.resolve({ id: '1735000000-abc123' }),
+        params: Promise.resolve({ id: VALID_LEGACY_ID }),
       })
 
       expect(response.status).toBe(200)
@@ -292,14 +307,14 @@ describe('/api/searches', () => {
       } as unknown as Awaited<ReturnType<typeof auth>>)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/123',
+        `http://localhost:3000/api/searches/${VALID_UUID}`,
         {
           method: 'PUT',
           body: JSON.stringify({ name: 'Updated' }),
         }
       )
       const response = await PUT(request, {
-        params: Promise.resolve({ id: '123' }),
+        params: Promise.resolve({ id: VALID_UUID }),
       })
 
       expect(response.status).toBe(401)
@@ -309,14 +324,14 @@ describe('/api/searches', () => {
       vi.mocked(savedSearchesService.updateSavedSearch).mockResolvedValue(null)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/nonexistent',
+        `http://localhost:3000/api/searches/${VALID_UUID}`,
         {
           method: 'PUT',
           body: JSON.stringify({ name: 'Updated' }),
         }
       )
       const response = await PUT(request, {
-        params: Promise.resolve({ id: 'nonexistent' }),
+        params: Promise.resolve({ id: VALID_UUID }),
       })
 
       expect(response.status).toBe(404)
@@ -324,7 +339,7 @@ describe('/api/searches', () => {
 
     it('should update saved search', async () => {
       const mockUpdated = {
-        id: '1735000000-abc123',
+        id: VALID_LEGACY_ID,
         clerkUserId: 'user_123',
         name: 'Updated Name',
         searchParams: {
@@ -343,14 +358,14 @@ describe('/api/searches', () => {
       )
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/1735000000-abc123',
+        `http://localhost:3000/api/searches/${VALID_LEGACY_ID}`,
         {
           method: 'PUT',
           body: JSON.stringify({ name: 'Updated Name' }),
         }
       )
       const response = await PUT(request, {
-        params: Promise.resolve({ id: '1735000000-abc123' }),
+        params: Promise.resolve({ id: VALID_LEGACY_ID }),
       })
 
       expect(response.status).toBe(200)
@@ -367,13 +382,13 @@ describe('/api/searches', () => {
       } as unknown as Awaited<ReturnType<typeof auth>>)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/123',
+        `http://localhost:3000/api/searches/${VALID_UUID}`,
         {
           method: 'DELETE',
         }
       )
       const response = await DELETE(request, {
-        params: Promise.resolve({ id: '123' }),
+        params: Promise.resolve({ id: VALID_UUID }),
       })
 
       expect(response.status).toBe(401)
@@ -383,13 +398,13 @@ describe('/api/searches', () => {
       vi.mocked(savedSearchesService.deleteSavedSearch).mockResolvedValue(false)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/nonexistent',
+        `http://localhost:3000/api/searches/${VALID_UUID}`,
         {
           method: 'DELETE',
         }
       )
       const response = await DELETE(request, {
-        params: Promise.resolve({ id: 'nonexistent' }),
+        params: Promise.resolve({ id: VALID_UUID }),
       })
 
       expect(response.status).toBe(404)
@@ -399,13 +414,13 @@ describe('/api/searches', () => {
       vi.mocked(savedSearchesService.deleteSavedSearch).mockResolvedValue(true)
 
       const request = new NextRequest(
-        'http://localhost:3000/api/searches/1735000000-abc123',
+        `http://localhost:3000/api/searches/${VALID_LEGACY_ID}`,
         {
           method: 'DELETE',
         }
       )
       const response = await DELETE(request, {
-        params: Promise.resolve({ id: '1735000000-abc123' }),
+        params: Promise.resolve({ id: VALID_LEGACY_ID }),
       })
 
       expect(response.status).toBe(200)

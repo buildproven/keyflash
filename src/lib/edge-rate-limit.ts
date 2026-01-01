@@ -10,6 +10,11 @@
  * Ported from shiparchitect for cross-project security standards.
  */
 
+import { logger } from '@/lib/utils/logger'
+
+// FIX-013: Maximum entries in memory store to prevent unbounded growth
+const MAX_MEMORY_ENTRIES = 10000
+
 interface RateLimitEntry {
   count: number
   windowStart: number
@@ -72,7 +77,8 @@ class RedisStorage implements RateLimitStorage {
       const result = await this.request(['GET', key])
       return result && typeof result === 'string' ? JSON.parse(result) : null
     } catch (error) {
-      console.warn('Redis GET failed:', error)
+      // FIX-014: Use logger instead of console.warn
+      logger.warn('Redis GET failed', { module: 'EdgeRateLimit', error })
       return null
     }
   }
@@ -86,7 +92,8 @@ class RedisStorage implements RateLimitStorage {
         JSON.stringify(entry),
       ])
     } catch (error) {
-      console.warn('Redis SET failed:', error)
+      // FIX-014: Use logger instead of console.warn
+      logger.warn('Redis SET failed', { module: 'EdgeRateLimit', error })
     }
   }
 
@@ -124,7 +131,8 @@ class RedisStorage implements RateLimitStorage {
 
       return incrResult.result ?? 0
     } catch (error) {
-      console.warn('Redis INCREMENT failed:', error)
+      // FIX-014: Use logger instead of console.warn
+      logger.warn('Redis INCREMENT failed', { module: 'EdgeRateLimit', error })
       throw error
     }
   }
@@ -142,9 +150,20 @@ class MemoryStorage implements RateLimitStorage {
     return entry
   }
 
-  async set(key: string, entry: RateLimitEntry, ttlMs: number): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- ttlMs required by interface but expiration handled via entry.expiresAt
+  async set(key: string, entry: RateLimitEntry, _ttlMs: number): Promise<void> {
+    // FIX-013: Prevent unbounded memory growth - evict oldest entries if at limit
+    if (this.store.size >= MAX_MEMORY_ENTRIES && !this.store.has(key)) {
+      // Evict ~10% of oldest entries based on expiresAt
+      const entries = Array.from(this.store.entries())
+        .sort((a, b) => a[1].expiresAt - b[1].expiresAt)
+        .slice(0, Math.ceil(MAX_MEMORY_ENTRIES * 0.1))
+      for (const [k] of entries) {
+        this.store.delete(k)
+      }
+    }
     this.store.set(key, entry)
-    setTimeout(() => this.store.delete(key), ttlMs)
+    // FIX-012: Removed setTimeout - entries are cleaned up on get() via expiresAt check
   }
 
   async increment(key: string, ttlMs: number): Promise<number> {
@@ -178,8 +197,11 @@ function getStorage(): RateLimitStorage {
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
 
   if (process.env.NODE_ENV === 'production' && (!redisUrl || !redisToken)) {
-    console.error(
-      '🚫 UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN required in production'
+    // FIX-014: Use logger instead of console.error
+    logger.error(
+      'UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN required in production',
+      new Error('Redis required in production'),
+      { module: 'EdgeRateLimit' }
     )
     throw new Error('Redis required in production for edge rate limiting')
   }
@@ -187,7 +209,10 @@ function getStorage(): RateLimitStorage {
   if (redisUrl && redisToken) {
     cachedStorage = new RedisStorage(redisUrl, redisToken)
   } else {
-    console.warn('⚠️ Using in-memory edge rate limiting (dev only)')
+    // FIX-014: Use logger instead of console.warn
+    logger.warn('Using in-memory edge rate limiting (dev only)', {
+      module: 'EdgeRateLimit',
+    })
     cachedStorage = new MemoryStorage()
   }
 
@@ -228,7 +253,10 @@ export async function checkEdgeRateLimit(
       retryAfter: 0,
     }
   } catch (error) {
-    console.error('Edge rate limit check failed:', error)
+    // FIX-014: Use logger instead of console.error
+    logger.error('Edge rate limit check failed', error, {
+      module: 'EdgeRateLimit',
+    })
 
     if (process.env.NODE_ENV === 'production') {
       return { limited: true, remaining: 0, resetTime, retryAfter: 60 }
@@ -264,7 +292,10 @@ export async function getEdgeRateLimitStatus(
         existing.count >= limit ? Math.ceil((resetTime - now) / 1000) : 0,
     }
   } catch (error) {
-    console.error('Edge rate limit status check failed:', error)
+    // FIX-014: Use logger instead of console.error
+    logger.error('Edge rate limit status check failed', error, {
+      module: 'EdgeRateLimit',
+    })
 
     if (process.env.NODE_ENV === 'production') {
       return { limited: true, remaining: 0, resetTime, retryAfter: 60 }

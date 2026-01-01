@@ -1,5 +1,14 @@
 import { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
+import { logger } from '@/lib/utils/logger'
+import {
+  ServiceUnavailableError,
+  ServiceOperationError,
+} from '@/lib/saved-searches/saved-searches-service'
+import {
+  UserServiceUnavailableError,
+  UserServiceOperationError,
+} from '@/lib/user/user-service'
 
 /**
  * Standard API error response format
@@ -36,6 +45,11 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
   // Zod validation errors
   if (error instanceof ZodError) {
     status = 400
+    // FIX-018: Log validation errors for debugging
+    logger.warn('Validation error', {
+      module: 'APIErrorHandler',
+      issues: error.issues.map(i => `${i.path.join('.')}: ${i.message}`),
+    })
     return NextResponse.json(
       {
         error: 'Validation Error',
@@ -44,6 +58,45 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
         timestamp,
       },
       { status, headers }
+    )
+  }
+
+  // FIX-008: Service unavailable errors (Redis down, etc.)
+  if (
+    error instanceof ServiceUnavailableError ||
+    error instanceof UserServiceUnavailableError
+  ) {
+    logger.error('Service unavailable', error, { module: 'APIErrorHandler' })
+    return NextResponse.json(
+      {
+        error: 'Service Unavailable',
+        message: 'Service temporarily unavailable. Please try again later.',
+        statusCode: 503,
+        timestamp,
+      },
+      { status: 503, headers }
+    )
+  }
+
+  // FIX-008: Service operation errors (Redis operation failed)
+  if (
+    error instanceof ServiceOperationError ||
+    error instanceof UserServiceOperationError
+  ) {
+    const operation =
+      error instanceof ServiceOperationError ? error.operation : error.operation
+    logger.error('Service operation failed', error, {
+      module: 'APIErrorHandler',
+      operation,
+    })
+    return NextResponse.json(
+      {
+        error: 'Service Error',
+        message: 'Service temporarily unavailable. Please try again later.',
+        statusCode: 503,
+        timestamp,
+      },
+      { status: 503, headers }
     )
   }
 
@@ -86,6 +139,20 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
       ? 'An unexpected error occurred'
       : error.message
 
+    // FIX-018: Log all errors for operational visibility
+    if (isServerError) {
+      logger.error('API server error', error, {
+        module: 'APIErrorHandler',
+        status,
+      })
+    } else if (status >= 400) {
+      logger.warn('API client error', {
+        module: 'APIErrorHandler',
+        status,
+        message: error.message,
+      })
+    }
+
     // Generic error
     return NextResponse.json(
       {
@@ -99,6 +166,8 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
   }
 
   // Unknown error type
+  // FIX-018: Log unknown error types
+  logger.error('Unknown API error type', error, { module: 'APIErrorHandler' })
   return NextResponse.json(
     {
       error: 'Unknown Error',

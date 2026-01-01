@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import Stripe from 'stripe'
 import { logger } from '@/lib/utils/logger'
+import { userService } from '@/lib/user/user-service'
+import {
+  rateLimiter,
+  type RateLimitConfig,
+} from '@/lib/rate-limit/redis-rate-limiter'
+
+const CHECKOUT_RATE_LIMIT: RateLimitConfig = {
+  requestsPerHour: 10,
+  enabled: true,
+  failSafe: 'closed',
+}
 
 // Lazy initialization to avoid build-time errors
 function getStripe() {
@@ -55,6 +67,37 @@ export function resolveCheckoutOrigin(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // FIX-004: Require authentication
+    const authResult = await auth()
+    if (!authResult.userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // FIX-010: Rate limit checkout requests
+    const rateLimitResult = await rateLimiter.checkRateLimit(
+      request,
+      CHECKOUT_RATE_LIMIT
+    )
+    if (!rateLimitResult.allowed) {
+      logger.warn('Checkout rate limit exceeded', {
+        module: 'Checkout',
+        userId: authResult.userId,
+        retryAfter: rateLimitResult.retryAfter,
+      })
+      return NextResponse.json(
+        { error: 'Too many checkout attempts. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 3600),
+          },
+        }
+      )
+    }
+
     const priceId = process.env.STRIPE_PRICE_PRO
     if (!priceId) {
       logger.error('Checkout: STRIPE_PRICE_PRO not configured')
@@ -63,6 +106,10 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Get user email to pre-fill and link subscription
+    const user = await userService.getUser(authResult.userId)
+    const customerEmail = user?.email
 
     const stripe = getStripe()
     const origin = resolveCheckoutOrigin(request)
@@ -77,21 +124,29 @@ export async function POST(request: NextRequest) {
       ],
       success_url: `${origin}/search?upgraded=true`,
       cancel_url: `${origin}/search?canceled=true`,
-      // Collect email for account creation
-      customer_creation: 'always',
+      // Pre-fill email if available for better user experience
+      ...(customerEmail && { customer_email: customerEmail }),
+      // Create customer if not pre-filled
+      customer_creation: customerEmail ? undefined : 'always',
       // Allow promotion codes
       allow_promotion_codes: true,
-      // Subscription data
+      // Subscription data with user ID for webhook linking
       subscription_data: {
         metadata: {
           product: 'keyflash-pro',
+          clerkUserId: authResult.userId,
         },
+      },
+      // Store clerk user ID in session metadata for webhook
+      metadata: {
+        clerkUserId: authResult.userId,
       },
     })
 
     logger.info('Checkout session created', {
       sessionId: session.id,
       priceId,
+      userId: authResult.userId,
     })
 
     return NextResponse.json({ url: session.url })

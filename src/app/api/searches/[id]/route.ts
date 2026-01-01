@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { savedSearchesService } from '@/lib/saved-searches/saved-searches-service'
-import { UpdateSavedSearchSchema } from '@/lib/validation/schemas'
+import {
+  UpdateSavedSearchSchema,
+  SearchIdSchema,
+} from '@/lib/validation/schemas'
 import { handleAPIError, HttpError } from '@/lib/utils/error-handler'
 import { readJsonWithLimit } from '@/lib/utils/request'
+
+// FIX-011: Helper to validate search ID parameter
+function validateSearchId(id: string): string {
+  const result = SearchIdSchema.safeParse(id)
+  if (!result.success) {
+    const error: HttpError = new Error('Invalid search ID format')
+    error.status = 400
+    throw error
+  }
+  return result.data
+}
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -21,6 +35,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
+    const validatedId = validateSearchId(id)
 
     if (!savedSearchesService.isAvailable()) {
       const error: HttpError = new Error('Service temporarily unavailable')
@@ -28,7 +43,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       return handleAPIError(error)
     }
 
-    const search = await savedSearchesService.getSavedSearch(userId, id)
+    const search = await savedSearchesService.getSavedSearch(
+      userId,
+      validatedId
+    )
 
     if (!search) {
       const error: HttpError = new Error('Saved search not found')
@@ -54,6 +72,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
+    const validatedId = validateSearchId(id)
 
     if (!savedSearchesService.isAvailable()) {
       const error: HttpError = new Error('Service temporarily unavailable')
@@ -66,7 +85,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const updated = await savedSearchesService.updateSavedSearch(
       userId,
-      id,
+      validatedId,
       validated
     )
 
@@ -94,6 +113,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
+    const validatedId = validateSearchId(id)
 
     if (!savedSearchesService.isAvailable()) {
       const error: HttpError = new Error('Service temporarily unavailable')
@@ -101,7 +121,10 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       return handleAPIError(error)
     }
 
-    const deleted = await savedSearchesService.deleteSavedSearch(userId, id)
+    const deleted = await savedSearchesService.deleteSavedSearch(
+      userId,
+      validatedId
+    )
 
     if (!deleted) {
       const error: HttpError = new Error('Saved search not found')

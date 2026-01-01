@@ -276,14 +276,24 @@ export class RedisRateLimiter {
 
   /**
    * Clear all rate limit entries (for testing/maintenance)
+   * Uses SCAN instead of KEYS to avoid blocking Redis with large keyspaces
    */
   async clear(): Promise<void> {
     if (this.isRedisAvailable && this.redis) {
       try {
-        const keys = await this.redis.keys('rate:*')
-        if (keys.length > 0) {
-          await this.redis.del(...keys)
-        }
+        // Use SCAN iterator to avoid blocking Redis with KEYS command
+        let cursor = '0'
+        do {
+          const result: [string, string[]] = await this.redis.scan(cursor, {
+            match: 'rate:*',
+            count: 100,
+          })
+          cursor = result[0]
+          const keys = result[1]
+          if (keys.length > 0) {
+            await this.redis.del(...keys)
+          }
+        } while (cursor !== '0')
       } catch (error) {
         logger.error('Error clearing Redis entries', error, {
           module: 'RedisRateLimiter',

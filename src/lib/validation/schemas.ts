@@ -157,8 +157,30 @@ export const UpdateSavedSearchSchema = z.object({
   description: z.string().trim().max(500).optional(),
 })
 
+/**
+ * FIX-011: Schema for validating search ID parameter
+ * Accepts both UUID format (new) and legacy format (timestamp-randomchars)
+ */
+export const SearchIdSchema = z
+  .string()
+  .trim()
+  .min(1, 'Search ID is required')
+  .max(50, 'Invalid search ID')
+  .refine(
+    id => {
+      // UUID format (new)
+      const uuidPattern =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      // Legacy format: timestamp-randomchars (e.g., 1703123456789-abc1234)
+      const legacyPattern = /^\d{13}-[a-z0-9]{7}$/
+      return uuidPattern.test(id) || legacyPattern.test(id)
+    },
+    { message: 'Invalid search ID format' }
+  )
+
 export type KeywordSearchInput = z.infer<typeof KeywordSearchSchema>
 export type KeywordFormInput = z.infer<typeof KeywordInputSchema>
 export type RelatedKeywordsInput = z.infer<typeof RelatedKeywordsSchema>
 export type CreateSavedSearchInput = z.infer<typeof CreateSavedSearchSchema>
 export type UpdateSavedSearchInput = z.infer<typeof UpdateSavedSearchSchema>
+export type SearchId = z.infer<typeof SearchIdSchema>

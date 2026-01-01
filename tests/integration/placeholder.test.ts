@@ -18,17 +18,22 @@ vi.mock('@clerk/nextjs/server', () => ({
   auth: vi.fn(() => Promise.resolve({ userId: null, sessionClaims: null })),
 }))
 
-// Mock userService BEFORE importing the route
-vi.mock('@/lib/user/user-service', () => ({
-  userService: {
-    getUser: vi.fn(() => Promise.resolve(null)),
-    createUser: vi.fn(() => Promise.resolve(null)),
-    checkKeywordLimit: vi.fn(() =>
-      Promise.resolve({ allowed: true, used: 0, limit: 300, tier: 'trial' })
-    ),
-    incrementKeywordUsage: vi.fn(() => Promise.resolve(1)),
-  },
-}))
+// Mock userService BEFORE importing the route - use importOriginal to keep error classes
+vi.mock('@/lib/user/user-service', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('@/lib/user/user-service')>()
+  return {
+    ...actual, // Keep UserServiceUnavailableError and UserServiceOperationError
+    userService: {
+      getUser: vi.fn(() => Promise.resolve(null)),
+      createUser: vi.fn(() => Promise.resolve(null)),
+      checkKeywordLimit: vi.fn(() =>
+        Promise.resolve({ allowed: true, used: 0, limit: 300, tier: 'trial' })
+      ),
+      incrementKeywordUsage: vi.fn(() => Promise.resolve(1)),
+    },
+  }
+})
 
 // Mock the rate limiter for integration tests
 vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({

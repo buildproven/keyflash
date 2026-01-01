@@ -1,6 +1,24 @@
 import { Redis } from '@upstash/redis'
 import { logger } from '@/lib/utils/logger'
 
+// FIX: Custom error classes for distinguishing service failures from "not found"
+export class UserServiceUnavailableError extends Error {
+  constructor(message: string = 'User service temporarily unavailable') {
+    super(message)
+    this.name = 'UserServiceUnavailableError'
+  }
+}
+
+export class UserServiceOperationError extends Error {
+  constructor(
+    message: string,
+    public readonly operation: string
+  ) {
+    super(message)
+    this.name = 'UserServiceOperationError'
+  }
+}
+
 export type UserTier = 'trial' | 'pro'
 
 export interface UserData {
@@ -49,16 +67,12 @@ class UserService {
 
   /**
    * Create a new user with trial tier
+   * @throws UserServiceUnavailableError if service is not available
+   * @throws UserServiceOperationError if Redis operation fails
    */
-  async createUser(
-    clerkUserId: string,
-    email: string
-  ): Promise<UserData | null> {
+  async createUser(clerkUserId: string, email: string): Promise<UserData> {
     if (!this.isAvailable()) {
-      logger.warn('UserService not available - Redis not configured', {
-        module: 'UserService',
-      })
-      return null
+      throw new UserServiceUnavailableError('UserService not available')
     }
 
     const now = new Date()
@@ -105,16 +119,19 @@ class UserService {
         module: 'UserService',
         clerkUserId,
       })
-      return null
+      throw new UserServiceOperationError('Failed to create user', 'create')
     }
   }
 
   /**
    * Get user by Clerk user ID
+   * @throws UserServiceUnavailableError if service is not available
+   * @throws UserServiceOperationError if Redis operation fails
+   * @returns UserData if found, null if not found
    */
   async getUser(clerkUserId: string): Promise<UserData | null> {
     if (!this.isAvailable()) {
-      return null
+      throw new UserServiceUnavailableError('UserService not available')
     }
 
     try {
@@ -126,16 +143,19 @@ class UserService {
         module: 'UserService',
         clerkUserId,
       })
-      return null
+      throw new UserServiceOperationError('Failed to get user', 'get')
     }
   }
 
   /**
    * Get user by email
+   * @throws UserServiceUnavailableError if service is not available
+   * @throws UserServiceOperationError if Redis operation fails
+   * @returns UserData if found, null if not found
    */
   async getUserByEmail(email: string): Promise<UserData | null> {
     if (!this.isAvailable()) {
-      return null
+      throw new UserServiceUnavailableError('UserService not available')
     }
 
     try {
@@ -151,18 +171,21 @@ class UserService {
         module: 'UserService',
         email,
       })
-      return null
+      throw new UserServiceOperationError('Failed to get user by email', 'get')
     }
   }
 
   /**
    * Get user by Stripe customer ID
+   * @throws UserServiceUnavailableError if service is not available
+   * @throws UserServiceOperationError if Redis operation fails
+   * @returns UserData if found, null if not found
    */
   async getUserByStripeCustomerId(
     stripeCustomerId: string
   ): Promise<UserData | null> {
     if (!this.isAvailable()) {
-      return null
+      throw new UserServiceUnavailableError('UserService not available')
     }
 
     try {
@@ -178,19 +201,25 @@ class UserService {
         module: 'UserService',
         stripeCustomerId,
       })
-      return null
+      throw new UserServiceOperationError(
+        'Failed to get user by Stripe customer ID',
+        'get'
+      )
     }
   }
 
   /**
    * Update user data
+   * @throws UserServiceUnavailableError if service is not available
+   * @throws UserServiceOperationError if Redis operation fails
+   * @returns Updated UserData if found, null if user not found
    */
   async updateUser(
     clerkUserId: string,
     updates: Partial<UserData>
   ): Promise<UserData | null> {
     if (!this.isAvailable()) {
-      return null
+      throw new UserServiceUnavailableError('UserService not available')
     }
 
     try {
@@ -225,11 +254,18 @@ class UserService {
 
       return updated
     } catch (error) {
+      // Re-throw service errors
+      if (
+        error instanceof UserServiceUnavailableError ||
+        error instanceof UserServiceOperationError
+      ) {
+        throw error
+      }
       logger.error('Failed to update user', error, {
         module: 'UserService',
         clerkUserId,
       })
-      return null
+      throw new UserServiceOperationError('Failed to update user', 'update')
     }
   }
 
@@ -261,13 +297,16 @@ class UserService {
 
   /**
    * Increment keyword usage for the month
+   * @throws UserServiceUnavailableError if service is not available
+   * @throws UserServiceOperationError if Redis operation fails
+   * @returns New count if successful, null if user not found
    */
   async incrementKeywordUsage(
     clerkUserId: string,
     count: number = 1
   ): Promise<number | null> {
     if (!this.isAvailable()) {
-      return null
+      throw new UserServiceUnavailableError('UserService not available')
     }
 
     try {
@@ -297,11 +336,21 @@ class UserService {
 
       return newCount
     } catch (error) {
+      // Re-throw service errors
+      if (
+        error instanceof UserServiceUnavailableError ||
+        error instanceof UserServiceOperationError
+      ) {
+        throw error
+      }
       logger.error('Failed to increment keyword usage', error, {
         module: 'UserService',
         clerkUserId,
       })
-      return null
+      throw new UserServiceOperationError(
+        'Failed to increment keyword usage',
+        'increment'
+      )
     }
   }
 

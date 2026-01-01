@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis'
+import crypto from 'crypto'
 import { logger } from '@/lib/utils/logger'
 import type {
   SavedSearch,
@@ -7,13 +8,33 @@ import type {
   UpdateSavedSearchInput,
 } from '@/types/saved-search'
 
+// FIX-008: Custom error for service infrastructure failures
+export class ServiceUnavailableError extends Error {
+  constructor(message: string = 'Service temporarily unavailable') {
+    super(message)
+    this.name = 'ServiceUnavailableError'
+  }
+}
+
+// FIX-008: Custom error for Redis operation failures
+export class ServiceOperationError extends Error {
+  constructor(
+    message: string,
+    public readonly operation: string
+  ) {
+    super(message)
+    this.name = 'ServiceOperationError'
+  }
+}
+
 const SAVED_SEARCH_PREFIX = 'saved-search:'
 const SAVED_SEARCHES_INDEX_PREFIX = 'saved-searches:'
 const MAX_SAVED_SEARCHES_PER_USER = 50
 const SAVED_SEARCH_TTL = 60 * 60 * 24 * 365 // 1 year
 
+// FIX-006: Use crypto.randomUUID for unique IDs
 function generateSearchId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  return crypto.randomUUID()
 }
 
 class SavedSearchesService {
@@ -54,29 +75,44 @@ class SavedSearchesService {
     clerkUserId: string,
     input: CreateSavedSearchInput
   ): Promise<SavedSearch | null> {
+    // FIX-008: Throw on unavailable instead of returning null
     if (!this.isAvailable()) {
-      logger.warn('SavedSearchesService not available', {
-        module: 'SavedSearchesService',
-      })
-      return null
+      throw new ServiceUnavailableError('Saved searches service unavailable')
     }
 
     try {
-      // Check limit
-      const existingIds = await this.client!.smembers(
-        this.getIndexKey(clerkUserId)
-      )
-      if (existingIds.length >= MAX_SAVED_SEARCHES_PER_USER) {
+      const indexKey = this.getIndexKey(clerkUserId)
+      const searchId = generateSearchId()
+      const searchKey = this.getSearchKey(clerkUserId, searchId)
+
+      // FIX-006: Atomic add with rollback if limit exceeded
+      // SADD is atomic, then we check count and rollback if needed
+      const addResult = await this.client!.sadd(indexKey, searchId)
+
+      if (addResult === 0) {
+        // ID already existed (extremely unlikely with UUID)
+        logger.warn('Search ID collision detected', {
+          module: 'SavedSearchesService',
+          clerkUserId,
+          searchId,
+        })
+        return null // Business logic: collision is not an infra error
+      }
+
+      // Check count after add - if over limit, rollback
+      const currentCount = await this.client!.scard(indexKey)
+      if (currentCount > MAX_SAVED_SEARCHES_PER_USER) {
+        // Rollback - remove the just-added ID
+        await this.client!.srem(indexKey, searchId)
         logger.warn('User reached saved searches limit', {
           module: 'SavedSearchesService',
           clerkUserId,
           limit: MAX_SAVED_SEARCHES_PER_USER,
         })
-        return null
+        return null // Business logic: limit exceeded is not an infra error
       }
 
       const now = new Date().toISOString()
-      const searchId = generateSearchId()
 
       const savedSearch: SavedSearch = {
         id: searchId,
@@ -92,15 +128,8 @@ class SavedSearchesService {
         },
       }
 
-      // Store the search
-      await this.client!.set(
-        this.getSearchKey(clerkUserId, searchId),
-        savedSearch,
-        { ex: SAVED_SEARCH_TTL }
-      )
-
-      // Add to user's index
-      await this.client!.sadd(this.getIndexKey(clerkUserId), searchId)
+      // Store the search data
+      await this.client!.set(searchKey, savedSearch, { ex: SAVED_SEARCH_TTL })
 
       logger.info('Created saved search', {
         module: 'SavedSearchesService',
@@ -115,7 +144,8 @@ class SavedSearchesService {
         module: 'SavedSearchesService',
         clerkUserId,
       })
-      return null
+      // FIX-008: Throw on Redis errors so API can return 503
+      throw new ServiceOperationError('Failed to create saved search', 'create')
     }
   }
 
@@ -123,25 +153,32 @@ class SavedSearchesService {
     clerkUserId: string,
     searchId: string
   ): Promise<SavedSearch | null> {
-    if (!this.isAvailable()) return null
+    // FIX-008: Throw on unavailable instead of returning null
+    if (!this.isAvailable()) {
+      throw new ServiceUnavailableError('Saved searches service unavailable')
+    }
 
     try {
       const search = await this.client!.get<SavedSearch>(
         this.getSearchKey(clerkUserId, searchId)
       )
-      return search
+      return search // null means not found, which is valid
     } catch (error) {
       logger.error('Failed to get saved search', error, {
         module: 'SavedSearchesService',
         clerkUserId,
         searchId,
       })
-      return null
+      // FIX-008: Throw on Redis errors so API can return 503
+      throw new ServiceOperationError('Failed to retrieve saved search', 'get')
     }
   }
 
   async listSavedSearches(clerkUserId: string): Promise<SavedSearchSummary[]> {
-    if (!this.isAvailable()) return []
+    // FIX-008: Throw on unavailable instead of returning empty array
+    if (!this.isAvailable()) {
+      throw new ServiceUnavailableError('Saved searches service unavailable')
+    }
 
     try {
       const searchIds = await this.client!.smembers(
@@ -150,12 +187,15 @@ class SavedSearchesService {
 
       if (searchIds.length === 0) return []
 
+      // FIX-009: Use MGET to batch fetch all searches instead of N+1 queries
+      const keys = searchIds.map(id =>
+        this.getSearchKey(clerkUserId, String(id))
+      )
+      const searches = await this.client!.mget<SavedSearch[]>(...keys)
+
       const summaries: SavedSearchSummary[] = []
 
-      for (const id of searchIds) {
-        const search = await this.client!.get<SavedSearch>(
-          this.getSearchKey(clerkUserId, String(id))
-        )
+      for (const search of searches) {
         if (search) {
           summaries.push({
             id: search.id,
@@ -181,7 +221,8 @@ class SavedSearchesService {
         module: 'SavedSearchesService',
         clerkUserId,
       })
-      return []
+      // FIX-008: Throw on Redis errors so API can return 503
+      throw new ServiceOperationError('Failed to list saved searches', 'list')
     }
   }
 
@@ -190,11 +231,15 @@ class SavedSearchesService {
     searchId: string,
     input: UpdateSavedSearchInput
   ): Promise<SavedSearch | null> {
-    if (!this.isAvailable()) return null
+    // FIX-008: Throw on unavailable instead of returning null
+    if (!this.isAvailable()) {
+      throw new ServiceUnavailableError('Saved searches service unavailable')
+    }
 
     try {
+      // getSavedSearch already throws on Redis errors
       const existing = await this.getSavedSearch(clerkUserId, searchId)
-      if (!existing) return null
+      if (!existing) return null // Not found is valid
 
       const updated: SavedSearch = {
         ...existing,
@@ -222,12 +267,20 @@ class SavedSearchesService {
 
       return updated
     } catch (error) {
+      // Re-throw service errors (from getSavedSearch)
+      if (
+        error instanceof ServiceUnavailableError ||
+        error instanceof ServiceOperationError
+      ) {
+        throw error
+      }
       logger.error('Failed to update saved search', error, {
         module: 'SavedSearchesService',
         clerkUserId,
         searchId,
       })
-      return null
+      // FIX-008: Throw on Redis errors so API can return 503
+      throw new ServiceOperationError('Failed to update saved search', 'update')
     }
   }
 
@@ -235,13 +288,24 @@ class SavedSearchesService {
     clerkUserId: string,
     searchId: string
   ): Promise<boolean> {
-    if (!this.isAvailable()) return false
+    // FIX-008: Throw on unavailable instead of returning false
+    if (!this.isAvailable()) {
+      throw new ServiceUnavailableError('Saved searches service unavailable')
+    }
 
     try {
-      // Remove from index
-      await this.client!.srem(this.getIndexKey(clerkUserId), searchId)
+      // FIX-019: Check SREM return value to verify search existed
+      const removed = await this.client!.srem(
+        this.getIndexKey(clerkUserId),
+        searchId
+      )
 
-      // Delete the search
+      if (removed === 0) {
+        // Search was not in the index - it doesn't exist
+        return false
+      }
+
+      // Delete the search data
       await this.client!.del(this.getSearchKey(clerkUserId, searchId))
 
       logger.info('Deleted saved search', {
@@ -257,16 +321,21 @@ class SavedSearchesService {
         clerkUserId,
         searchId,
       })
-      return false
+      // FIX-008: Throw on Redis errors so API can return 503
+      throw new ServiceOperationError('Failed to delete saved search', 'delete')
     }
   }
 
   async updateLastRun(clerkUserId: string, searchId: string): Promise<boolean> {
-    if (!this.isAvailable()) return false
+    // FIX-008: Throw on unavailable instead of returning false
+    if (!this.isAvailable()) {
+      throw new ServiceUnavailableError('Saved searches service unavailable')
+    }
 
     try {
+      // getSavedSearch already throws on Redis errors
       const existing = await this.getSavedSearch(clerkUserId, searchId)
-      if (!existing) return false
+      if (!existing) return false // Not found is valid
 
       const updated: SavedSearch = {
         ...existing,
@@ -287,12 +356,23 @@ class SavedSearchesService {
 
       return true
     } catch (error) {
+      // Re-throw service errors (from getSavedSearch)
+      if (
+        error instanceof ServiceUnavailableError ||
+        error instanceof ServiceOperationError
+      ) {
+        throw error
+      }
       logger.error('Failed to update last run', error, {
         module: 'SavedSearchesService',
         clerkUserId,
         searchId,
       })
-      return false
+      // FIX-008: Throw on Redis errors so API can return 503
+      throw new ServiceOperationError(
+        'Failed to update last run',
+        'updateLastRun'
+      )
     }
   }
 }

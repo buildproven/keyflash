@@ -1,7 +1,39 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2025-12-30
+**Last Updated**: 2025-12-31
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
+
+---
+
+## 🚨 Critical - Deep Review Fixes (2025-12-31)
+
+| ID          | Issue                                            | Category    | Effort | Status  |
+| ----------- | ------------------------------------------------ | ----------- | ------ | ------- |
+| **FIX-004** | Add authentication to checkout endpoint          | Security    | S      | ✅ Done |
+| **FIX-005** | Webhook returns 503 on Redis errors (not 200)    | Reliability | S      | ✅ Done |
+| **FIX-006** | Fix race condition in saved searches limit check | Reliability | M      | ✅ Done |
+| **FIX-007** | Fix Stripe type assertions (customer as object)  | Type Safety | S      | ✅ Done |
+| **FIX-008** | Services throw errors instead of returning null  | Reliability | M      | ✅ Done |
+
+## 🔶 High Priority - Deep Review Fixes
+
+| ID           | Issue                                     | Category    | Effort | Status  |
+| ------------ | ----------------------------------------- | ----------- | ------ | ------- |
+| **FIX-009**  | Fix N+1 query in listSavedSearches (MGET) | Performance | S      | ✅ Done |
+| **FIX-010**  | Add rate limiting to checkout endpoint    | Security    | S      | ✅ Done |
+| **FIX-011**  | Add search ID parameter validation        | Security    | S      | ✅ Done |
+| **FIX-012**  | Fix rate limiter memory leak and logging  | Reliability | S      | ✅ Done |
+| **TEST-004** | Improve user-service.ts coverage to 70%+  | Quality     | M      | 🟠 High |
+
+## 🟡 Medium Priority - Deep Review Fixes
+
+| ID          | Issue                                      | Category      | Effort | Status    |
+| ----------- | ------------------------------------------ | ------------- | ------ | --------- |
+| **FIX-013** | Fix memory leak in rate limit fallback     | Performance   | S      | ✅ Done   |
+| **FIX-014** | Use logger instead of console.warn         | Observability | S      | ✅ Done   |
+| **FIX-015** | Add provider name type guard               | Type Safety   | S      | ✅ Done   |
+| **SEC-002** | Integrate SSRF protection module           | Security      | M      | 🟡 Medium |
+| **FIX-016** | Add request timeouts to external API calls | Reliability   | S      | 🟡 Medium |
 
 ---
 
@@ -61,6 +93,22 @@
 
 | ID                        | Feature                                                          | Completed  |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **FIX-008**               | Services throw errors instead of null (proper 503 responses)     | 2025-12-31 |
+| **FIX-020**               | Webhook idempotency (track event IDs to prevent duplicates)      | 2025-12-31 |
+| **FIX-004**               | Add authentication to checkout endpoint                          | 2025-12-31 |
+| **FIX-005**               | Webhook returns 503 on Redis errors (enables Stripe retry)       | 2025-12-31 |
+| **FIX-006**               | Fix race condition in saved searches limit (atomic ops)          | 2025-12-31 |
+| **FIX-007**               | Fix Stripe type assertions (type-safe customer extraction)       | 2025-12-31 |
+| **FIX-009**               | Fix N+1 query in listSavedSearches (Redis MGET)                  | 2025-12-31 |
+| **FIX-010**               | Add rate limiting to checkout endpoint                           | 2025-12-31 |
+| **FIX-011**               | Add search ID parameter validation (UUID + legacy format)        | 2025-12-31 |
+| **FIX-012**               | Fix rate limiter memory leak (remove setTimeout accumulation)    | 2025-12-31 |
+| **FIX-013**               | Fix memory leak in rate limit fallback (cap at 10K entries)      | 2025-12-31 |
+| **FIX-014**               | Use logger instead of console.warn (edge rate limit)             | 2025-12-31 |
+| **FIX-015**               | Add provider name type guard (factory pattern)                   | 2025-12-31 |
+| **FIX-017**               | Throw on invalid provider in production (not mock fallback)      | 2025-12-31 |
+| **FIX-018**               | Add error logging to handleAPIError (operational visibility)     | 2025-12-31 |
+| **FIX-019**               | Fix deleteSavedSearch to check SREM return value (proper 404)    | 2025-12-31 |
 | **PERF-001**              | Lazy load Clerk authentication                                   | 2025-12-30 |
 | **SEC-001**               | Security hardening (origin allowlist, 5xx redaction, validation) | 2025-12-30 |
 | **FIX-003**               | Monthly keyword reset bug fix                                    | 2025-12-30 |

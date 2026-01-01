@@ -12,6 +12,7 @@ const originalEnv = process.env
 describe('SavedSearchesService', () => {
   beforeEach(() => {
     vi.resetModules()
+    vi.clearAllMocks()
     process.env = { ...originalEnv }
   })
 
@@ -394,6 +395,41 @@ describe('SavedSearchesService', () => {
       expect(validateDescLength('Short description')).toBe(true)
       expect(validateDescLength('a'.repeat(500))).toBe(true)
       expect(validateDescLength('a'.repeat(501))).toBe(false)
+    })
+  })
+
+  // =========================================
+  // Error Classes Tests
+  // =========================================
+  describe('Error Classes', () => {
+    it('should create ServiceUnavailableError with correct properties', async () => {
+      const { ServiceUnavailableError } = await import(
+        '@/lib/saved-searches/saved-searches-service'
+      )
+
+      const error = new ServiceUnavailableError('Custom message')
+      expect(error.name).toBe('ServiceUnavailableError')
+      expect(error.message).toBe('Custom message')
+    })
+
+    it('should create ServiceUnavailableError with default message', async () => {
+      const { ServiceUnavailableError } = await import(
+        '@/lib/saved-searches/saved-searches-service'
+      )
+
+      const error = new ServiceUnavailableError()
+      expect(error.message).toBe('Service temporarily unavailable')
+    })
+
+    it('should create ServiceOperationError with operation property', async () => {
+      const { ServiceOperationError } = await import(
+        '@/lib/saved-searches/saved-searches-service'
+      )
+
+      const error = new ServiceOperationError('Failed to get', 'get')
+      expect(error.name).toBe('ServiceOperationError')
+      expect(error.message).toBe('Failed to get')
+      expect(error.operation).toBe('get')
     })
   })
 })

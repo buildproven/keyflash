@@ -8,6 +8,7 @@ const mockRedis = {
   del: vi.fn(),
   ping: vi.fn().mockResolvedValue('PONG'),
   keys: vi.fn().mockResolvedValue([]),
+  scan: vi.fn().mockResolvedValue(['0', []]), // [cursor, keys]
   // New atomic operations for race-condition-free rate limiting
   ttl: vi.fn(),
   incr: vi.fn(),
@@ -352,16 +353,19 @@ describe('RedisRateLimiter', () => {
   })
 
   describe('Clear Method', () => {
-    it('clears all rate limit entries from Redis', async () => {
-      mockRedis.keys.mockResolvedValueOnce([
-        'rate:1.2.3.4:abc',
-        'rate:5.6.7.8:def',
-      ])
+    it('clears all rate limit entries from Redis using SCAN', async () => {
+      // First scan returns keys, second scan returns cursor '0' to end
+      mockRedis.scan
+        .mockResolvedValueOnce(['1', ['rate:1.2.3.4:abc', 'rate:5.6.7.8:def']])
+        .mockResolvedValueOnce(['0', []])
       mockRedis.del.mockResolvedValueOnce(2)
 
       await rateLimiter.clear()
 
-      expect(mockRedis.keys).toHaveBeenCalledWith('rate:*')
+      expect(mockRedis.scan).toHaveBeenCalledWith('0', {
+        match: 'rate:*',
+        count: 100,
+      })
       expect(mockRedis.del).toHaveBeenCalledWith(
         'rate:1.2.3.4:abc',
         'rate:5.6.7.8:def'
@@ -369,16 +373,19 @@ describe('RedisRateLimiter', () => {
     })
 
     it('handles empty key list gracefully', async () => {
-      mockRedis.keys.mockResolvedValueOnce([])
+      mockRedis.scan.mockResolvedValueOnce(['0', []])
 
       await rateLimiter.clear()
 
-      expect(mockRedis.keys).toHaveBeenCalledWith('rate:*')
+      expect(mockRedis.scan).toHaveBeenCalledWith('0', {
+        match: 'rate:*',
+        count: 100,
+      })
       expect(mockRedis.del).not.toHaveBeenCalled()
     })
 
     it('handles Redis clear errors gracefully', async () => {
-      mockRedis.keys.mockRejectedValueOnce(new Error('Redis error'))
+      mockRedis.scan.mockRejectedValueOnce(new Error('Redis error'))
 
       // Should not throw
       await expect(rateLimiter.clear()).resolves.toBeUndefined()

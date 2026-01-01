@@ -12,17 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Monthly reset test coverage for user service (`user-service-reset.test.ts`)
 - Checkout origin allowlist tests
 - Saved search validation tests for KeywordData shape
+- `UserServiceUnavailableError` and `UserServiceOperationError` custom error classes
+- `ServiceUnavailableError` and `ServiceOperationError` for saved searches
+- `SearchIdSchema` for URL parameter validation (accepts UUID and legacy formats)
+- Rate limiting on checkout endpoint (10 requests/hour)
+- Authentication requirement on checkout endpoint
 
 ### Changed
 
 - Rate limiter now defaults to trusting proxy headers in production (required for Vercel/Cloudflare)
 - 5xx error messages are now redacted to "An unexpected error occurred" (prevents information leakage)
 - Saved search results validation changed from `z.any()` to proper `KeywordDataSchema`
+- Redis rate-limiter `clear()` now uses SCAN iterator instead of KEYS (prevents blocking)
+- UserService methods now throw errors on Redis failures instead of returning null
+- SavedSearchesService methods now throw errors on Redis failures
+- Saved search creation uses atomic SADD + SCARD + rollback pattern (prevents race condition)
+- `listSavedSearches` uses MGET for batch fetch (fixes N+1 query)
+- Stripe webhook handler returns 503 on infrastructure errors (enables retries)
 
 ### Fixed
 
 - **[Bug]** Monthly keyword usage now resets in `checkKeywordLimit()` not just `incrementKeywordUsage()`
 - TypeScript test file errors (auth mock types, NODE_ENV assignment, optional property checks)
+- Race condition in saved search limit check (atomic add with rollback)
+- N+1 query pattern in listSavedSearches (now uses MGET)
+- Type safety for Stripe customer/subscription ID extraction
 
 ### Security
 
@@ -31,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redacted 5xx error messages to prevent internal error leakage
 - Strengthened saved search validation (removed `z.any()`)
 - Fixed high-severity `qs` vulnerability (CVE: DoS via memory exhaustion)
+- Added authentication and rate limiting to checkout endpoint
+- Search ID parameter validation prevents injection attacks
 
 ## [0.2.0] - 2025-12-24
 

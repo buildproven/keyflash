@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { createHash } from 'crypto'
 import { z } from 'zod'
 import {
   handleAPIError,
@@ -65,9 +66,7 @@ function generateCacheKey(
   language: string
 ): string {
   const normalizedKeyword = keyword.toLowerCase().trim()
-  const hash = Buffer.from(normalizedKeyword)
-    .toString('base64')
-    .substring(0, 12)
+  const hash = createHash('sha256').update(normalizedKeyword).digest('hex')
   return `brief:${location}:${language}:${hash}`
 }
 

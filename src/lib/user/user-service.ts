@@ -323,8 +323,7 @@ class UserService {
         return null
       }
 
-      const usageKey = this.getUsageKeyForMonth(clerkUserId)
-      const ttl = this.getUsageKeyTTL()
+      const { usageKey, ttl } = this.getUsageKeyForUser(user)
 
       // Atomic increment + set expiry (no race condition)
       const newCount = await this.client!.incrby(usageKey, count)
@@ -389,8 +388,11 @@ class UserService {
       }
     }
 
-    // Get current month's usage from TTL-based key (auto-resets via expiry)
-    const usageKey = this.getUsageKeyForMonth(clerkUserId)
+    // Get usage from tier-specific TTL key (auto-resets via expiry)
+    const usageKey =
+      user.tier === 'trial'
+        ? this.getUsageKeyForTrial(user)
+        : this.getUsageKeyForMonth(clerkUserId)
     const used = (await this.client!.get(usageKey)) || 0
 
     // Trial users: 300 keywords during 7-day trial
@@ -431,6 +433,37 @@ class UserService {
       (endOfMonth.getTime() - now.getTime()) / 1000
     )
     return Math.max(secondsUntilEnd, 3600) // Minimum 1 hour
+  }
+
+  private getUsageKeyForTrial(user: UserData): string {
+    const trialStart = new Date(user.trialStartedAt).toISOString().slice(0, 10)
+    return `trial-usage:${user.clerkUserId}:${trialStart}`
+  }
+
+  private getTrialUsageTTL(user: UserData): number {
+    const now = new Date()
+    const trialExpires = new Date(user.trialExpiresAt)
+    const secondsUntilEnd = Math.floor(
+      (trialExpires.getTime() - now.getTime()) / 1000
+    )
+    return Math.max(secondsUntilEnd, 3600)
+  }
+
+  private getUsageKeyForUser(user: UserData): {
+    usageKey: string
+    ttl: number
+  } {
+    if (user.tier === 'trial') {
+      return {
+        usageKey: this.getUsageKeyForTrial(user),
+        ttl: this.getTrialUsageTTL(user),
+      }
+    }
+
+    return {
+      usageKey: this.getUsageKeyForMonth(user.clerkUserId),
+      ttl: this.getUsageKeyTTL(),
+    }
   }
 
   /**

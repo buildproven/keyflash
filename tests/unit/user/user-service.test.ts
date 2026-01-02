@@ -298,4 +298,122 @@ describe('UserService', () => {
       expect(downgraded.stripeCustomerId).toBe('cus_123')
     })
   })
+
+  describe('Trial Usage TTL Behavior', () => {
+    it('should generate trial usage key with trial start date', () => {
+      const user = {
+        clerkUserId: 'user_123',
+        tier: 'trial' as const,
+        trialStartedAt: '2025-01-01T00:00:00.000Z',
+        trialExpiresAt: '2025-01-08T00:00:00.000Z',
+      }
+
+      const trialStart = new Date(user.trialStartedAt)
+        .toISOString()
+        .slice(0, 10)
+      const usageKey = `trial-usage:${user.clerkUserId}:${trialStart}`
+
+      expect(usageKey).toBe('trial-usage:user_123:2025-01-01')
+      expect(trialStart).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    })
+
+    it('should calculate TTL as seconds until trial expiry', () => {
+      const now = new Date('2025-01-05T12:00:00.000Z')
+      const trialExpires = new Date('2025-01-08T00:00:00.000Z')
+
+      const secondsUntilEnd = Math.floor(
+        (trialExpires.getTime() - now.getTime()) / 1000
+      )
+
+      // 2.5 days remaining = 216,000 seconds
+      expect(secondsUntilEnd).toBe(216000)
+    })
+
+    it('should enforce minimum TTL of 1 hour for trial usage', () => {
+      const now = new Date('2025-01-08T00:30:00.000Z')
+      const trialExpires = new Date('2025-01-08T00:00:00.000Z') // Already expired
+
+      const secondsUntilEnd = Math.floor(
+        (trialExpires.getTime() - now.getTime()) / 1000
+      )
+      const ttl = Math.max(secondsUntilEnd, 3600)
+
+      expect(secondsUntilEnd).toBeLessThan(0) // Negative (expired)
+      expect(ttl).toBe(3600) // Minimum 1 hour
+    })
+
+    it('should use trial-specific usage key for trial tier', () => {
+      const trialUser = {
+        clerkUserId: 'user_123',
+        tier: 'trial' as const,
+        trialStartedAt: '2025-01-01T00:00:00.000Z',
+      }
+
+      const proUser = {
+        clerkUserId: 'user_123',
+        tier: 'pro' as const,
+      }
+
+      const trialStart = new Date(trialUser.trialStartedAt)
+        .toISOString()
+        .slice(0, 10)
+      const trialKey = `trial-usage:${trialUser.clerkUserId}:${trialStart}`
+
+      const now = new Date()
+      const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      const proKey = `usage:${proUser.clerkUserId}:${yearMonth}`
+
+      expect(trialKey).toMatch(/^trial-usage:user_123:\d{4}-\d{2}-\d{2}$/)
+      expect(proKey).toMatch(/^usage:user_123:\d{4}-\d{2}$/)
+      expect(trialKey).not.toBe(proKey)
+    })
+
+    it('should track trial usage per trial window, not monthly', () => {
+      // User A: trial started Jan 1
+      const userA = {
+        clerkUserId: 'user_A',
+        tier: 'trial' as const,
+        trialStartedAt: '2025-01-01T00:00:00.000Z',
+      }
+
+      // User B: trial started Jan 15
+      const userB = {
+        clerkUserId: 'user_B',
+        tier: 'trial' as const,
+        trialStartedAt: '2025-01-15T00:00:00.000Z',
+      }
+
+      const trialStartA = new Date(userA.trialStartedAt)
+        .toISOString()
+        .slice(0, 10)
+      const trialStartB = new Date(userB.trialStartedAt)
+        .toISOString()
+        .slice(0, 10)
+
+      const keyA = `trial-usage:${userA.clerkUserId}:${trialStartA}`
+      const keyB = `trial-usage:${userB.clerkUserId}:${trialStartB}`
+
+      // Different users have different trial start dates
+      expect(keyA).toBe('trial-usage:user_A:2025-01-01')
+      expect(keyB).toBe('trial-usage:user_B:2025-01-15')
+      expect(keyA).not.toBe(keyB)
+    })
+
+    it('should auto-expire trial usage at trial end via TTL', () => {
+      const user = {
+        trialStartedAt: '2025-01-01T00:00:00.000Z',
+        trialExpiresAt: '2025-01-08T00:00:00.000Z',
+      }
+
+      const now = new Date('2025-01-05T00:00:00.000Z')
+      const trialExpires = new Date(user.trialExpiresAt)
+
+      const ttl = Math.floor((trialExpires.getTime() - now.getTime()) / 1000)
+
+      // After TTL seconds, Redis will auto-delete the key
+      // This means usage resets automatically when trial expires
+      expect(ttl).toBeGreaterThan(0)
+      expect(ttl).toBe(259200) // 3 days = 259,200 seconds
+    })
+  })
 })

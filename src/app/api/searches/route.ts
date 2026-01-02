@@ -16,12 +16,7 @@ export async function GET() {
       return handleAPIError(error)
     }
 
-    if (!savedSearchesService.isAvailable()) {
-      const error: HttpError = new Error('Service temporarily unavailable')
-      error.status = 503
-      return handleAPIError(error)
-    }
-
+    // Service will throw ServiceUnavailableError if unavailable
     const searches = await savedSearchesService.listSavedSearches(userId)
 
     return NextResponse.json({ searches })
@@ -41,12 +36,7 @@ export async function POST(request: NextRequest) {
       return handleAPIError(error)
     }
 
-    if (!savedSearchesService.isAvailable()) {
-      const error: HttpError = new Error('Service temporarily unavailable')
-      error.status = 503
-      return handleAPIError(error)
-    }
-
+    // Service will throw ServiceUnavailableError if unavailable
     const body = await readJsonWithLimit(request)
     const validated = CreateSavedSearchSchema.parse(body)
 

@@ -1,6 +1,6 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2026-01-01
+**Last Updated**: 2026-01-02
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
 
 ---
@@ -93,6 +93,17 @@
 
 | ID                        | Feature                                                          | Completed  |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **A11Y-006**              | Dark mode color contrast fixes (7 components, WCAG 2.1 AA)       | 2026-01-02 |
+| **A11Y-007**              | ARIA labels for icon buttons (related, content brief)            | 2026-01-02 |
+| **A11Y-008**              | Modal focus restoration (3 modals: content brief, related, save) | 2026-01-02 |
+| **A11Y-009**              | Table caption for screen readers (keyword results)               | 2026-01-02 |
+| **A11Y-010**              | Aria-live regions for modal error announcements                  | 2026-01-02 |
+| **FIX-029**               | Content brief error handling (cache write timeout race)          | 2026-01-02 |
+| **FIX-030**               | Redis KEYS to SCAN migration (purgeKeywordCache, non-blocking)   | 2026-01-02 |
+| **FIX-031**               | Structured Redis error classes (CacheError hierarchy)            | 2026-01-02 |
+| **FIX-032**               | Rate limiter fail-fast validation (production HMAC + Redis)      | 2026-01-02 |
+| **FIX-033**               | Enhanced getAppUrl() production validation (URL format, HTTPS)   | 2026-01-02 |
+| **FIX-034**               | Remove redundant isAvailable() checks in searches API            | 2026-01-02 |
 | **FIX-021**               | Webhook idempotency fail closed (prevent duplicate billing)      | 2026-01-01 |
 | **FIX-022**               | Cache health tracking (cacheHealthy field in API responses)      | 2026-01-01 |
 | **FIX-023**               | Saved search race condition (SCARD before SADD atomic check)     | 2026-01-01 |
@@ -170,5 +181,5 @@
 
 - **MVP Status**: Complete
 - **Deployment**: https://keyflash.vibebuildlab.com (Live)
-- **Test Coverage**: 714 tests passing, ~84% line coverage
+- **Test Coverage**: 714 tests passing, ~84% line coverage (all tests passing after deep review fixes)
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

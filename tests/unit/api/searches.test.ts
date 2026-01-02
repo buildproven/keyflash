@@ -42,7 +42,10 @@ vi.mock('@/lib/saved-searches/saved-searches-service', async importOriginal => {
 import { GET, POST } from '@/app/api/searches/route'
 import { GET as GET_ID, PUT, DELETE } from '@/app/api/searches/[id]/route'
 import { auth } from '@clerk/nextjs/server'
-import { savedSearchesService } from '@/lib/saved-searches/saved-searches-service'
+import {
+  savedSearchesService,
+  ServiceUnavailableError,
+} from '@/lib/saved-searches/saved-searches-service'
 
 // FIX-011: Use valid search IDs that match SearchIdSchema
 // UUID format: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -75,13 +78,17 @@ describe('/api/searches', () => {
     })
 
     it('should return 503 when service unavailable', async () => {
-      vi.mocked(savedSearchesService.isAvailable).mockReturnValue(false)
+      vi.mocked(savedSearchesService.listSavedSearches).mockRejectedValue(
+        new ServiceUnavailableError('Service temporarily unavailable')
+      )
 
       const response = await GET()
 
       expect(response.status).toBe(503)
       const data = await response.json()
-      expect(data.message).toBe('An unexpected error occurred')
+      expect(data.message).toBe(
+        'Service temporarily unavailable. Please try again later.'
+      )
     })
 
     it('should return saved searches list', async () => {

@@ -77,7 +77,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
   if (!isSignedIn) {
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-800/50">
-        <p className="text-sm text-gray-600 dark:text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           Sign in to save and access your searches
         </p>
       </div>
@@ -127,7 +127,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
             d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
           />
         </svg>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-600">
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
           No saved searches yet
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-500">
@@ -157,11 +157,11 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
                   {search.name}
                 </div>
                 {search.description && (
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-600 line-clamp-1">
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
                     {search.description}
                   </p>
                 )}
-                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-600">
+                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <span>{search.keywordCount} keywords</span>
                   <span>•</span>
                   <span>{search.location}</span>

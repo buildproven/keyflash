@@ -13,7 +13,7 @@ export function LoadingState() {
       />
       <p
         id="loading-title"
-        className="text-lg text-gray-600 dark:text-gray-600"
+        className="text-lg text-gray-700 dark:text-gray-300"
       >
         Fetching keyword data...
       </p>

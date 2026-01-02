@@ -1,6 +1,11 @@
 import { Redis } from '@upstash/redis'
 import type { KeywordData } from '@/types/keyword'
 import { logger } from '@/lib/utils/logger'
+import {
+  RedisConnectionError,
+  RedisOperationError,
+  RedisConfigurationError,
+} from './errors'
 
 /**
  * Redis Cache Client
@@ -61,16 +66,23 @@ class RedisCache {
         this.isConfigured = true
         this.defaultTTL = ttl
       } catch (error) {
-        logger.error('Failed to initialize Redis client', error, {
+        const connectionError = new RedisConnectionError(
+          'Failed to initialize Redis client'
+        )
+        logger.error('Failed to initialize Redis client', connectionError, {
           module: 'RedisCache',
+          originalError: error,
         })
         this.isConfigured = false
       }
     } else {
+      const configError = new RedisConfigurationError(
+        'Redis credentials not provided. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
+      )
       logger.warn(
         'Redis not configured. Cache operations will be skipped. ' +
           'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to enable caching.',
-        { module: 'RedisCache' }
+        { module: 'RedisCache', error: configError }
       )
     }
   }
@@ -129,7 +141,12 @@ class RedisCache {
       const cached = await this.client!.get<CachedKeywordData>(key)
       return cached
     } catch (error) {
-      logger.error('Failed to get from cache', error, { module: 'RedisCache' })
+      const opError = new RedisOperationError('Failed to get from cache', 'get')
+      logger.error('Failed to get from cache', opError, {
+        module: 'RedisCache',
+        key,
+        originalError: error,
+      })
       return null
     }
   }
@@ -166,7 +183,12 @@ class RedisCache {
       await this.client!.set(key, cacheData, { ex: cacheTTL })
       return true
     } catch (error) {
-      logger.error('Failed to set cache', error, { module: 'RedisCache' })
+      const opError = new RedisOperationError('Failed to set cache', 'set')
+      logger.error('Failed to set cache', opError, {
+        module: 'RedisCache',
+        key,
+        originalError: error,
+      })
       return false
     }
   }
@@ -183,8 +205,14 @@ class RedisCache {
       const cached = await this.client!.get<T>(key)
       return cached
     } catch (error) {
-      logger.error('Failed to get raw from cache', error, {
+      const opError = new RedisOperationError(
+        'Failed to get raw from cache',
+        'getRaw'
+      )
+      logger.error('Failed to get raw from cache', opError, {
         module: 'RedisCache',
+        key,
+        originalError: error,
       })
       return null
     }
@@ -204,7 +232,15 @@ class RedisCache {
       await this.client!.set(key, data, { ex: cacheTTL })
       return true
     } catch (error) {
-      logger.error('Failed to set raw cache', error, { module: 'RedisCache' })
+      const opError = new RedisOperationError(
+        'Failed to set raw cache',
+        'setRaw'
+      )
+      logger.error('Failed to set raw cache', opError, {
+        module: 'RedisCache',
+        key,
+        originalError: error,
+      })
       return false
     }
   }
@@ -221,8 +257,14 @@ class RedisCache {
       await this.client!.del(key)
       return true
     } catch (error) {
-      logger.error('Failed to delete from cache', error, {
+      const opError = new RedisOperationError(
+        'Failed to delete from cache',
+        'delete'
+      )
+      logger.error('Failed to delete from cache', opError, {
         module: 'RedisCache',
+        key,
+        originalError: error,
       })
       return false
     }
@@ -240,7 +282,11 @@ class RedisCache {
       await this.client!.flushdb()
       return true
     } catch (error) {
-      logger.error('Failed to flush cache', error, { module: 'RedisCache' })
+      const opError = new RedisOperationError('Failed to flush cache', 'flush')
+      logger.error('Failed to flush cache', opError, {
+        module: 'RedisCache',
+        originalError: error,
+      })
       return false
     }
   }
@@ -248,6 +294,7 @@ class RedisCache {
   /**
    * Purge expired cache entries and optionally all keyword cache entries
    * Useful for privacy compliance and maintenance
+   * Uses SCAN instead of KEYS to avoid blocking Redis
    */
   async purgeKeywordCache(): Promise<number> {
     if (!this.isAvailable()) {
@@ -255,22 +302,49 @@ class RedisCache {
     }
 
     try {
-      // Find all keyword cache keys (pattern: kw:*)
-      const keys = await this.client!.keys('kw:*')
+      let cursor = '0'
+      let totalDeleted = 0
+      const keysToDelete: string[] = []
 
-      if (keys.length === 0) {
+      // Scan in batches to avoid blocking Redis
+      do {
+        const result = await this.client!.scan(cursor, {
+          match: 'kw:*',
+          count: 100, // Process 100 keys at a time
+        })
+
+        cursor = result[0]
+        const keys = result[1]
+
+        if (keys.length > 0) {
+          keysToDelete.push(...keys)
+        }
+      } while (cursor !== '0')
+
+      if (keysToDelete.length === 0) {
         return 0
       }
 
-      // Delete all keyword cache entries
-      await this.client!.del(...keys)
-      logger.info(`Purged ${keys.length} keyword cache entries`, {
+      // Delete in batches to avoid command size limits
+      const batchSize = 100
+      for (let i = 0; i < keysToDelete.length; i += batchSize) {
+        const batch = keysToDelete.slice(i, i + batchSize)
+        await this.client!.del(...batch)
+        totalDeleted += batch.length
+      }
+
+      logger.info(`Purged ${totalDeleted} keyword cache entries`, {
         module: 'RedisCache',
       })
-      return keys.length
+      return totalDeleted
     } catch (error) {
-      logger.error('Failed to purge keyword cache', error, {
+      const opError = new RedisOperationError(
+        'Failed to purge keyword cache',
+        'purgeKeywordCache'
+      )
+      logger.error('Failed to purge keyword cache', opError, {
         module: 'RedisCache',
+        originalError: error,
       })
       return 0
     }
@@ -288,7 +362,11 @@ class RedisCache {
       const result = await this.client!.ping()
       return result === 'PONG'
     } catch (error) {
-      logger.error('Ping failed', error, { module: 'RedisCache' })
+      const opError = new RedisOperationError('Ping failed', 'ping')
+      logger.error('Ping failed', opError, {
+        module: 'RedisCache',
+        originalError: error,
+      })
       return false
     }
   }

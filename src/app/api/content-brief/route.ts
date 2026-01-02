@@ -139,7 +139,27 @@ export async function POST(request: NextRequest) {
     // Cache the brief (1 day TTL) only when using live data
     if (!brief.mockData) {
       const briefCacheTTL = 24 * 60 * 60 // 1 day in seconds
-      await cache.setRaw(cacheKey, brief, briefCacheTTL)
+
+      const cacheWrite = cache
+        .setRaw(cacheKey, brief, briefCacheTTL)
+        .catch(error => {
+          logger.error('Failed to cache content brief', error, {
+            module: 'Cache',
+            errorId: 'CACHE_WRITE_FAILED',
+            cacheKey,
+          })
+        })
+
+      const timeout = new Promise(resolve =>
+        setTimeout(() => {
+          logger.warn(`Cache write timeout for content brief key ${cacheKey}`, {
+            module: 'Cache',
+          })
+          resolve(null)
+        }, 150)
+      )
+
+      await Promise.race([cacheWrite, timeout])
     } else {
       logger.warn('Skipping cache write for mock content brief', {
         module: 'ContentBrief',

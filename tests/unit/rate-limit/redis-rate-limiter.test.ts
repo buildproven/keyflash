@@ -142,6 +142,9 @@ describe('RedisRateLimiter', () => {
     it('defaults to trusting proxy headers in production when unset', async () => {
       vi.stubEnv('NODE_ENV', 'production')
       delete process.env.RATE_LIMIT_TRUST_PROXY
+      // Production requires 32+ character HMAC secret
+      process.env.RATE_LIMIT_HMAC_SECRET =
+        'test-production-hmac-secret-at-least-32-characters-long'
       const productionLimiter = new RedisRateLimiter()
 
       const request = new Request('https://example.com', {

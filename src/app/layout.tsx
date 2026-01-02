@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { AuthHeaderWrapper } from '@/components/layout/auth-header-wrapper'
+import { getAppUrl } from '@/lib/utils/app-url'
 import './globals.css'
 
-const baseUrl = 'https://keyflash.vibebuildlab.com'
+const baseUrl = getAppUrl()
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

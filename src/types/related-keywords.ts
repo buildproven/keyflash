@@ -20,6 +20,7 @@ export interface RelatedKeywordsResponse {
   seedKeyword: string
   relatedKeywords: RelatedKeyword[]
   cached: boolean
+  cacheHealthy?: boolean // Indicates if cache write succeeded (when not from cache)
   timestamp: string
   provider?: string
 }

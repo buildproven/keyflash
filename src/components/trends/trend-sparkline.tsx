@@ -287,7 +287,7 @@ export const TrendChartExpanded = memo(function TrendChartExpanded({
         )}
       </svg>
       {/* Stats summary */}
-      <div className="mt-2 flex justify-between text-xs text-gray-600 dark:text-gray-400">
+      <div className="mt-2 flex justify-between text-xs text-gray-600 dark:text-gray-600">
         <span>Min: {minVol.toLocaleString()}</span>
         <span>Max: {maxVol.toLocaleString()}</span>
         <span>

@@ -173,6 +173,7 @@ export async function POST(request: NextRequest) {
     let keywordData
     let isCached = false
     let provider
+    let cacheWriteSucceeded = true
 
     if (cachedData) {
       // Cache hit - use cached data
@@ -192,18 +193,30 @@ export async function POST(request: NextRequest) {
 
       // Store in cache (only for real data from Pro users)
       if (!useMockData) {
-        const cacheWrite = cache.set(cacheKey, keywordData, provider.name)
+        const cacheWrite = cache
+          .set(cacheKey, keywordData, provider.name)
+          .catch(error => {
+            cacheWriteSucceeded = false
+            logger.error('Failed to cache data', error, {
+              module: 'Cache',
+              errorId: 'CACHE_WRITE_FAILED',
+              cacheKey,
+            })
+          })
+
         const timeout = new Promise(resolve =>
           setTimeout(() => {
-            logger.warn(`Cache write taking too long for key ${cacheKey}`, {
-              module: 'Cache',
-            })
+            if (cacheWriteSucceeded) {
+              cacheWriteSucceeded = false
+              logger.warn(`Cache write timeout for key ${cacheKey}`, {
+                module: 'Cache',
+              })
+            }
             resolve(null)
           }, 150)
         )
-        await Promise.race([cacheWrite, timeout]).catch(error => {
-          logger.error('Failed to cache data', error, { module: 'Cache' })
-        })
+
+        await Promise.race([cacheWrite, timeout])
       }
     }
 
@@ -220,6 +233,7 @@ export async function POST(request: NextRequest) {
     const response: KeywordSearchResponse = {
       data: keywordData,
       cached: isCached,
+      cacheHealthy: !isCached ? cacheWriteSucceeded : undefined,
       timestamp: new Date().toISOString(),
       mockData: isMockData,
       provider: providerName,

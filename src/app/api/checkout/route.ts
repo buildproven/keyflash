@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import Stripe from 'stripe'
 import { logger } from '@/lib/utils/logger'
+import { getAppUrl } from '@/lib/utils/app-url'
 import { userService } from '@/lib/user/user-service'
 import {
   rateLimiter,
@@ -50,8 +51,7 @@ export function resolveCheckoutOrigin(request: NextRequest): string {
     if (normalized) allowedOrigins.add(normalized)
   }
 
-  const fallbackOrigin =
-    Array.from(allowedOrigins)[0] || 'https://keyflash.vibebuildlab.com'
+  const fallbackOrigin = Array.from(allowedOrigins)[0] || getAppUrl()
 
   if (!headerOrigin) {
     return fallbackOrigin

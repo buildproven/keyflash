@@ -55,6 +55,7 @@ export interface KeywordSearchParams {
 export interface KeywordSearchResponse {
   data: KeywordData[]
   cached: boolean
+  cacheHealthy?: boolean // Indicates if cache write succeeded (when not from cache)
   timestamp: string
   mockData?: boolean // Indicates if data is from mock provider
   provider?: string // Name of the provider used

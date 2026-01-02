@@ -77,7 +77,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
   if (!isSignedIn) {
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-800/50">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-600">
           Sign in to save and access your searches
         </p>
       </div>
@@ -115,7 +115,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-700 dark:bg-gray-800/50">
         <svg
-          className="mx-auto h-8 w-8 text-gray-400"
+          className="mx-auto h-8 w-8 text-gray-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -127,7 +127,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
             d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
           />
         </svg>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-600">
           No saved searches yet
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-500">
@@ -157,11 +157,11 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
                   {search.name}
                 </div>
                 {search.description && (
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-600 line-clamp-1">
                     {search.description}
                   </p>
                 )}
-                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-600">
                   <span>{search.keywordCount} keywords</span>
                   <span>•</span>
                   <span>{search.location}</span>
@@ -172,7 +172,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
               <button
                 onClick={() => handleDelete(search.id, search.name)}
                 disabled={deletingId === search.id}
-                className="rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                className="rounded p-1 text-gray-600 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                 title="Delete search"
                 aria-label={`Delete "${search.name}"`}
               >

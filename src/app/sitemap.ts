@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next'
+import { getAppUrl } from '@/lib/utils/app-url'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://keyflash.vibebuildlab.com'
+  const baseUrl = getAppUrl()
 
   return [
     {

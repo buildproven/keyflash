@@ -37,12 +37,6 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const { id } = await params
     const validatedId = validateSearchId(id)
 
-    if (!savedSearchesService.isAvailable()) {
-      const error: HttpError = new Error('Service temporarily unavailable')
-      error.status = 503
-      return handleAPIError(error)
-    }
-
     const search = await savedSearchesService.getSavedSearch(
       userId,
       validatedId
@@ -73,12 +67,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params
     const validatedId = validateSearchId(id)
-
-    if (!savedSearchesService.isAvailable()) {
-      const error: HttpError = new Error('Service temporarily unavailable')
-      error.status = 503
-      return handleAPIError(error)
-    }
 
     const body = await readJsonWithLimit(request)
     const validated = UpdateSavedSearchSchema.parse(body)
@@ -114,12 +102,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params
     const validatedId = validateSearchId(id)
-
-    if (!savedSearchesService.isAvailable()) {
-      const error: HttpError = new Error('Service temporarily unavailable')
-      error.status = 503
-      return handleAPIError(error)
-    }
 
     const deleted = await savedSearchesService.deleteSavedSearch(
       userId,

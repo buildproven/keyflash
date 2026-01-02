@@ -140,7 +140,7 @@ export function RelatedKeywordsModal({
             >
               Related Keywords
             </h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-gray-600 dark:text-gray-600">
               Seed: <span className="font-medium">{keyword}</span>
             </p>
           </div>
@@ -170,7 +170,7 @@ export function RelatedKeywordsModal({
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">
+            <p className="mt-4 text-gray-600 dark:text-gray-600">
               Finding related keywords...
             </p>
           </div>
@@ -205,17 +205,17 @@ export function RelatedKeywordsModal({
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
                       Keyword
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
                       Volume
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
                       Relevance
                     </th>
                     {onAddKeyword && (
-                      <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                      <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
                         Action
                       </th>
                     )}
@@ -232,7 +232,7 @@ export function RelatedKeywordsModal({
                           {kw.keyword}
                         </div>
                         {kw.competition && (
-                          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-600">
                             <span
                               className={`inline-flex rounded px-1.5 py-0.5 text-xs font-medium ${
                                 kw.competition === 'low'
@@ -252,7 +252,7 @@ export function RelatedKeywordsModal({
                           </div>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-600">
                         {kw.searchVolume.toLocaleString()}
                       </td>
                       <td className="px-4 py-3">
@@ -263,7 +263,7 @@ export function RelatedKeywordsModal({
                               style={{ width: `${kw.relevance}%` }}
                             />
                           </div>
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-600">
                             {kw.relevance}%
                           </span>
                         </div>
@@ -285,7 +285,7 @@ export function RelatedKeywordsModal({
             </div>
 
             {/* Summary */}
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-600">
               Found {relatedKeywords.length} related keywords
             </p>
           </div>

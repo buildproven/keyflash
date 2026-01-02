@@ -34,7 +34,13 @@ function getWebhookRedis(): Redis | null {
   } catch (error) {
     logger.error('Failed to initialize webhook Redis client', error, {
       module: 'StripeWebhook',
+      errorId: 'WEBHOOK_REDIS_INIT_FAILED',
     })
+
+    // FAIL FAST in production - webhooks cannot work without Redis
+    if (process.env.NODE_ENV === 'production') {
+      throw error
+    }
     return null
   }
 }
@@ -45,36 +51,34 @@ function getWebhookRedis(): Redis | null {
  */
 async function isEventProcessed(eventId: string): Promise<boolean> {
   const redis = getWebhookRedis()
-  if (!redis) return false // Skip check if Redis unavailable
+  if (!redis) return false // Skip check if Redis unavailable (dev mode only)
   try {
     const exists = await redis.exists(`${WEBHOOK_EVENT_PREFIX}${eventId}`)
     return exists === 1
   } catch (error) {
-    logger.warn('Failed to check webhook event idempotency', {
+    logger.error('Failed to check webhook event idempotency', error, {
       eventId,
-      error,
+      module: 'StripeWebhook',
     })
-    return false // Allow processing if check fails
+    // FAIL CLOSED: Assume processed to prevent duplicate billing
+    return true
   }
 }
 
 /**
  * Mark a webhook event as processed
+ * @throws InfrastructureError if Redis unavailable or operation fails
  */
 async function markEventProcessed(eventId: string): Promise<void> {
   const redis = getWebhookRedis()
-  if (!redis) return // Skip if Redis unavailable
-  try {
-    await redis.set(`${WEBHOOK_EVENT_PREFIX}${eventId}`, '1', {
-      ex: WEBHOOK_EVENT_TTL_SECONDS,
-    })
-  } catch (error) {
-    logger.warn('Failed to mark webhook event as processed', {
-      eventId,
-      error,
-    })
-    // Continue even if marking fails - better to risk duplicate than fail
+  if (!redis) {
+    throw new InfrastructureError('Redis unavailable for webhook idempotency')
   }
+
+  // No try-catch - let errors propagate to trigger 503 response
+  await redis.set(`${WEBHOOK_EVENT_PREFIX}${eventId}`, '1', {
+    ex: WEBHOOK_EVENT_TTL_SECONDS,
+  })
 }
 
 // FIX-007: Helper to safely extract customer ID from Stripe objects

@@ -135,7 +135,7 @@ export function ContentBriefModal({
             >
               Content Brief
             </h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">
+            <p className="mt-1 text-gray-600 dark:text-gray-600">
               Keyword: <span className="font-medium">{keyword}</span>
             </p>
           </div>
@@ -165,7 +165,7 @@ export function ContentBriefModal({
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">
+            <p className="mt-4 text-gray-600 dark:text-gray-600">
               Analyzing top search results...
             </p>
           </div>
@@ -209,7 +209,7 @@ export function ContentBriefModal({
                     words (avg)
                   </div>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-gray-500 dark:text-gray-600">
                   Range: {brief.recommendedWordCount.min.toLocaleString()} -{' '}
                   {brief.recommendedWordCount.max.toLocaleString()} words
                 </div>
@@ -253,7 +253,7 @@ export function ContentBriefModal({
                       heading.level === 'h2' ? 'font-medium' : 'pl-4 text-sm'
                     }`}
                   >
-                    <span className="mt-0.5 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                    <span className="mt-0.5 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-600">
                       {heading.level.toUpperCase()}
                     </span>
                     <span className="text-gray-800 dark:text-gray-200">
@@ -315,7 +315,7 @@ export function ContentBriefModal({
                     className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-600">
                         {result.position}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -332,7 +332,7 @@ export function ContentBriefModal({
                           {result.wordCount &&
                             ` • ~${result.wordCount.toLocaleString()} words`}
                         </div>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-600 line-clamp-2">
                           {result.description}
                         </p>
                       </div>

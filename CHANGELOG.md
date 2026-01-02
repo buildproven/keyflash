@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Cache health tracking with `cacheHealthy` field in API responses (keywords, related keywords)
+- Runtime validation with Zod schemas for UserData and SavedSearch from Redis
+- `getAppUrl()` helper for centralized app URL configuration
+- Domain validation schemas in `src/lib/validation/domain-schemas.ts`
+- Screen reader accessibility: aria-label, aria-expanded, sr-only text for keyword tables
 - Monthly reset test coverage for user service (`user-service-reset.test.ts`)
 - Checkout origin allowlist tests
 - Saved search validation tests for KeywordData shape
@@ -20,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Monthly keyword usage now tracked with Redis TTL-based keys (atomic operations, auto-reset)
+- Color contrast improved to WCAG 2.1 AA compliance (text-gray-400 → text-gray-600 in 7 files)
+- Hardcoded domains replaced with `NEXT_PUBLIC_APP_URL` env var (robots.ts, sitemap.ts, layout.tsx, checkout)
+- Redundant `isAvailable()` checks removed from API routes (services now throw errors)
+- Monthly reset logic eliminated (DRY) - TTL pattern handles auto-reset
 - Rate limiter now defaults to trusting proxy headers in production (required for Vercel/Cloudflare)
 - 5xx error messages are now redacted to "An unexpected error occurred" (prevents information leakage)
 - Saved search results validation changed from `z.any()` to proper `KeywordDataSchema`
@@ -32,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **[Critical]** Webhook idempotency now fails closed on Redis errors (prevents duplicate billing)
+- **[Critical]** Cache write failures now tracked and exposed in API responses (operational visibility)
+- **[Critical]** Saved search race condition fixed with SCARD check before SADD
+- **[High]** Monthly reset race condition eliminated with atomic Redis TTL operations
 - **[Bug]** Monthly keyword usage now resets in `checkKeywordLimit()` not just `incrementKeywordUsage()`
 - TypeScript test file errors (auth mock types, NODE_ENV assignment, optional property checks)
 - Race condition in saved search limit check (atomic add with rollback)
@@ -40,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Webhook Redis initialization now fails fast in production (prevents processing without idempotency)
+- Webhook event marking failures now throw errors (prevents silent duplicate processing)
+- Runtime validation added for all data retrieved from Redis (prevents data corruption)
 - Added checkout origin allowlist to prevent open redirect via origin header manipulation
 - Hardened rate limiter with production-aware proxy trust defaults
 - Redacted 5xx error messages to prevent internal error leakage

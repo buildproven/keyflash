@@ -11,9 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cache health tracking with `cacheHealthy` field in API responses (keywords, related keywords)
 - Runtime validation with Zod schemas for UserData and SavedSearch from Redis
-- `getAppUrl()` helper for centralized app URL configuration
+- `getAppUrl()` helper for centralized app URL configuration with production validation
 - Domain validation schemas in `src/lib/validation/domain-schemas.ts`
 - Screen reader accessibility: aria-label, aria-expanded, sr-only text for keyword tables
+- Table caption for screen readers in keyword results table
+- Aria-live regions for error announcements in modals (content brief, related keywords, saved searches)
+- Focus restoration to modal close buttons on open with return to trigger on close
+- Structured Redis error classes (`CacheError`, `RedisConnectionError`, `RedisOperationError`, `RedisConfigurationError`)
+- Fail-fast validation for rate limiter in production (HMAC secret, Redis config)
 - Monthly reset test coverage for user service (`user-service-reset.test.ts`)
 - Checkout origin allowlist tests
 - Saved search validation tests for KeywordData shape
@@ -26,19 +31,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Monthly keyword usage now tracked with Redis TTL-based keys (atomic operations, auto-reset)
-- Color contrast improved to WCAG 2.1 AA compliance (text-gray-400 → text-gray-600 in 7 files)
+- Dark mode color contrast improved to WCAG 2.1 AA compliance (text-gray-400 → text-gray-600/300 in 7 files)
 - Hardcoded domains replaced with `NEXT_PUBLIC_APP_URL` env var (robots.ts, sitemap.ts, layout.tsx, checkout)
 - Redundant `isAvailable()` checks removed from API routes (services now throw errors)
 - Monthly reset logic eliminated (DRY) - TTL pattern handles auto-reset
 - Rate limiter now defaults to trusting proxy headers in production (required for Vercel/Cloudflare)
 - 5xx error messages are now redacted to "An unexpected error occurred" (prevents information leakage)
 - Saved search results validation changed from `z.any()` to proper `KeywordDataSchema`
+- Redis cache `purgeKeywordCache()` migrated from blocking KEYS to non-blocking SCAN iterator
 - Redis rate-limiter `clear()` now uses SCAN iterator instead of KEYS (prevents blocking)
 - UserService methods now throw errors on Redis failures instead of returning null
 - SavedSearchesService methods now throw errors on Redis failures
 - Saved search creation uses atomic SADD + SCARD + rollback pattern (prevents race condition)
 - `listSavedSearches` uses MGET for batch fetch (fixes N+1 query)
 - Stripe webhook handler returns 503 on infrastructure errors (enables retries)
+- `getAppUrl()` now validates URL format and enforces HTTPS protocol in production
 
 ### Fixed
 
@@ -46,7 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **[Critical]** Cache write failures now tracked and exposed in API responses (operational visibility)
 - **[Critical]** Saved search race condition fixed with SCARD check before SADD
 - **[High]** Monthly reset race condition eliminated with atomic Redis TTL operations
+- **[High]** Dark mode color contrast for loading states, tables, modals, and form components (WCAG 2.1 AA)
 - **[Bug]** Monthly keyword usage now resets in `checkKeywordLimit()` not just `incrementKeywordUsage()`
+- **[Bug]** Content brief error handling now prevents unhandled promise rejections from cache writes
 - TypeScript test file errors (auth mock types, NODE_ENV assignment, optional property checks)
 - Race condition in saved search limit check (atomic add with rollback)
 - N+1 query pattern in listSavedSearches (now uses MGET)
@@ -64,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed high-severity `qs` vulnerability (CVE: DoS via memory exhaustion)
 - Added authentication and rate limiting to checkout endpoint
 - Search ID parameter validation prevents injection attacks
+- Rate limiter constructor validates HMAC secret length (≥32 chars) in production
 
 ## [0.2.0] - 2025-12-24
 

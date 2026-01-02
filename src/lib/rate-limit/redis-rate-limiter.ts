@@ -47,6 +47,24 @@ export class RedisRateLimiter {
   }
 
   constructor() {
+    // Fail-fast validation for production
+    if (this.isProduction) {
+      // Validate HMAC secret for spoof-resistant client identification
+      const hmacSecret = process.env.RATE_LIMIT_HMAC_SECRET
+      if (!hmacSecret) {
+        throw this.createConfigError(
+          'RATE_LIMIT_HMAC_SECRET is required in production for secure rate limiting',
+          500
+        )
+      }
+      if (hmacSecret.length < 32) {
+        throw this.createConfigError(
+          'RATE_LIMIT_HMAC_SECRET must be at least 32 characters for security',
+          500
+        )
+      }
+    }
+
     const redisUrl = process.env.UPSTASH_REDIS_REST_URL
     const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
 
@@ -65,13 +83,30 @@ export class RedisRateLimiter {
           module: 'RedisRateLimiter',
         })
         this.isRedisAvailable = false
+
+        // In production, Redis failure is critical for rate limiting
+        if (this.isProduction) {
+          throw this.createConfigError(
+            'Failed to initialize Redis for rate limiting in production',
+            500
+          )
+        }
       }
     } else {
-      logger.warn(
+      const message =
         'Redis not configured. Falling back to in-memory rate limiting. ' +
-          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production.',
-        { module: 'RedisRateLimiter' }
-      )
+        'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production.'
+
+      logger.warn(message, { module: 'RedisRateLimiter' })
+
+      // In production, require Redis for distributed rate limiting
+      if (this.isProduction) {
+        throw this.createConfigError(
+          'Redis configuration required in production for distributed rate limiting. ' +
+            'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
+          500
+        )
+      }
     }
   }
 

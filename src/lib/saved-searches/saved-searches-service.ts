@@ -1,6 +1,7 @@
 import { Redis } from '@upstash/redis'
 import crypto from 'crypto'
 import { logger } from '@/lib/utils/logger'
+import { SavedSearchSchema } from '@/lib/validation/domain-schemas'
 import type {
   SavedSearch,
   SavedSearchSummary,
@@ -82,11 +83,23 @@ class SavedSearchesService {
 
     try {
       const indexKey = this.getIndexKey(clerkUserId)
+
+      // Check count BEFORE adding (prevent race condition)
+      const currentCount = await this.client!.scard(indexKey)
+      if (currentCount >= MAX_SAVED_SEARCHES_PER_USER) {
+        logger.warn('User reached saved searches limit', {
+          module: 'SavedSearchesService',
+          clerkUserId,
+          limit: MAX_SAVED_SEARCHES_PER_USER,
+          currentCount,
+        })
+        return null // Business logic: limit exceeded is not an infra error
+      }
+
       const searchId = generateSearchId()
       const searchKey = this.getSearchKey(clerkUserId, searchId)
 
-      // FIX-006: Atomic add with rollback if limit exceeded
-      // SADD is atomic, then we check count and rollback if needed
+      // Now add atomically
       const addResult = await this.client!.sadd(indexKey, searchId)
 
       if (addResult === 0) {
@@ -97,19 +110,6 @@ class SavedSearchesService {
           searchId,
         })
         return null // Business logic: collision is not an infra error
-      }
-
-      // Check count after add - if over limit, rollback
-      const currentCount = await this.client!.scard(indexKey)
-      if (currentCount > MAX_SAVED_SEARCHES_PER_USER) {
-        // Rollback - remove the just-added ID
-        await this.client!.srem(indexKey, searchId)
-        logger.warn('User reached saved searches limit', {
-          module: 'SavedSearchesService',
-          clerkUserId,
-          limit: MAX_SAVED_SEARCHES_PER_USER,
-        })
-        return null // Business logic: limit exceeded is not an infra error
       }
 
       const now = new Date().toISOString()
@@ -159,10 +159,15 @@ class SavedSearchesService {
     }
 
     try {
-      const search = await this.client!.get<SavedSearch>(
+      const raw = await this.client!.get<SavedSearch>(
         this.getSearchKey(clerkUserId, searchId)
       )
-      return search // null means not found, which is valid
+      if (!raw) {
+        return null // null means not found, which is valid
+      }
+
+      // Runtime validation to ensure data integrity
+      return SavedSearchSchema.parse(raw) as SavedSearch
     } catch (error) {
       logger.error('Failed to get saved search', error, {
         module: 'SavedSearchesService',

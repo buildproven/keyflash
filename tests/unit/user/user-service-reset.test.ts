@@ -50,16 +50,15 @@ describe('UserService monthly reset', () => {
       updatedAt: '2025-02-15T00:00:00.000Z',
     })
 
+    // Note: With TTL-based usage tracking, checkKeywordLimit() reads from
+    // the usage:{userId}:{YYYY-MM} key, which doesn't exist for the new month,
+    // so it returns 0 (auto-reset via key expiry)
     const result = await service.checkKeywordLimit(clerkUserId)
 
     expect(result?.used).toBe(0)
     expect(result?.allowed).toBe(true)
 
-    const updated = store.get(`user:${clerkUserId}`) as {
-      keywordsUsedThisMonth: number
-      monthlyResetAt: string
-    }
-    expect(updated.keywordsUsedThisMonth).toBe(0)
-    expect(updated.monthlyResetAt).not.toBe('2025-03-01T00:00:00.000Z')
+    // TTL-based implementation no longer updates UserData.keywordsUsedThisMonth
+    // or monthlyResetAt - usage is tracked in separate Redis keys that auto-expire
   })
 })

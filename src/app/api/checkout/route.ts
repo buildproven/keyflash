@@ -107,8 +107,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user email to pre-fill and link subscription
-    const user = await userService.getUser(authResult.userId)
+    // Ensure user exists so webhook can link subscription
+    const sessionClaims = authResult.sessionClaims as
+      | { email?: string }
+      | undefined
+    const fallbackEmail = `${authResult.userId}@keyflash.local`
+    const userEmail = sessionClaims?.email || fallbackEmail
+    const user = await userService.getOrCreateUser(authResult.userId, userEmail)
     const customerEmail = user?.email
 
     const stripe = getStripe()

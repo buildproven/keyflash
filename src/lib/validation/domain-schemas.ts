@@ -25,8 +25,18 @@ export const UserDataSchema = z.object({
  * Runtime validation schema for SavedSearch retrieved from Redis
  * Ensures data integrity and type safety for saved search records
  */
+const SavedSearchIdSchema = z
+  .string()
+  .trim()
+  .refine(id => {
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const legacyPattern = /^\d{13}-[a-z0-9]{7}$/
+    return uuidPattern.test(id) || legacyPattern.test(id)
+  })
+
 export const SavedSearchSchema = z.object({
-  id: z.string().uuid(),
+  id: SavedSearchIdSchema,
   clerkUserId: z.string().min(1),
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),

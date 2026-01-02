@@ -149,7 +149,7 @@ export function SaveSearchModal({
           </button>
         </div>
 
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-600">
           Save this search with {searchParams.keywords.length} keyword
           {searchParams.keywords.length !== 1 ? 's' : ''} for quick access
           later.

@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis'
 import { logger } from '@/lib/utils/logger'
+import { UserDataSchema } from '@/lib/validation/domain-schemas'
 
 // FIX: Custom error classes for distinguishing service failures from "not found"
 export class UserServiceUnavailableError extends Error {
@@ -124,9 +125,9 @@ class UserService {
   }
 
   /**
-   * Get user by Clerk user ID
+   * Get user by Clerk user ID with runtime validation
    * @throws UserServiceUnavailableError if service is not available
-   * @throws UserServiceOperationError if Redis operation fails
+   * @throws UserServiceOperationError if Redis operation fails or data validation fails
    * @returns UserData if found, null if not found
    */
   async getUser(clerkUserId: string): Promise<UserData | null> {
@@ -135,9 +136,15 @@ class UserService {
     }
 
     try {
-      return await this.client!.get<UserData>(
+      const raw = await this.client!.get<UserData>(
         `${USER_KEY_PREFIX}${clerkUserId}`
       )
+      if (!raw) {
+        return null
+      }
+
+      // Runtime validation to ensure data integrity
+      return UserDataSchema.parse(raw)
     } catch (error) {
       logger.error('Failed to get user', error, {
         module: 'UserService',
@@ -296,7 +303,7 @@ class UserService {
   }
 
   /**
-   * Increment keyword usage for the month
+   * Increment keyword usage for the month using atomic Redis operations
    * @throws UserServiceUnavailableError if service is not available
    * @throws UserServiceOperationError if Redis operation fails
    * @returns New count if successful, null if user not found
@@ -310,28 +317,25 @@ class UserService {
     }
 
     try {
+      // Verify user exists
       const user = await this.getUser(clerkUserId)
       if (!user) {
         return null
       }
 
-      // Check if monthly reset is needed
-      const now = new Date()
-      const resetDate = new Date(user.monthlyResetAt)
+      const usageKey = this.getUsageKeyForMonth(clerkUserId)
+      const ttl = this.getUsageKeyTTL()
 
-      let newCount = user.keywordsUsedThisMonth + count
-      let monthlyResetAt = user.monthlyResetAt
+      // Atomic increment + set expiry (no race condition)
+      const newCount = await this.client!.incrby(usageKey, count)
+      await this.client!.expire(usageKey, ttl)
 
-      if (now >= resetDate) {
-        // Reset the counter
-        newCount = count
-        const nextReset = this.getNextMonthlyResetDate(now)
-        monthlyResetAt = nextReset.toISOString()
-      }
-
-      await this.updateUser(clerkUserId, {
-        keywordsUsedThisMonth: newCount,
-        monthlyResetAt,
+      logger.debug('Incremented keyword usage', {
+        module: 'UserService',
+        clerkUserId,
+        count,
+        newCount,
+        usageKey,
       })
 
       return newCount
@@ -356,6 +360,7 @@ class UserService {
 
   /**
    * Check if user has exceeded their monthly keyword limit
+   * Uses TTL-based usage keys - no manual reset needed
    */
   async checkKeywordLimit(clerkUserId: string): Promise<{
     allowed: boolean
@@ -369,18 +374,24 @@ class UserService {
       return null
     }
 
+    // Check trial expiration (only for trial tier users)
     const now = new Date()
-    const resetDate = new Date(user.monthlyResetAt)
-    let effectiveUsed = user.keywordsUsedThisMonth
+    const trialExpires = new Date(user.trialExpiresAt)
+    const trialExpired = user.tier === 'trial' && now > trialExpires
 
-    if (now >= resetDate) {
-      effectiveUsed = 0
-      const nextReset = this.getNextMonthlyResetDate(now)
-      await this.updateUser(clerkUserId, {
-        keywordsUsedThisMonth: effectiveUsed,
-        monthlyResetAt: nextReset.toISOString(),
-      })
+    if (trialExpired) {
+      return {
+        allowed: false,
+        used: 0,
+        limit: 0,
+        tier: user.tier,
+        trialExpired: true,
+      }
     }
+
+    // Get current month's usage from TTL-based key (auto-resets via expiry)
+    const usageKey = this.getUsageKeyForMonth(clerkUserId)
+    const used = (await this.client!.get(usageKey)) || 0
 
     // Trial users: 300 keywords during 7-day trial
     // Pro users: 1,000 keywords/month
@@ -390,24 +401,36 @@ class UserService {
     }
 
     const limit = limits[user.tier]
-    const trialExpired =
-      user.tier === 'trial' && now > new Date(user.trialExpiresAt)
 
     return {
-      allowed: !trialExpired && effectiveUsed < limit,
-      used: effectiveUsed,
+      allowed: Number(used) < limit,
+      used: Number(used),
       limit,
       tier: user.tier,
-      trialExpired,
+      trialExpired: false,
     }
   }
 
-  private getNextMonthlyResetDate(now: Date): Date {
-    const nextReset = new Date(now)
-    nextReset.setMonth(nextReset.getMonth() + 1)
-    nextReset.setDate(1)
-    nextReset.setHours(0, 0, 0, 0)
-    return nextReset
+  /**
+   * Get the current month's usage key for atomic tracking
+   * Format: usage:{userId}:{YYYY-MM}
+   */
+  private getUsageKeyForMonth(clerkUserId: string): string {
+    const now = new Date()
+    const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    return `usage:${clerkUserId}:${yearMonth}`
+  }
+
+  /**
+   * Get TTL for usage key (seconds until end of current month)
+   */
+  private getUsageKeyTTL(): number {
+    const now = new Date()
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    const secondsUntilEnd = Math.floor(
+      (endOfMonth.getTime() - now.getTime()) / 1000
+    )
+    return Math.max(secondsUntilEnd, 3600) // Minimum 1 hour
   }
 
   /**

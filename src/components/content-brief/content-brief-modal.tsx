@@ -21,6 +21,7 @@ export function ContentBriefModal({
   const [error, setError] = useState<string | null>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousActiveElement = useRef<HTMLElement | null>(null)
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -39,6 +40,9 @@ export function ContentBriefModal({
   // Focus trap and initial focus
   useEffect(() => {
     if (!isOpen) return
+
+    // Store the element that triggered the modal
+    previousActiveElement.current = document.activeElement as HTMLElement
 
     // Focus close button on open
     closeButtonRef.current?.focus()
@@ -70,7 +74,14 @@ export function ContentBriefModal({
     }
 
     document.addEventListener('keydown', handleTabKey)
-    return () => document.removeEventListener('keydown', handleTabKey)
+
+    // Cleanup: restore focus and remove event listener
+    return () => {
+      document.removeEventListener('keydown', handleTabKey)
+      if (previousActiveElement.current) {
+        previousActiveElement.current.focus()
+      }
+    }
   }, [isOpen])
 
   const generateBrief = useCallback(async () => {
@@ -135,7 +146,7 @@ export function ContentBriefModal({
             >
               Content Brief
             </h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-600">
+            <p className="mt-1 text-gray-600 dark:text-gray-300">
               Keyword: <span className="font-medium">{keyword}</span>
             </p>
           </div>
@@ -165,7 +176,7 @@ export function ContentBriefModal({
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-600">
+            <p className="mt-4 text-gray-600 dark:text-gray-300">
               Analyzing top search results...
             </p>
           </div>
@@ -173,7 +184,11 @@ export function ContentBriefModal({
 
         {/* Error state */}
         {error && (
-          <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+          <div
+            className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
+            role="alert"
+            aria-live="polite"
+          >
             <p className="text-red-700 dark:text-red-400">{error}</p>
             <button
               onClick={generateBrief}
@@ -209,7 +224,7 @@ export function ContentBriefModal({
                     words (avg)
                   </div>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-600">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
                   Range: {brief.recommendedWordCount.min.toLocaleString()} -{' '}
                   {brief.recommendedWordCount.max.toLocaleString()} words
                 </div>
@@ -253,7 +268,7 @@ export function ContentBriefModal({
                       heading.level === 'h2' ? 'font-medium' : 'pl-4 text-sm'
                     }`}
                   >
-                    <span className="mt-0.5 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-600">
+                    <span className="mt-0.5 rounded bg-gray-200 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
                       {heading.level.toUpperCase()}
                     </span>
                     <span className="text-gray-800 dark:text-gray-200">
@@ -332,7 +347,7 @@ export function ContentBriefModal({
                           {result.wordCount &&
                             ` • ~${result.wordCount.toLocaleString()} words`}
                         </div>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-600 line-clamp-2">
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                           {result.description}
                         </p>
                       </div>

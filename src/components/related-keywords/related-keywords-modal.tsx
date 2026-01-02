@@ -24,6 +24,7 @@ export function RelatedKeywordsModal({
   const [isMockData, setIsMockData] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousActiveElement = useRef<HTMLElement | null>(null)
 
   // Handle Escape key to close modal
   useEffect(() => {
@@ -42,6 +43,9 @@ export function RelatedKeywordsModal({
   // Focus trap and initial focus
   useEffect(() => {
     if (!isOpen) return
+
+    // Store the element that triggered the modal
+    previousActiveElement.current = document.activeElement as HTMLElement
 
     // Focus close button on open
     closeButtonRef.current?.focus()
@@ -73,7 +77,14 @@ export function RelatedKeywordsModal({
     }
 
     document.addEventListener('keydown', handleTabKey)
-    return () => document.removeEventListener('keydown', handleTabKey)
+
+    // Cleanup: restore focus and remove event listener
+    return () => {
+      document.removeEventListener('keydown', handleTabKey)
+      if (previousActiveElement.current) {
+        previousActiveElement.current.focus()
+      }
+    }
   }, [isOpen])
 
   const fetchRelatedKeywords = useCallback(async () => {
@@ -140,7 +151,7 @@ export function RelatedKeywordsModal({
             >
               Related Keywords
             </h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-600">
+            <p className="mt-1 text-gray-600 dark:text-gray-300">
               Seed: <span className="font-medium">{keyword}</span>
             </p>
           </div>
@@ -178,7 +189,11 @@ export function RelatedKeywordsModal({
 
         {/* Error state */}
         {error && (
-          <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+          <div
+            className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
+            role="alert"
+            aria-live="polite"
+          >
             <p className="text-red-700 dark:text-red-400">{error}</p>
             <button
               onClick={fetchRelatedKeywords}
@@ -205,17 +220,17 @@ export function RelatedKeywordsModal({
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
                       Keyword
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
                       Volume
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
+                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
                       Relevance
                     </th>
                     {onAddKeyword && (
-                      <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-600">
+                      <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
                         Action
                       </th>
                     )}
@@ -232,7 +247,7 @@ export function RelatedKeywordsModal({
                           {kw.keyword}
                         </div>
                         {kw.competition && (
-                          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-600">
+                          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                             <span
                               className={`inline-flex rounded px-1.5 py-0.5 text-xs font-medium ${
                                 kw.competition === 'low'
@@ -252,7 +267,7 @@ export function RelatedKeywordsModal({
                           </div>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">
                         {kw.searchVolume.toLocaleString()}
                       </td>
                       <td className="px-4 py-3">
@@ -263,7 +278,7 @@ export function RelatedKeywordsModal({
                               style={{ width: `${kw.relevance}%` }}
                             />
                           </div>
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-600">
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-300">
                             {kw.relevance}%
                           </span>
                         </div>
@@ -285,7 +300,7 @@ export function RelatedKeywordsModal({
             </div>
 
             {/* Summary */}
-            <p className="text-center text-sm text-gray-500 dark:text-gray-600">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               Found {relatedKeywords.length} related keywords
             </p>
           </div>

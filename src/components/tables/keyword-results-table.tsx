@@ -51,7 +51,7 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
   if (data.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
-        <p className="text-gray-500 dark:text-gray-600">No results found</p>
+        <p className="text-gray-500 dark:text-gray-300">No results found</p>
       </div>
     )
   }
@@ -121,53 +121,58 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 shadow dark:border-gray-700">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <caption className="sr-only">
+            Keyword research results showing {data.length} keywords with metrics
+            including search volume, difficulty, CPC, competition, intent, and
+            trends
+          </caption>
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Keyword
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Search Volume
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Difficulty
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 CPC
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Competition
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Intent
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Trend
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-600"
+                className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
               >
                 Actions
               </th>
@@ -180,10 +185,10 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                     {row.keyword}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-600">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                     {row.searchVolume.toLocaleString()}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-600">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                     <div className="flex items-center">
                       <span className="sr-only">
                         Difficulty: {row.difficulty}/100 -{' '}
@@ -209,7 +214,7 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                       <span aria-hidden="true">{row.difficulty}/100</span>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-600">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                     ${row.cpc.toFixed(2)}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
@@ -225,10 +230,10 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                       {row.competition}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-600">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                     {row.intent}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-600">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
                     {row.trends && row.trends.length >= 2 ? (
                       <button
                         onClick={() => toggleRowExpansion(row.keyword)}
@@ -264,6 +269,7 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                         onClick={() => setRelatedKeyword(row.keyword)}
                         className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                         title={`Find related keywords for "${row.keyword}"`}
+                        aria-label={`Find related keywords for ${row.keyword}`}
                       >
                         <svg
                           className="h-4 w-4"
@@ -284,6 +290,7 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                         onClick={() => setBriefKeyword(row.keyword)}
                         className="inline-flex items-center gap-1 rounded-md bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
                         title={`Generate content brief for "${row.keyword}"`}
+                        aria-label={`Generate content brief for ${row.keyword}`}
                       >
                         <svg
                           className="h-4 w-4"

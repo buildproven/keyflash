@@ -24,14 +24,25 @@ export function SaveSearchModal({
   const [error, setError] = useState<string | null>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
+  const previousActiveElement = useRef<HTMLElement | null>(null)
 
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
+      // Store the element that triggered the modal
+      previousActiveElement.current = document.activeElement as HTMLElement
+
       setName('')
       setDescription('')
       setError(null)
       nameInputRef.current?.focus()
+    }
+
+    // Restore focus when modal closes
+    return () => {
+      if (!isOpen && previousActiveElement.current) {
+        previousActiveElement.current.focus()
+      }
     }
   }, [isOpen])
 
@@ -149,7 +160,7 @@ export function SaveSearchModal({
           </button>
         </div>
 
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-600">
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
           Save this search with {searchParams.keywords.length} keyword
           {searchParams.keywords.length !== 1 ? 's' : ''} for quick access
           later.
@@ -196,7 +207,11 @@ export function SaveSearchModal({
           </div>
 
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            <div
+              className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400"
+              role="alert"
+              aria-live="polite"
+            >
               {error}
             </div>
           )}

@@ -398,6 +398,134 @@ describe('SavedSearchesService', () => {
     })
   })
 
+  describe('Legacy ID Schema Validation', () => {
+    it('should accept valid UUID format', async () => {
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
+
+      const validData = {
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        clerkUserId: 'user_123',
+        name: 'Test Search',
+        searchParams: {
+          keywords: ['test'],
+        },
+        metadata: {
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+        },
+      }
+
+      expect(() => SavedSearchSchema.parse(validData)).not.toThrow()
+    })
+
+    it('should accept legacy ID format (13-digit timestamp + 7-char hash)', async () => {
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
+
+      const validData = {
+        id: '1735000000000-abc123d',
+        clerkUserId: 'user_123',
+        name: 'Test Search',
+        searchParams: {
+          keywords: ['test'],
+        },
+        metadata: {
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+        },
+      }
+
+      expect(() => SavedSearchSchema.parse(validData)).not.toThrow()
+    })
+
+    it('should reject invalid legacy ID format (wrong timestamp length)', async () => {
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
+
+      const invalidData = {
+        id: '173500000-abc123d', // Only 9 digits instead of 13
+        clerkUserId: 'user_123',
+        name: 'Test Search',
+        searchParams: {
+          keywords: ['test'],
+        },
+        metadata: {
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+        },
+      }
+
+      expect(() => SavedSearchSchema.parse(invalidData)).toThrow()
+    })
+
+    it('should reject invalid legacy ID format (wrong hash length)', async () => {
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
+
+      const invalidData = {
+        id: '1735000000000-abc12', // Only 5 chars instead of 7
+        clerkUserId: 'user_123',
+        name: 'Test Search',
+        searchParams: {
+          keywords: ['test'],
+        },
+        metadata: {
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+        },
+      }
+
+      expect(() => SavedSearchSchema.parse(invalidData)).toThrow()
+    })
+
+    it('should reject invalid legacy ID format (uppercase letters in hash)', async () => {
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
+
+      const invalidData = {
+        id: '1735000000000-ABC123D', // Uppercase not allowed
+        clerkUserId: 'user_123',
+        name: 'Test Search',
+        searchParams: {
+          keywords: ['test'],
+        },
+        metadata: {
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+        },
+      }
+
+      expect(() => SavedSearchSchema.parse(invalidData)).toThrow()
+    })
+
+    it('should reject completely invalid ID format', async () => {
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
+
+      const invalidData = {
+        id: 'invalid-id-format',
+        clerkUserId: 'user_123',
+        name: 'Test Search',
+        searchParams: {
+          keywords: ['test'],
+        },
+        metadata: {
+          createdAt: '2025-01-01T00:00:00.000Z',
+          updatedAt: '2025-01-01T00:00:00.000Z',
+        },
+      }
+
+      expect(() => SavedSearchSchema.parse(invalidData)).toThrow()
+    })
+  })
+
   // =========================================
   // Error Classes Tests
   // =========================================

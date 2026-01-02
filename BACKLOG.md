@@ -1,6 +1,6 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-01-01
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
 
 ---
@@ -93,6 +93,16 @@
 
 | ID                        | Feature                                                          | Completed  |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **FIX-021**               | Webhook idempotency fail closed (prevent duplicate billing)      | 2026-01-01 |
+| **FIX-022**               | Cache health tracking (cacheHealthy field in API responses)      | 2026-01-01 |
+| **FIX-023**               | Saved search race condition (SCARD before SADD atomic check)     | 2026-01-01 |
+| **A11Y-004**              | WCAG 2.1 AA color contrast (text-gray-400 → text-gray-600)       | 2026-01-01 |
+| **A11Y-005**              | Screen reader accessibility (aria-label, sr-only text)           | 2026-01-01 |
+| **FIX-024**               | Replace hardcoded domains with getAppUrl() env-based helper      | 2026-01-01 |
+| **FIX-025**               | Remove redundant isAvailable() checks (services throw errors)    | 2026-01-01 |
+| **FIX-026**               | Monthly reset race condition (Redis TTL atomic operations)       | 2026-01-01 |
+| **FIX-027**               | DRY violation eliminated (monthly reset via TTL refactor)        | 2026-01-01 |
+| **FIX-028**               | Runtime validation with Zod schemas (UserData, SavedSearch)      | 2026-01-01 |
 | **FIX-008**               | Services throw errors instead of null (proper 503 responses)     | 2025-12-31 |
 | **FIX-020**               | Webhook idempotency (track event IDs to prevent duplicates)      | 2025-12-31 |
 | **FIX-004**               | Add authentication to checkout endpoint                          | 2025-12-31 |
@@ -160,5 +170,5 @@
 
 - **MVP Status**: Complete
 - **Deployment**: https://keyflash.vibebuildlab.com (Live)
-- **Test Coverage**: 711 tests passing, ~79% line coverage
+- **Test Coverage**: 714 tests passing, ~84% line coverage
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

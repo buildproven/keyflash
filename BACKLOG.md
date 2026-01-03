@@ -44,18 +44,18 @@
 ## 🔶 HIGH PRIORITY - Deep Review 2026-01-02
 
 **Value Score: 6.5-13 (Revenue:4, Retention:5, Differentiation:4)**
-**Partial completion: 5/8 items done (updated 2026-01-03)**
+**Completion: 8/8 items done (updated 2026-01-03)**
 
 | ID           | Issue                                   | Category      | Effort | Status  |
 | ------------ | --------------------------------------- | ------------- | ------ | ------- |
-| **TYPE-002** | Non-null assertions (133 instances)     | Type Safety   | M      | 🟠 High |
+| **TYPE-002** | Non-null assertions (133 instances)     | Type Safety   | M      | ✅ Done |
 | **SEC-012**  | Saved search quota bypass - TOCTOU      | Security      | S      | ✅ Done |
 | **SEC-013**  | Rate limit HMAC fallback in development | Security      | S      | ✅ Done |
 | **SEC-014**  | Cache poisoning - 32-bit hash collision | Security      | S      | ✅ Done |
 | **A11Y-011** | Color contrast - text-gray-500 issues   | Accessibility | S      | ✅ Done |
 | **A11Y-012** | Missing aria-labels on interactive btns | Accessibility | S      | ✅ Done |
-| **A11Y-013** | Inconsistent focus indicators           | Accessibility | S      | 🟠 High |
-| **PERF-011** | Cache write timeout race condition      | Performance   | S      | 🟠 High |
+| **A11Y-013** | Inconsistent focus indicators           | Accessibility | S      | ✅ Done |
+| **PERF-011** | Cache write timeout race condition      | Performance   | S      | ✅ Done |
 
 **TYPE-002 Details**: Replace `this.client!.set()` pattern with safe `getClient()` helper
 
@@ -102,19 +102,19 @@
 ## 🟡 MEDIUM PRIORITY - Deep Review 2026-01-02
 
 **Value Score: 4-8 (Revenue:3, Retention:4, Differentiation:3)**
-**Total Effort: 5 hours**
+**Completion: 9/9 items done (updated 2026-01-03)**
 
-| ID           | Issue                                    | Category      | Effort | Status    |
-| ------------ | ---------------------------------------- | ------------- | ------ | --------- |
-| **SEC-016**  | Unbounded cache key scan (OOM risk)      | Security      | S      | 🟡 Medium |
-| **TYPE-003** | Weak generic constraints on Redis get<T> | Type Safety   | M      | 🟡 Medium |
-| **TYPE-005** | Redundant type assertion after Zod parse | Type Safety   | S      | 🟡 Medium |
-| **ERR-002**  | Dynamic import error handling missing    | Reliability   | S      | 🟡 Medium |
-| **A11Y-014** | Table scope attributes missing           | Accessibility | S      | 🟡 Medium |
-| **A11Y-015** | Modal loading states need role="status"  | Accessibility | S      | 🟡 Medium |
-| **PERF-012** | Sequential user operations in hot path   | Performance   | M      | 🟡 Medium |
-| **PERF-013** | Rate limiter not truly atomic            | Performance   | M      | 🟡 Medium |
-| **PERF-014** | Large bundle size (285KB Clerk chunk)    | Performance   | M      | 🟡 Medium |
+| ID           | Issue                                    | Category      | Effort | Status  |
+| ------------ | ---------------------------------------- | ------------- | ------ | ------- |
+| **SEC-016**  | Unbounded cache key scan (OOM risk)      | Security      | S      | ✅ Done |
+| **TYPE-003** | Weak generic constraints on Redis get<T> | Type Safety   | M      | ✅ Done |
+| **TYPE-005** | Redundant type assertion after Zod parse | Type Safety   | S      | ✅ Done |
+| **ERR-002**  | Dynamic import error handling missing    | Reliability   | S      | ✅ Done |
+| **A11Y-014** | Table scope attributes missing           | Accessibility | S      | ✅ Done |
+| **A11Y-015** | Modal loading states need role="status"  | Accessibility | S      | ✅ Done |
+| **PERF-012** | Sequential user operations in hot path   | Performance   | M      | ✅ Done |
+| **PERF-013** | Rate limiter not truly atomic            | Performance   | M      | ✅ Done |
+| **PERF-014** | Large bundle size (285KB Clerk chunk)    | Performance   | M      | ✅ Done |
 
 **SEC-015 Details**: Webhook signature verification lacks timestamp validation
 
@@ -165,17 +165,20 @@
 **PERF-012 Details**: 3-5 sequential Redis calls per keyword request (15-75ms overhead)
 
 - Location: `keywords/route.ts:108-156`
-- Fix: Cache user tier in JWT claims, use Redis pipelines for multi-key ops
+- Fix: Made `checkKeywordLimit` accept optional `cachedUser` parameter to avoid redundant Redis GET
+- Result: Eliminated 1 redundant Redis operation per keyword request
 
 **PERF-013 Details**: Rate limiter has race between TTL check and INCR
 
 - Location: `redis-rate-limiter.ts:345-391`
-- Fix: Use Lua script for atomic TTL + INCR + EXPIRE operations
+- Fix: Implemented Lua script for atomic TTL + GET + INCR + SET + EXPIRE operations
+- Result: All rate limiting operations now execute atomically in single Redis call
 
 **PERF-014 Details**: Large chunks reducing initial load performance
 
 - Clerk SDK: 285KB, Total: ~1.1MB uncompressed
-- Fix: Run `ANALYZE=true npm run build`, aggressive code splitting, check if using full Clerk bundle
+- Fix: Added bundle analyzer, dynamic imports for SavedSearchesList and SaveSearchModal
+- Result: Auth-only components lazy loaded, reducing initial bundle for unauthenticated users
 
 ---
 
@@ -320,6 +323,18 @@
 
 | ID                        | Feature                                                          | Completed  |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **TYPE-002**              | Non-null assertions → getClient() helper (133→3 instances)       | 2026-01-03 |
+| **A11Y-013**              | Focus indicators for saved search buttons                        | 2026-01-03 |
+| **PERF-011**              | Cache write fire-and-forget (removed Promise.race timeout)       | 2026-01-03 |
+| **PERF-012**              | Eliminated redundant Redis GET in checkKeywordLimit              | 2026-01-03 |
+| **PERF-013**              | Atomic rate limiting via Lua script (no race conditions)         | 2026-01-03 |
+| **PERF-014**              | Dynamic imports + bundle analyzer for code splitting             | 2026-01-03 |
+| **SEC-016**               | Streaming cache purge (prevents OOM with millions of keys)       | 2026-01-03 |
+| **TYPE-003**              | Optional validation for Redis get<T> generic                     | 2026-01-03 |
+| **TYPE-005**              | Removed redundant SavedSearch type assertion                     | 2026-01-03 |
+| **ERR-002**               | Dynamic import error handling (.catch with fallback)             | 2026-01-03 |
+| **A11Y-014**              | Table scope="col" attributes (related keywords modal)            | 2026-01-03 |
+| **A11Y-015**              | Modal loading states role="status" aria-live="polite"            | 2026-01-03 |
 | **SEC-015**               | CSRF protection (token generation, validation, origin checking)  | 2026-01-03 |
 | **TYPE-004**              | z.array(z.any()) → KeywordDataSchema (proper type safety)        | 2026-01-03 |
 | **ERR-001**               | Status-code-specific error messages (400-504 user-friendly)      | 2026-01-03 |

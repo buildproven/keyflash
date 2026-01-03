@@ -180,7 +180,11 @@ export function RelatedKeywordsModal({
 
         {/* Loading state */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-12">
+          <div
+            className="flex flex-col items-center justify-center py-12"
+            role="status"
+            aria-live="polite"
+          >
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">
               Finding related keywords...
@@ -221,17 +225,29 @@ export function RelatedKeywordsModal({
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 dark:text-gray-400"
+                    >
                       Keyword
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-600 dark:text-gray-400"
+                    >
                       Volume
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-600 dark:text-gray-400"
+                    >
                       Relevance
                     </th>
                     {onAddKeyword && (
-                      <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-600 dark:text-gray-400"
+                      >
                         Action
                       </th>
                     )}

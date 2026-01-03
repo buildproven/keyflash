@@ -175,7 +175,11 @@ export function ContentBriefModal({
 
         {/* Loading state */}
         {isLoading && (
-          <div className="flex flex-col items-center justify-center py-12">
+          <div
+            className="flex flex-col items-center justify-center py-12"
+            role="status"
+            aria-live="polite"
+          >
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-300">
               Analyzing top search results...

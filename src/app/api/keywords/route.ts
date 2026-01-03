@@ -121,8 +121,8 @@ export async function POST(request: NextRequest) {
       const user = await userService.getOrCreateUser(userId, email)
 
       if (user) {
-        // Check keyword limit
-        const limitCheck = await userService.checkKeywordLimit(userId)
+        // PERF-012: Pass user data to avoid redundant Redis GET
+        const limitCheck = await userService.checkKeywordLimit(userId, user)
 
         if (limitCheck) {
           if (limitCheck.trialExpired) {
@@ -188,31 +188,16 @@ export async function POST(request: NextRequest) {
       })
 
       // Store in cache (only for real data from Pro users)
+      // Fire-and-forget: cache write runs in background without blocking response
       if (!useMockData) {
-        const cacheWrite = cache
-          .set(cacheKey, keywordData, provider.name)
-          .catch(error => {
-            cacheWriteSucceeded = false
-            logger.error('Failed to cache data', error, {
-              module: 'Cache',
-              errorId: 'CACHE_WRITE_FAILED',
-              cacheKey,
-            })
+        cache.set(cacheKey, keywordData, provider.name).catch(error => {
+          cacheWriteSucceeded = false
+          logger.error('Failed to cache data', error, {
+            module: 'Cache',
+            errorId: 'CACHE_WRITE_FAILED',
+            cacheKey,
           })
-
-        const timeout = new Promise(resolve =>
-          setTimeout(() => {
-            if (cacheWriteSucceeded) {
-              cacheWriteSucceeded = false
-              logger.warn(`Cache write timeout for key ${cacheKey}`, {
-                module: 'Cache',
-              })
-            }
-            resolve(null)
-          }, 150)
-        )
-
-        await Promise.race([cacheWrite, timeout])
+        })
       }
     }
 

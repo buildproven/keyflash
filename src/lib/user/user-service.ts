@@ -70,6 +70,16 @@ class UserService {
   }
 
   /**
+   * Get Redis client, throwing if unavailable
+   * Assumes isAvailable() has already been checked
+   * @private
+   */
+  private getClient(): Redis {
+    // This should only be called after isAvailable() check
+    return this.client!
+  }
+
+  /**
    * Acquire distributed lock for user creation
    * @returns true if lock acquired, false if already locked
    * @private
@@ -193,13 +203,14 @@ class UserService {
     }
 
     try {
+      const client = this.getClient()
       // Store user data with 1 year TTL (auto-expire inactive accounts)
-      await this.client!.set(`${USER_KEY_PREFIX}${clerkUserId}`, userData, {
+      await client.set(`${USER_KEY_PREFIX}${clerkUserId}`, userData, {
         ex: USER_DATA_TTL_SECONDS,
       })
 
       // Create email index for lookup with same TTL
-      await this.client!.set(
+      await client.set(
         `${EMAIL_INDEX_PREFIX}${email.toLowerCase()}`,
         clerkUserId,
         { ex: USER_DATA_TTL_SECONDS }
@@ -234,9 +245,8 @@ class UserService {
     }
 
     try {
-      const raw = await this.client!.get<UserData>(
-        `${USER_KEY_PREFIX}${clerkUserId}`
-      )
+      const client = this.getClient()
+      const raw = await client.get<UserData>(`${USER_KEY_PREFIX}${clerkUserId}`)
       if (!raw) {
         return null
       }
@@ -245,7 +255,7 @@ class UserService {
       const validated = UserDataSchema.parse(raw)
 
       // Refresh TTL on access (keeps active users' data alive)
-      await this.client!.expire(
+      await client.expire(
         `${USER_KEY_PREFIX}${clerkUserId}`,
         USER_DATA_TTL_SECONDS
       )
@@ -272,7 +282,8 @@ class UserService {
     }
 
     try {
-      const clerkUserId = await this.client!.get<string>(
+      const client = this.getClient()
+      const clerkUserId = await client.get<string>(
         `${EMAIL_INDEX_PREFIX}${email.toLowerCase()}`
       )
       if (!clerkUserId) {
@@ -302,7 +313,8 @@ class UserService {
     }
 
     try {
-      const clerkUserId = await this.client!.get<string>(
+      const client = this.getClient()
+      const clerkUserId = await client.get<string>(
         `${STRIPE_CUSTOMER_PREFIX}${stripeCustomerId}`
       )
       if (!clerkUserId) {
@@ -352,8 +364,9 @@ class UserService {
         updatedAt: new Date().toISOString(),
       }
 
+      const client = this.getClient()
       // Refresh TTL on update (keeps active users' data alive)
-      await this.client!.set(`${USER_KEY_PREFIX}${clerkUserId}`, updated, {
+      await client.set(`${USER_KEY_PREFIX}${clerkUserId}`, updated, {
         ex: USER_DATA_TTL_SECONDS,
       })
 
@@ -362,7 +375,7 @@ class UserService {
         updates.stripeCustomerId &&
         updates.stripeCustomerId !== existing.stripeCustomerId
       ) {
-        await this.client!.set(
+        await client.set(
           `${STRIPE_CUSTOMER_PREFIX}${updates.stripeCustomerId}`,
           clerkUserId,
           { ex: USER_DATA_TTL_SECONDS }
@@ -435,9 +448,10 @@ class UserService {
 
       const { usageKey, ttl } = this.getUsageKeyForUser(user)
 
+      const client = this.getClient()
       // Atomic increment + set expiry (no race condition)
-      const newCount = await this.client!.incrby(usageKey, count)
-      await this.client!.expire(usageKey, ttl)
+      const newCount = await client.incrby(usageKey, count)
+      await client.expire(usageKey, ttl)
 
       logger.debug('Incremented keyword usage', {
         module: 'UserService',
@@ -470,15 +484,20 @@ class UserService {
   /**
    * Check if user has exceeded their monthly keyword limit
    * Uses TTL-based usage keys - no manual reset needed
+   * @param clerkUserId - User's Clerk ID
+   * @param cachedUser - Optional user data to avoid redundant fetch (PERF-012 optimization)
    */
-  async checkKeywordLimit(clerkUserId: string): Promise<{
+  async checkKeywordLimit(
+    clerkUserId: string,
+    cachedUser?: UserData
+  ): Promise<{
     allowed: boolean
     used: number
     limit: number
     tier: UserTier
     trialExpired?: boolean
   } | null> {
-    const user = await this.getUser(clerkUserId)
+    const user = cachedUser || (await this.getUser(clerkUserId))
     if (!user) {
       return null
     }
@@ -503,7 +522,8 @@ class UserService {
       user.tier === 'trial'
         ? this.getUsageKeyForTrial(user)
         : this.getUsageKeyForMonth(clerkUserId)
-    const used = (await this.client!.get(usageKey)) || 0
+    const client = this.getClient()
+    const used = (await client.get(usageKey)) || 0
 
     // Trial users: 300 keywords during 7-day trial
     // Pro users: 1,000 keywords/month

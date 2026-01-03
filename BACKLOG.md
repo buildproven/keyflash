@@ -1,6 +1,6 @@
 # KeyFlash - Backlog
 
-**Last Updated**: 2026-01-02
+**Last Updated**: 2026-01-03
 **Priority System**: Value-based (Revenue × Retention × Differentiation ÷ Effort)
 
 ---
@@ -44,7 +44,7 @@
 ## 🔶 HIGH PRIORITY - Deep Review 2026-01-02
 
 **Value Score: 6.5-13 (Revenue:4, Retention:5, Differentiation:4)**
-**Partial completion: 3/8 items done 2026-01-02**
+**Partial completion: 5/8 items done (updated 2026-01-03)**
 
 | ID           | Issue                                   | Category      | Effort | Status  |
 | ------------ | --------------------------------------- | ------------- | ------ | ------- |
@@ -52,8 +52,8 @@
 | **SEC-012**  | Saved search quota bypass - TOCTOU      | Security      | S      | ✅ Done |
 | **SEC-013**  | Rate limit HMAC fallback in development | Security      | S      | ✅ Done |
 | **SEC-014**  | Cache poisoning - 32-bit hash collision | Security      | S      | ✅ Done |
-| **A11Y-011** | Color contrast - text-gray-500 issues   | Accessibility | S      | 🟠 High |
-| **A11Y-012** | Missing aria-labels on interactive btns | Accessibility | S      | 🟠 High |
+| **A11Y-011** | Color contrast - text-gray-500 issues   | Accessibility | S      | ✅ Done |
+| **A11Y-012** | Missing aria-labels on interactive btns | Accessibility | S      | ✅ Done |
 | **A11Y-013** | Inconsistent focus indicators           | Accessibility | S      | 🟠 High |
 | **PERF-011** | Cache write timeout race condition      | Performance   | S      | 🟠 High |
 
@@ -106,12 +106,9 @@
 
 | ID           | Issue                                    | Category      | Effort | Status    |
 | ------------ | ---------------------------------------- | ------------- | ------ | --------- |
-| **SEC-015**  | Webhook missing timestamp validation     | Security      | S      | 🟡 Medium |
 | **SEC-016**  | Unbounded cache key scan (OOM risk)      | Security      | S      | 🟡 Medium |
 | **TYPE-003** | Weak generic constraints on Redis get<T> | Type Safety   | M      | 🟡 Medium |
-| **TYPE-004** | z.array(z.any()) for SavedSearch results | Type Safety   | S      | 🟡 Medium |
 | **TYPE-005** | Redundant type assertion after Zod parse | Type Safety   | S      | 🟡 Medium |
-| **ERR-001**  | Generic error messages in components     | UX            | M      | 🟡 Medium |
 | **ERR-002**  | Dynamic import error handling missing    | Reliability   | S      | 🟡 Medium |
 | **A11Y-014** | Table scope attributes missing           | Accessibility | S      | 🟡 Medium |
 | **A11Y-015** | Modal loading states need role="status"  | Accessibility | S      | 🟡 Medium |
@@ -323,6 +320,11 @@
 
 | ID                        | Feature                                                          | Completed  |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **SEC-015**               | CSRF protection (token generation, validation, origin checking)  | 2026-01-03 |
+| **TYPE-004**              | z.array(z.any()) → KeywordDataSchema (proper type safety)        | 2026-01-03 |
+| **ERR-001**               | Status-code-specific error messages (400-504 user-friendly)      | 2026-01-03 |
+| **A11Y-011**              | Color contrast fixes (9 additional components, WCAG 2.1 AA)      | 2026-01-03 |
+| **A11Y-012**              | Form labels and ARIA attributes (match type legend)              | 2026-01-03 |
 | **SEC-010**               | Trial period bypass race condition (distributed lock with SETNX) | 2026-01-02 |
 | **SEC-011**               | Webhook replay attack idempotency (optimistic locking)           | 2026-01-02 |
 | **TYPE-001**              | Stripe webhook Zod validation (CheckoutSession, Subscription)    | 2026-01-02 |

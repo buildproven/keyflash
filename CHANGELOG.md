@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CSRF protection** with custom Web Crypto API implementation (Edge Runtime compatible)
+- Client-side CSRF utilities: `getCsrfToken()`, `getCsrfHeaders()`, `fetchWithCsrf()`
+- Comprehensive SSRF protection tests (72 tests, 437 lines)
+- Webhook idempotency tests (15 tests, 446 lines) - duplicate detection, optimistic locking, TTL validation
+- User service concurrency tests (16 tests, 333 lines) - distributed locking, race conditions, stress testing
+- Status-code-specific error messages utility (`src/lib/utils/error-messages.ts`) for 400-504 codes
+- DNS prefetch and preconnect hints (Clerk, Stripe, DataForSEO, Google Fonts)
+- User data TTL (1-year auto-expiry for inactive accounts)
+- Static generation for home page (`force-static`)
+- Cache-Control headers for all API responses
 - Cache health tracking with `cacheHealthy` field in API responses (keywords, related keywords)
 - Runtime validation with Zod schemas for UserData and SavedSearch from Redis
 - `getAppUrl()` helper for centralized app URL configuration with production validation
@@ -30,6 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Cookie security**: SameSite changed from 'lax' to 'strict'
+- **Usage tracking**: Changed from fire-and-forget to blocking (prevents silent quota failures)
+- **Color contrast**: Improved to WCAG 2.1 AA compliance (text-gray-400 → text-gray-600 in additional 9 component files)
+- **Type safety**: Replaced `z.any()` with proper `KeywordDataSchema` in domain-schemas.ts
+- **Dependency updates**: 435 packages updated (zod 4.1.12→4.3.4, next 16.0.10→16.1.1, clerk 6.8.3→6.8.4, stripe 17.5.0→17.7.0, sentry 10.29.0→10.32.1)
 - Monthly keyword usage now tracked with Redis TTL-based keys (atomic operations, auto-reset)
 - Dark mode color contrast improved to WCAG 2.1 AA compliance (text-gray-400 → text-gray-600/300 in 7 files)
 - Hardcoded domains replaced with `NEXT_PUBLIC_APP_URL` env var (robots.ts, sitemap.ts, layout.tsx, checkout)
@@ -49,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **[Accessibility]** Form labels and ARIA attributes (id + aria-labelledby for match type legend)
+- **[Accessibility]** Color contrast in 9 additional component files for WCAG 2.1 AA compliance
 - **[Critical]** Webhook idempotency now fails closed on Redis errors (prevents duplicate billing)
 - **[Critical]** Cache write failures now tracked and exposed in API responses (operational visibility)
 - **[Critical]** Saved search race condition fixed with SCARD check before SADD
@@ -63,6 +80,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **CSRF protection** implemented with token generation, validation, and origin checking
+- **Request origin validation** for all state-changing requests (POST/PUT/DELETE/PATCH)
+- **HSTS headers** enforced in production (max-age=31536000, includeSubDomains, preload)
+- **Type safety** improved by replacing `z.any()` with strict schemas (prevents data corruption)
+- **Comprehensive SSRF tests** (72 tests covering private IPs, cloud metadata, ports, protocols)
+- **User data TTL** (1-year auto-expiry reduces attack surface for inactive accounts)
 - Webhook Redis initialization now fails fast in production (prevents processing without idempotency)
 - Webhook event marking failures now throw errors (prevents silent duplicate processing)
 - Runtime validation added for all data retrieved from Redis (prevents data corruption)

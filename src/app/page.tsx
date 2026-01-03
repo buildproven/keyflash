@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { Footer } from '@/components/layout/footer'
 
+// Force static generation for optimal performance
+export const dynamic = 'force-static'
+
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">

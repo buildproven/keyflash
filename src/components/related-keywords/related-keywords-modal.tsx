@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { fetchWithCsrf } from '@/lib/utils/csrf'
 import type { RelatedKeyword } from '@/types/related-keywords'
 
 interface RelatedKeywordsModalProps {
@@ -92,7 +93,7 @@ export function RelatedKeywordsModal({
     setError(null)
 
     try {
-      const response = await fetch('/api/keywords/related', {
+      const response = await fetchWithCsrf('/api/keywords/related', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword, location }),
@@ -158,7 +159,7 @@ export function RelatedKeywordsModal({
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Close modal"
           >
             <svg
@@ -181,7 +182,7 @@ export function RelatedKeywordsModal({
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-600">
+            <p className="mt-4 text-gray-600 dark:text-gray-400">
               Finding related keywords...
             </p>
           </div>
@@ -220,17 +221,17 @@ export function RelatedKeywordsModal({
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
                       Keyword
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
                       Volume
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
                       Relevance
                     </th>
                     {onAddKeyword && (
-                      <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
+                      <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-600 dark:text-gray-400">
                         Action
                       </th>
                     )}
@@ -247,7 +248,7 @@ export function RelatedKeywordsModal({
                           {kw.keyword}
                         </div>
                         {kw.competition && (
-                          <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                          <div className="mt-0.5 text-xs text-gray-600 dark:text-gray-400">
                             <span
                               className={`inline-flex rounded px-1.5 py-0.5 text-xs font-medium ${
                                 kw.competition === 'low'
@@ -278,7 +279,7 @@ export function RelatedKeywordsModal({
                               style={{ width: `${kw.relevance}%` }}
                             />
                           </div>
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-300">
+                          <span className="ml-2 text-xs text-gray-600 dark:text-gray-300">
                             {kw.relevance}%
                           </span>
                         </div>
@@ -300,7 +301,7 @@ export function RelatedKeywordsModal({
             </div>
 
             {/* Summary */}
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-center text-sm text-gray-600 dark:text-gray-400">
               Found {relatedKeywords.length} related keywords
             </p>
           </div>

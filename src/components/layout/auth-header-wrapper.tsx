@@ -4,7 +4,14 @@ import dynamic from 'next/dynamic'
 
 // Lazy load auth header to reduce initial bundle size
 const AuthHeader = dynamic(
-  () => import('./auth-header').then(mod => mod.AuthHeader),
+  () =>
+    import('./auth-header')
+      .then(mod => mod.AuthHeader)
+      .catch(err => {
+        console.error('Failed to load AuthHeader component:', err)
+        // Return a fallback component
+        return () => null
+      }),
   {
     ssr: false,
     loading: () => (

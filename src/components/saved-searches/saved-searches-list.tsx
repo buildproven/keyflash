@@ -152,7 +152,8 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
             <div className="flex items-start justify-between gap-2">
               <button
                 onClick={() => onLoadSearch(search.id)}
-                className="flex-1 text-left"
+                className="flex-1 text-left focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                aria-label={`Load search "${search.name}"`}
               >
                 <div className="font-medium text-gray-900 dark:text-white">
                   {search.name}
@@ -173,7 +174,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
               <button
                 onClick={() => handleDelete(search.id, search.name)}
                 disabled={deletingId === search.id}
-                className="rounded p-1 text-gray-600 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                className="rounded p-1 text-gray-600 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:focus:ring-offset-gray-800"
                 title="Delete search"
                 aria-label={`Delete "${search.name}"`}
               >

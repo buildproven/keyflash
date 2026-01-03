@@ -11,18 +11,30 @@ import {
 // Dynamic imports for modals to reduce initial bundle size
 const ContentBriefModal = dynamic(
   () =>
-    import('@/components/content-brief/content-brief-modal').then(
-      mod => mod.ContentBriefModal
-    ),
-  { ssr: false }
+    import('@/components/content-brief/content-brief-modal')
+      .then(mod => mod.ContentBriefModal)
+      .catch(err => {
+        console.error('Failed to load ContentBriefModal component:', err)
+        // Return a fallback component
+        return () => null
+      }),
+  {
+    ssr: false,
+  }
 )
 
 const RelatedKeywordsModal = dynamic(
   () =>
-    import('@/components/related-keywords/related-keywords-modal').then(
-      mod => mod.RelatedKeywordsModal
-    ),
-  { ssr: false }
+    import('@/components/related-keywords/related-keywords-modal')
+      .then(mod => mod.RelatedKeywordsModal)
+      .catch(err => {
+        console.error('Failed to load RelatedKeywordsModal component:', err)
+        // Return a fallback component
+        return () => null
+      }),
+  {
+    ssr: false,
+  }
 )
 
 interface KeywordResultsTableProps {

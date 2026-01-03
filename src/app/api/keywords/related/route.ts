@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
       )
 
       // Cache results (7 days TTL for related keywords)
+      // Fire-and-forget: cache write runs in background without blocking response
       const cacheData: CachedRelatedKeywords = {
         data: fullRelatedKeywords,
         metadata: {
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
           provider: providerName,
         },
       }
-      const cacheWrite = cache.setRaw(cacheKey, cacheData).catch(error => {
+      cache.setRaw(cacheKey, cacheData).catch(error => {
         cacheWriteSucceeded = false
         logger.error('Failed to cache related keywords', error, {
           module: 'Cache',
@@ -138,20 +139,6 @@ export async function POST(request: NextRequest) {
           cacheKey,
         })
       })
-
-      const timeout = new Promise(resolve =>
-        setTimeout(() => {
-          if (cacheWriteSucceeded) {
-            cacheWriteSucceeded = false
-            logger.warn(`Cache write timeout for key ${cacheKey}`, {
-              module: 'Cache',
-            })
-          }
-          resolve(null)
-        }, 150)
-      )
-
-      await Promise.race([cacheWrite, timeout])
     }
 
     relatedKeywords = validated.limit

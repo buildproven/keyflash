@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useState, useCallback, useRef } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { KeywordSearchForm } from '@/components/forms/keyword-search-form'
@@ -8,8 +9,6 @@ import { KeywordResultsTable } from '@/components/tables/keyword-results-table'
 import { LoadingState } from '@/components/ui/loading-state'
 import { ErrorState } from '@/components/ui/error-state'
 import { Footer } from '@/components/layout/footer'
-import { SavedSearchesList } from '@/components/saved-searches/saved-searches-list'
-import { SaveSearchModal } from '@/components/saved-searches/save-search-modal'
 import { exportToCSV } from '@/lib/utils/csv-export'
 import { fetchWithCsrf } from '@/lib/utils/csrf'
 import { getErrorMessageFromResponse } from '@/lib/utils/error-messages'
@@ -19,6 +18,29 @@ import type {
   KeywordSearchResponse,
 } from '@/types/keyword'
 import type { SavedSearchParams, SavedSearch } from '@/types/saved-search'
+
+// PERF-014: Dynamic import for authenticated-only components to reduce initial bundle
+const SavedSearchesList = dynamic(
+  () =>
+    import('@/components/saved-searches/saved-searches-list')
+      .then(mod => mod.SavedSearchesList)
+      .catch(err => {
+        console.error('Failed to load SavedSearchesList component:', err)
+        return () => null
+      }),
+  { ssr: false }
+)
+
+const SaveSearchModal = dynamic(
+  () =>
+    import('@/components/saved-searches/save-search-modal')
+      .then(mod => mod.SaveSearchModal)
+      .catch(err => {
+        console.error('Failed to load SaveSearchModal component:', err)
+        return () => null
+      }),
+  { ssr: false }
+)
 
 export default function SearchPage() {
   const { isSignedIn } = useAuth()

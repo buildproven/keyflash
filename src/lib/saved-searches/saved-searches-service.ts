@@ -64,6 +64,16 @@ class SavedSearchesService {
     return this.isConfigured && this.client !== null
   }
 
+  /**
+   * Get Redis client, throwing if unavailable
+   * Assumes isAvailable() has already been checked
+   * @private
+   */
+  private getClient(): Redis {
+    // This should only be called after isAvailable() check
+    return this.client!
+  }
+
   private getSearchKey(clerkUserId: string, searchId: string): string {
     return `${SAVED_SEARCH_PREFIX}${clerkUserId}:${searchId}`
   }
@@ -82,13 +92,14 @@ class SavedSearchesService {
     }
 
     try {
+      const client = this.getClient()
       const indexKey = this.getIndexKey(clerkUserId)
       const searchId = generateSearchId()
       const searchKey = this.getSearchKey(clerkUserId, searchId)
 
       // SEC-012 FIX: Add FIRST, then check count (prevents TOCTOU race)
       // This prevents concurrent requests from bypassing the quota
-      const addResult = await this.client!.sadd(indexKey, searchId)
+      const addResult = await client.sadd(indexKey, searchId)
 
       if (addResult === 0) {
         // ID already existed (extremely unlikely with UUID)
@@ -101,10 +112,10 @@ class SavedSearchesService {
       }
 
       // Check count AFTER adding atomically
-      const currentCount = await this.client!.scard(indexKey)
+      const currentCount = await client.scard(indexKey)
       if (currentCount > MAX_SAVED_SEARCHES_PER_USER) {
         // Rollback: remove the search we just added
-        await this.client!.srem(indexKey, searchId)
+        await client.srem(indexKey, searchId)
         logger.warn('User exceeded saved searches limit (rolled back)', {
           module: 'SavedSearchesService',
           clerkUserId,
@@ -131,7 +142,7 @@ class SavedSearchesService {
       }
 
       // Store the search data
-      await this.client!.set(searchKey, savedSearch, { ex: SAVED_SEARCH_TTL })
+      await client.set(searchKey, savedSearch, { ex: SAVED_SEARCH_TTL })
 
       logger.info('Created saved search', {
         module: 'SavedSearchesService',
@@ -161,7 +172,8 @@ class SavedSearchesService {
     }
 
     try {
-      const raw = await this.client!.get<SavedSearch>(
+      const client = this.getClient()
+      const raw = await client.get<SavedSearch>(
         this.getSearchKey(clerkUserId, searchId)
       )
       if (!raw) {
@@ -169,7 +181,8 @@ class SavedSearchesService {
       }
 
       // Runtime validation to ensure data integrity
-      return SavedSearchSchema.parse(raw) as SavedSearch
+      const validated = SavedSearchSchema.parse(raw)
+      return validated as SavedSearch
     } catch (error) {
       logger.error('Failed to get saved search', error, {
         module: 'SavedSearchesService',
@@ -188,9 +201,8 @@ class SavedSearchesService {
     }
 
     try {
-      const searchIds = await this.client!.smembers(
-        this.getIndexKey(clerkUserId)
-      )
+      const client = this.getClient()
+      const searchIds = await client.smembers(this.getIndexKey(clerkUserId))
 
       if (searchIds.length === 0) return []
 
@@ -198,7 +210,7 @@ class SavedSearchesService {
       const keys = searchIds.map(id =>
         this.getSearchKey(clerkUserId, String(id))
       )
-      const searches = await this.client!.mget<SavedSearch[]>(...keys)
+      const searches = await client.mget<SavedSearch[]>(...keys)
 
       const summaries: SavedSearchSummary[] = []
 
@@ -258,13 +270,10 @@ class SavedSearchesService {
         },
       }
 
-      await this.client!.set(
-        this.getSearchKey(clerkUserId, searchId),
-        updated,
-        {
-          ex: SAVED_SEARCH_TTL,
-        }
-      )
+      const client = this.getClient()
+      await client.set(this.getSearchKey(clerkUserId, searchId), updated, {
+        ex: SAVED_SEARCH_TTL,
+      })
 
       logger.info('Updated saved search', {
         module: 'SavedSearchesService',
@@ -301,11 +310,9 @@ class SavedSearchesService {
     }
 
     try {
+      const client = this.getClient()
       // FIX-019: Check SREM return value to verify search existed
-      const removed = await this.client!.srem(
-        this.getIndexKey(clerkUserId),
-        searchId
-      )
+      const removed = await client.srem(this.getIndexKey(clerkUserId), searchId)
 
       if (removed === 0) {
         // Search was not in the index - it doesn't exist
@@ -313,7 +320,7 @@ class SavedSearchesService {
       }
 
       // Delete the search data
-      await this.client!.del(this.getSearchKey(clerkUserId, searchId))
+      await client.del(this.getSearchKey(clerkUserId, searchId))
 
       logger.info('Deleted saved search', {
         module: 'SavedSearchesService',
@@ -353,13 +360,10 @@ class SavedSearchesService {
         },
       }
 
-      await this.client!.set(
-        this.getSearchKey(clerkUserId, searchId),
-        updated,
-        {
-          ex: SAVED_SEARCH_TTL,
-        }
-      )
+      const client = this.getClient()
+      await client.set(this.getSearchKey(clerkUserId, searchId), updated, {
+        ex: SAVED_SEARCH_TTL,
+      })
 
       return true
     } catch (error) {

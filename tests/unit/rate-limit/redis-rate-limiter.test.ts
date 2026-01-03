@@ -9,7 +9,10 @@ const mockRedis = {
   ping: vi.fn().mockResolvedValue('PONG'),
   keys: vi.fn().mockResolvedValue([]),
   scan: vi.fn().mockResolvedValue(['0', []]), // [cursor, keys]
-  // New atomic operations for race-condition-free rate limiting
+  // PERF-013: Lua script for atomic rate limiting
+  // Returns: [newCount, ttlSeconds]
+  eval: vi.fn(),
+  // Legacy methods (kept for backwards compatibility in other tests)
   ttl: vi.fn(),
   incr: vi.fn(),
   expire: vi.fn(),
@@ -47,10 +50,9 @@ describe('RedisRateLimiter', () => {
     process.env.RATE_LIMIT_TRUST_PROXY = 'true'
 
     // Set up default mock behaviors for atomic operations
-    // Default: key doesn't exist (new rate limit window)
-    mockRedis.ttl.mockResolvedValue(-2) // Key doesn't exist
-    mockRedis.incr.mockResolvedValue(1) // First increment returns 1
-    mockRedis.expire.mockResolvedValue(true) // Expiry set successfully
+    // PERF-013: Lua script returns [newCount, ttlSeconds]
+    // Default: first request in new window
+    mockRedis.eval.mockResolvedValue([1, 3600]) // New window, count=1, TTL=1 hour
 
     rateLimiter = new RedisRateLimiter()
   })
@@ -78,7 +80,10 @@ describe('RedisRateLimiter', () => {
       await rateLimiter.checkRateLimit(request, config)
 
       // Should use CF-Connecting-IP in the key (hash truncated to 8 chars)
-      expect(mockRedis.incr).toHaveBeenCalledWith(
+      // PERF-013: Lua script is called with key via eval
+      expect(mockRedis.eval).toHaveBeenCalled()
+      const evalCall = mockRedis.eval.mock.calls[0]
+      expect(evalCall[1][0]).toBe(
         expect.stringMatching(/^rate:1\.2\.3\.4:mockedha$/)
       )
     })

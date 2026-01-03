@@ -237,8 +237,7 @@ export class RedisRateLimiter {
           clientId,
           config,
           windowMs,
-          now,
-          resetTime
+          now
         )
       } else {
         // Fallback to in-memory for development (single-threaded, so no race condition)
@@ -338,54 +337,68 @@ export class RedisRateLimiter {
   }
 
   /**
-   * Atomic rate limiting using Redis INCR operations to prevent race conditions
-   * Uses individual atomic operations since Upstash doesn't support pipeline()
+   * PERF-013 FIX: Atomic rate limiting using Lua script
+   * Eliminates race condition between TTL check, INCR, and EXPIRE
+   * All operations execute atomically in a single Redis call
    */
   private async checkRateLimitAtomically(
     clientId: string,
     config: RateLimitConfig,
     windowMs: number,
-    now: number,
-    resetTime: number
+    now: number
   ): Promise<RateLimitResult> {
     const key = `rate:${clientId}`
+    const windowSeconds = Math.ceil(windowMs / 1000)
 
-    // Get current TTL to check if key exists
-    const ttl = await this.redis!.ttl(key)
+    // Lua script for atomic rate limiting
+    // Returns: [newCount, ttlSeconds]
+    const luaScript = `
+      local key = KEYS[1]
+      local window_seconds = tonumber(ARGV[1])
 
-    // If TTL is -2 (key doesn't exist) or -1 (no expiry), it's a new window
-    if (ttl <= 0) {
-      // First request in window - atomically increment and set expiration
-      const newCount = await this.redis!.incr(key)
-      if (newCount === 1) {
-        // Only set expiration if this is truly the first increment
-        await this.redis!.expire(key, Math.ceil(windowMs / 1000))
-      }
+      -- Get current value and TTL
+      local current = redis.call('GET', key)
+      local ttl = redis.call('TTL', key)
 
-      return {
-        allowed: true,
-        remaining: Math.max(0, config.requestsPerHour - newCount),
-        resetAt: new Date(resetTime),
-      }
-    }
+      -- If key doesn't exist or expired, start new window
+      if current == false or ttl <= 0 then
+        redis.call('SET', key, 1, 'EX', window_seconds)
+        return {1, window_seconds}
+      end
 
-    // Key exists with TTL - atomically increment
-    const newCount = await this.redis!.incr(key)
+      -- Increment existing counter
+      local new_count = redis.call('INCR', key)
 
-    // Check if limit exceeded after increment
+      -- Get remaining TTL
+      local remaining_ttl = redis.call('TTL', key)
+
+      return {new_count, remaining_ttl}
+    `
+
+    // Execute Lua script atomically via Redis eval (not JavaScript eval)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (await (this.redis as any).eval(
+      luaScript,
+      [key],
+      [windowSeconds]
+    )) as [number, number]
+
+    const [newCount, ttlSeconds] = result
+
+    // Check if limit exceeded
     if (newCount > config.requestsPerHour) {
       return {
         allowed: false,
         remaining: 0,
-        resetAt: new Date(now + ttl * 1000),
-        retryAfter: ttl,
+        resetAt: new Date(now + ttlSeconds * 1000),
+        retryAfter: ttlSeconds,
       }
     }
 
     return {
       allowed: true,
-      remaining: config.requestsPerHour - newCount,
-      resetAt: new Date(now + ttl * 1000),
+      remaining: Math.max(0, config.requestsPerHour - newCount),
+      resetAt: new Date(now + ttlSeconds * 1000),
     }
   }
 

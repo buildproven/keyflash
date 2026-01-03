@@ -100,6 +100,16 @@ class RedisCache {
   }
 
   /**
+   * Get Redis client, throwing if unavailable
+   * Assumes isAvailable() has already been checked
+   * @private
+   */
+  private getClient(): Redis {
+    // This should only be called after isAvailable() check
+    return this.client!
+  }
+
+  /**
    * Generate cache key for keyword search
    * Format: kw:{location}:{language}:{matchType}:{hash}
    */
@@ -139,7 +149,8 @@ class RedisCache {
     }
 
     try {
-      const cached = await this.client!.get<CachedKeywordData>(key)
+      const client = this.getClient()
+      const cached = await client.get<CachedKeywordData>(key)
       return cached
     } catch (error) {
       const opError = new RedisOperationError('Failed to get from cache', 'get')
@@ -181,7 +192,8 @@ class RedisCache {
     }
 
     try {
-      await this.client!.set(key, cacheData, { ex: cacheTTL })
+      const client = this.getClient()
+      await client.set(key, cacheData, { ex: cacheTTL })
       return true
     } catch (error) {
       const opError = new RedisOperationError('Failed to set cache', 'set')
@@ -196,15 +208,31 @@ class RedisCache {
 
   /**
    * Get raw cached data (for non-KeywordData types)
+   * @param key - Cache key
+   * @param validate - Optional validation function to ensure type safety
    */
-  async getRaw<T>(key: string): Promise<T | null> {
+  async getRaw<T>(
+    key: string,
+    validate?: (data: unknown) => T
+  ): Promise<T | null> {
     if (!this.isAvailable()) {
       return null
     }
 
     try {
-      const cached = await this.client!.get<T>(key)
-      return cached
+      const client = this.getClient()
+      const cached = await client.get<unknown>(key)
+
+      if (!cached) {
+        return null
+      }
+
+      // If validation function provided, use it to ensure type safety
+      if (validate) {
+        return validate(cached)
+      }
+
+      return cached as T
     } catch (error) {
       const opError = new RedisOperationError(
         'Failed to get raw from cache',
@@ -230,7 +258,8 @@ class RedisCache {
     const cacheTTL = ttl || this.defaultTTL
 
     try {
-      await this.client!.set(key, data, { ex: cacheTTL })
+      const client = this.getClient()
+      await client.set(key, data, { ex: cacheTTL })
       return true
     } catch (error) {
       const opError = new RedisOperationError(
@@ -255,7 +284,8 @@ class RedisCache {
     }
 
     try {
-      await this.client!.del(key)
+      const client = this.getClient()
+      await client.del(key)
       return true
     } catch (error) {
       const opError = new RedisOperationError(
@@ -280,7 +310,8 @@ class RedisCache {
     }
 
     try {
-      await this.client!.flushdb()
+      const client = this.getClient()
+      await client.flushdb()
       return true
     } catch (error) {
       const opError = new RedisOperationError('Failed to flush cache', 'flush')
@@ -303,13 +334,13 @@ class RedisCache {
     }
 
     try {
+      const client = this.getClient()
       let cursor = '0'
       let totalDeleted = 0
-      const keysToDelete: string[] = []
 
-      // Scan in batches to avoid blocking Redis
+      // Scan and delete in streaming fashion to avoid OOM with millions of keys
       do {
-        const result = await this.client!.scan(cursor, {
+        const result = await client.scan(cursor, {
           match: 'kw:*',
           count: 100, // Process 100 keys at a time
         })
@@ -317,22 +348,12 @@ class RedisCache {
         cursor = result[0]
         const keys = result[1]
 
+        // Delete keys immediately in this scan iteration (streaming delete)
         if (keys.length > 0) {
-          keysToDelete.push(...keys)
+          await client.del(...keys)
+          totalDeleted += keys.length
         }
       } while (cursor !== '0')
-
-      if (keysToDelete.length === 0) {
-        return 0
-      }
-
-      // Delete in batches to avoid command size limits
-      const batchSize = 100
-      for (let i = 0; i < keysToDelete.length; i += batchSize) {
-        const batch = keysToDelete.slice(i, i + batchSize)
-        await this.client!.del(...batch)
-        totalDeleted += batch.length
-      }
 
       logger.info(`Purged ${totalDeleted} keyword cache entries`, {
         module: 'RedisCache',
@@ -360,7 +381,8 @@ class RedisCache {
     }
 
     try {
-      const result = await this.client!.ping()
+      const client = this.getClient()
+      const result = await client.ping()
       return result === 'PONG'
     } catch (error) {
       const opError = new RedisOperationError('Ping failed', 'ping')

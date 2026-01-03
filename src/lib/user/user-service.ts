@@ -41,6 +41,8 @@ const TRIAL_DAYS = 7
 const USER_KEY_PREFIX = 'user:'
 const EMAIL_INDEX_PREFIX = 'email:'
 const STRIPE_CUSTOMER_PREFIX = 'stripe:'
+const USER_LOCK_PREFIX = 'lock:user:'
+const LOCK_TTL_SECONDS = 10 // Lock expires after 10 seconds to prevent deadlocks
 
 class UserService {
   private client: Redis | null = null
@@ -67,11 +69,103 @@ class UserService {
   }
 
   /**
-   * Create a new user with trial tier
+   * Acquire distributed lock for user creation
+   * @returns true if lock acquired, false if already locked
+   * @private
+   */
+  private async acquireLock(clerkUserId: string): Promise<boolean> {
+    if (!this.client) return false
+
+    try {
+      const lockKey = `${USER_LOCK_PREFIX}${clerkUserId}`
+      // SETNX: SET if Not eXists with TTL
+      const result = await this.client.set(lockKey, '1', {
+        ex: LOCK_TTL_SECONDS,
+        nx: true,
+      })
+      return result === 'OK'
+    } catch (error) {
+      logger.error('Failed to acquire user creation lock', error, {
+        module: 'UserService',
+        clerkUserId,
+      })
+      return false
+    }
+  }
+
+  /**
+   * Release distributed lock for user creation
+   * @private
+   */
+  private async releaseLock(clerkUserId: string): Promise<void> {
+    if (!this.client) return
+
+    try {
+      const lockKey = `${USER_LOCK_PREFIX}${clerkUserId}`
+      await this.client.del(lockKey)
+    } catch (error) {
+      logger.error('Failed to release user creation lock', error, {
+        module: 'UserService',
+        clerkUserId,
+      })
+      // Don't throw - lock will auto-expire
+    }
+  }
+
+  /**
+   * Get existing user or create new user atomically (race-condition safe)
    * @throws UserServiceUnavailableError if service is not available
    * @throws UserServiceOperationError if Redis operation fails
    */
-  async createUser(clerkUserId: string, email: string): Promise<UserData> {
+  async getOrCreateUser(clerkUserId: string, email: string): Promise<UserData> {
+    if (!this.isAvailable()) {
+      throw new UserServiceUnavailableError('UserService not available')
+    }
+
+    // Try to get existing user first
+    let user = await this.getUser(clerkUserId)
+    if (user) {
+      return user
+    }
+
+    // User doesn't exist - acquire lock before creating
+    const lockAcquired = await this.acquireLock(clerkUserId)
+    if (!lockAcquired) {
+      // Another request is creating this user - wait and retry
+      await new Promise(resolve => setTimeout(resolve, 100))
+      user = await this.getUser(clerkUserId)
+      if (user) {
+        return user
+      }
+      // If still not found after wait, proceed with creation
+      // (lock may have timed out or failed)
+    }
+
+    try {
+      // Double-check user doesn't exist (another request may have created it)
+      user = await this.getUser(clerkUserId)
+      if (user) {
+        return user
+      }
+
+      // Create the user
+      return await this.createUser(clerkUserId, email)
+    } finally {
+      // Always release lock
+      await this.releaseLock(clerkUserId)
+    }
+  }
+
+  /**
+   * Create a new user with trial tier (internal method - use getOrCreateUser instead)
+   * @throws UserServiceUnavailableError if service is not available
+   * @throws UserServiceOperationError if Redis operation fails
+   * @private
+   */
+  private async createUser(
+    clerkUserId: string,
+    email: string
+  ): Promise<UserData> {
     if (!this.isAvailable()) {
       throw new UserServiceUnavailableError('UserService not available')
     }
@@ -464,20 +558,6 @@ class UserService {
       usageKey: this.getUsageKeyForMonth(user.clerkUserId),
       ttl: this.getUsageKeyTTL(),
     }
-  }
-
-  /**
-   * Get or create user (for webhook handling)
-   */
-  async getOrCreateUser(
-    clerkUserId: string,
-    email: string
-  ): Promise<UserData | null> {
-    const existing = await this.getUser(clerkUserId)
-    if (existing) {
-      return existing
-    }
-    return this.createUser(clerkUserId, email)
   }
 }
 

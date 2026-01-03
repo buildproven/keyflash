@@ -7,6 +7,10 @@ import {
   UserServiceUnavailableError,
   UserServiceOperationError,
 } from '@/lib/user/user-service'
+import {
+  StripeCheckoutSessionSchema,
+  StripeSubscriptionSchema,
+} from '@/lib/validation/domain-schemas'
 
 // FIX-005: Custom error for infrastructure failures that should trigger retry
 class InfrastructureError extends Error {
@@ -66,7 +70,7 @@ async function isEventProcessed(eventId: string): Promise<boolean> {
 }
 
 /**
- * Mark a webhook event as processed
+ * Mark a webhook event as processed (optimistic locking)
  * @throws InfrastructureError if Redis unavailable or operation fails
  */
 async function markEventProcessed(eventId: string): Promise<void> {
@@ -79,6 +83,25 @@ async function markEventProcessed(eventId: string): Promise<void> {
   await redis.set(`${WEBHOOK_EVENT_PREFIX}${eventId}`, '1', {
     ex: WEBHOOK_EVENT_TTL_SECONDS,
   })
+}
+
+/**
+ * Delete processed mark (rollback for failed processing)
+ * Used when business logic fails and we want Stripe to retry
+ */
+async function deleteEventProcessedMark(eventId: string): Promise<void> {
+  const redis = getWebhookRedis()
+  if (!redis) return // Can't rollback if Redis unavailable
+
+  try {
+    await redis.del(`${WEBHOOK_EVENT_PREFIX}${eventId}`)
+  } catch (error) {
+    logger.error('Failed to delete webhook processed mark', error, {
+      eventId,
+      module: 'StripeWebhook',
+    })
+    // Don't throw - this is a rollback operation
+  }
 }
 
 // FIX-007: Helper to safely extract customer ID from Stripe objects
@@ -152,38 +175,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true, duplicate: true })
   }
 
+  // SEC-011 FIX: Mark event as processed BEFORE business logic (optimistic locking)
+  // This prevents duplicate processing if Redis fails during business logic
+  await markEventProcessed(event.id)
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        await handleCheckoutCompleted(session)
+        // TYPE-001 FIX: Validate with Zod instead of type assertion
+        const session = StripeCheckoutSessionSchema.parse(event.data.object)
+        await handleCheckoutCompleted(
+          session as unknown as Stripe.Checkout.Session
+        )
         break
       }
 
       case 'customer.subscription.created': {
-        const subscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionCreated(subscription)
+        // TYPE-001 FIX: Validate with Zod instead of type assertion
+        const subscription = StripeSubscriptionSchema.parse(event.data.object)
+        await handleSubscriptionCreated(
+          subscription as unknown as Stripe.Subscription
+        )
         break
       }
 
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionUpdated(subscription)
+        // TYPE-001 FIX: Validate with Zod instead of type assertion
+        const subscription = StripeSubscriptionSchema.parse(event.data.object)
+        await handleSubscriptionUpdated(
+          subscription as unknown as Stripe.Subscription
+        )
         break
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionDeleted(subscription)
+        // TYPE-001 FIX: Validate with Zod instead of type assertion
+        const subscription = StripeSubscriptionSchema.parse(event.data.object)
+        await handleSubscriptionDeleted(
+          subscription as unknown as Stripe.Subscription
+        )
         break
       }
 
       default:
         logger.info('Unhandled webhook event type', { type: event.type })
     }
-
-    // Mark event as processed for idempotency
-    await markEventProcessed(event.id)
 
     return NextResponse.json({ received: true })
   } catch (err) {
@@ -195,6 +231,9 @@ export async function POST(request: NextRequest) {
       err instanceof UserServiceUnavailableError ||
       err instanceof UserServiceOperationError
     ) {
+      // SEC-011 FIX: Delete processed mark so Stripe can retry
+      await deleteEventProcessedMark(event.id)
+
       logger.error('Stripe webhook infrastructure error (will retry)', {
         type: event.type,
         error: message,

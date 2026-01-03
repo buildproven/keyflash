@@ -56,3 +56,73 @@ export const SavedSearchSchema = z.object({
     resultCount: z.number().int().min(0).optional(),
   }),
 })
+
+/**
+ * TYPE-001 FIX: Runtime validation schemas for Stripe webhook events
+ * Ensures type safety and prevents runtime errors from unexpected Stripe API changes
+ */
+
+// Stripe Customer schema (can be string ID, object, or deleted object)
+const StripeCustomerSchema = z.union([
+  z.string(), // Customer ID
+  z.object({
+    id: z.string(),
+    email: z.string().nullable().optional(),
+  }),
+  z.object({
+    id: z.string(),
+    deleted: z.literal(true),
+  }),
+])
+
+// Stripe Checkout Session schema
+export const StripeCheckoutSessionSchema = z.object({
+  id: z.string(),
+  object: z.literal('checkout.session'),
+  customer: StripeCustomerSchema.nullable(),
+  subscription: z.union([z.string(), z.null()]), // Subscription ID or null
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  payment_status: z.string().optional(),
+  status: z.string().optional(),
+})
+
+// Stripe Subscription schema
+export const StripeSubscriptionSchema = z.object({
+  id: z.string(),
+  object: z.literal('subscription'),
+  customer: StripeCustomerSchema,
+  status: z.enum([
+    'active',
+    'canceled',
+    'incomplete',
+    'incomplete_expired',
+    'past_due',
+    'trialing',
+    'unpaid',
+  ]),
+  items: z
+    .object({
+      data: z.array(
+        z.object({
+          id: z.string(),
+          price: z.object({
+            id: z.string(),
+          }),
+        })
+      ),
+    })
+    .optional(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+  current_period_end: z.number().optional(),
+  cancel_at_period_end: z.boolean().optional(),
+})
+
+// Stripe Invoice schema (for future use)
+export const StripeInvoiceSchema = z.object({
+  id: z.string(),
+  object: z.literal('invoice'),
+  customer: StripeCustomerSchema,
+  subscription: z.union([z.string(), z.null()]),
+  status: z.enum(['draft', 'open', 'paid', 'uncollectible', 'void']).nullable(),
+  metadata: z.record(z.string(), z.string()).nullable().optional(),
+})

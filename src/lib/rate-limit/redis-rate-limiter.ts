@@ -123,17 +123,16 @@ export class RedisRateLimiter {
     // Create HMAC of user-agent to make spoofing more difficult
     const hmacKey = process.env.RATE_LIMIT_HMAC_SECRET
 
-    // In production, require HMAC secret for security
-    if (this.isProduction && !hmacKey) {
+    // SEC-013 FIX: Require HMAC secret in ALL environments for security
+    // Removed insecure fallback - attackers could pre-compute client IDs
+    if (!hmacKey) {
       throw this.createConfigError(
-        'RATE_LIMIT_HMAC_SECRET missing in production; rate limiting cannot safely identify clients.'
+        'RATE_LIMIT_HMAC_SECRET required in all environments; rate limiting cannot safely identify clients without it.'
       )
     }
 
-    // Use fallback only in development
-    const effectiveKey = hmacKey || 'dev-only-insecure-fallback'
     const userAgentHash = crypto
-      .createHmac('sha256', effectiveKey)
+      .createHmac('sha256', hmacKey)
       .update(userAgent)
       .digest('hex')
       .substring(0, 8) // First 8 chars for brevity

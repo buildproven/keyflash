@@ -111,18 +111,14 @@ export async function POST(request: NextRequest) {
     let useMockData = true // Default: unauthenticated users get mock data
 
     if (userId) {
-      // Get user from database (or create if new)
-      let user = await userService.getUser(userId)
+      // Get email from Clerk session
+      const sessionClaims = authResult.sessionClaims as
+        | { email?: string }
+        | undefined
+      const email = sessionClaims?.email || `${userId}@keyflash.local`
 
-      // Create user on first access
-      if (!user) {
-        // Get email from Clerk session
-        const sessionClaims = authResult.sessionClaims as
-          | { email?: string }
-          | undefined
-        const email = sessionClaims?.email || `${userId}@keyflash.local`
-        user = await userService.createUser(userId, email)
-      }
+      // Get user from database (or create if new) - race-condition safe
+      const user = await userService.getOrCreateUser(userId, email)
 
       if (user) {
         // Check keyword limit
@@ -220,9 +216,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Track keyword usage for authenticated users
+    // PERF-010 FIX: Track keyword usage in background (fire-and-forget)
+    // Don't block the request if usage tracking fails
     if (userId) {
-      await userService.incrementKeywordUsage(userId, validated.keywords.length)
+      userService
+        .incrementKeywordUsage(userId, validated.keywords.length)
+        .catch(err => {
+          logger.error('Failed to track keyword usage (non-blocking)', err, {
+            module: 'KeywordSearch',
+            userId,
+            keywordCount: validated.keywords.length,
+          })
+        })
     }
 
     // Determine provider name and mock status

@@ -15,6 +15,23 @@ vi.mock('@/lib/user/user-service', async importOriginal => {
     userService: {
       getUser: vi.fn(() => Promise.resolve(null)),
       createUser: vi.fn(() => Promise.resolve(null)),
+      getOrCreateUser: vi.fn(() =>
+        Promise.resolve({
+          clerkUserId: 'test-user',
+          email: 'test@example.com',
+          tier: 'trial',
+          trialStartedAt: new Date().toISOString(),
+          trialExpiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          keywordsUsedThisMonth: 0,
+          monthlyResetAt: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+      ),
       checkKeywordLimit: vi.fn(() =>
         Promise.resolve({ allowed: true, used: 0, limit: 300, tier: 'trial' })
       ),

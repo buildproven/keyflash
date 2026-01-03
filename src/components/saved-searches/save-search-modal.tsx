@@ -141,7 +141,7 @@ export function SaveSearchModal({
           </h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="rounded-lg p-1 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Close modal"
           >
             <svg

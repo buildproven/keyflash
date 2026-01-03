@@ -216,18 +216,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // PERF-010 FIX: Track keyword usage in background (fire-and-forget)
-    // Don't block the request if usage tracking fails
+    // Track keyword usage (blocking to ensure accurate usage tracking)
+    // If usage tracking fails, the entire request should fail to prevent:
+    // - Inaccurate usage data
+    // - Users exceeding limits without tracking
+    // - Billing discrepancies
     if (userId) {
-      userService
-        .incrementKeywordUsage(userId, validated.keywords.length)
-        .catch(err => {
-          logger.error('Failed to track keyword usage (non-blocking)', err, {
-            module: 'KeywordSearch',
-            userId,
-            keywordCount: validated.keywords.length,
-          })
-        })
+      await userService.incrementKeywordUsage(userId, validated.keywords.length)
     }
 
     // Determine provider name and mock status

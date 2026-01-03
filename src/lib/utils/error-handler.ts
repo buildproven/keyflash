@@ -37,6 +37,8 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
   const timestamp = new Date().toISOString()
   let status = 500
   const headers = new Headers()
+  // Always prevent caching of error responses
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
   type ErrorWithMeta = Error & {
     status?: number
     headers?: Record<string, string>
@@ -180,11 +182,25 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
 }
 
 /**
- * Creates a success response with data
+ * Creates a success response with data and appropriate cache headers
+ * @param data - The response data
+ * @param status - HTTP status code (default: 200)
+ * @param cacheControl - Optional Cache-Control header value
  */
 export function createSuccessResponse<T>(
   data: T,
-  status: number = 200
+  status: number = 200,
+  cacheControl?: string
 ): NextResponse<T> {
-  return NextResponse.json(data, { status })
+  const headers = new Headers()
+
+  // Add cache control headers
+  if (cacheControl) {
+    headers.set('Cache-Control', cacheControl)
+  } else {
+    // Default: prevent caching for API responses (most are user-specific)
+    headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+  }
+
+  return NextResponse.json(data, { status, headers })
 }

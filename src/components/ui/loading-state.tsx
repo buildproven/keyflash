@@ -17,7 +17,7 @@ export function LoadingState() {
       >
         Fetching keyword data...
       </p>
-      <p id="loading-description" className="text-sm text-gray-500">
+      <p id="loading-description" className="text-sm text-gray-600">
         This should take less than 3 seconds
       </p>
       {/* Screen reader only announcement */}

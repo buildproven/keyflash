@@ -29,7 +29,7 @@ export const TrendSparkline = memo(function TrendSparkline({
 }: TrendSparklineProps) {
   const { path, color, trendDirection } = useMemo<TrendSparklineState>(() => {
     if (!trends || trends.length < 2) {
-      return { path: '', color: 'text-gray-500', trendDirection: 'flat' }
+      return { path: '', color: 'text-gray-600', trendDirection: 'flat' }
     }
 
     const volumes = trends.map(t => t.volume)
@@ -83,7 +83,7 @@ export const TrendSparkline = memo(function TrendSparkline({
         className={`flex items-center justify-center ${className}`}
         style={{ width, height }}
       >
-        <span className="text-xs text-gray-500">—</span>
+        <span className="text-xs text-gray-600">—</span>
       </div>
     )
   }
@@ -151,7 +151,7 @@ export const TrendChartExpanded = memo(function TrendChartExpanded({
 
   if (!chartData || chartData.volumes.length < 2) {
     return (
-      <div className={`text-center text-sm text-gray-500 ${className}`}>
+      <div className={`text-center text-sm text-gray-600 ${className}`}>
         No trend data available
       </div>
     )

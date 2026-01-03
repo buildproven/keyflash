@@ -11,6 +11,8 @@ import { Footer } from '@/components/layout/footer'
 import { SavedSearchesList } from '@/components/saved-searches/saved-searches-list'
 import { SaveSearchModal } from '@/components/saved-searches/save-search-modal'
 import { exportToCSV } from '@/lib/utils/csv-export'
+import { fetchWithCsrf } from '@/lib/utils/csrf'
+import { getErrorMessageFromResponse } from '@/lib/utils/error-messages'
 import type {
   KeywordSearchFormData,
   KeywordData,
@@ -54,7 +56,7 @@ export default function SearchPage() {
       }
 
       // Call the API
-      const response = await fetch('/api/keywords', {
+      const response = await fetchWithCsrf('/api/keywords', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,8 +69,8 @@ export default function SearchPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to fetch keyword data')
+        const errorMessage = await getErrorMessageFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       const data: KeywordSearchResponse = await response.json()
@@ -84,6 +86,7 @@ export default function SearchPage() {
         location: formData.location || 'US',
       })
     } catch (err) {
+      // Use error message from API response or fallback to error message
       setError(
         err instanceof Error ? err.message : 'An unexpected error occurred'
       )
@@ -108,7 +111,7 @@ export default function SearchPage() {
         throw new Error('No search to save')
       }
 
-      const response = await fetch('/api/searches', {
+      const response = await fetchWithCsrf('/api/searches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -137,7 +140,8 @@ export default function SearchPage() {
     try {
       const response = await fetch(`/api/searches/${searchId}`)
       if (!response.ok) {
-        throw new Error('Failed to load saved search')
+        const errorMessage = await getErrorMessageFromResponse(response)
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -152,7 +156,7 @@ export default function SearchPage() {
         setCurrentSearchParams(search.searchParams)
       } else {
         // Otherwise, run the search again
-        const keywordsResponse = await fetch('/api/keywords', {
+        const keywordsResponse = await fetchWithCsrf('/api/keywords', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -163,8 +167,9 @@ export default function SearchPage() {
         })
 
         if (!keywordsResponse.ok) {
-          const errorData = await keywordsResponse.json()
-          throw new Error(errorData.message || 'Failed to run search')
+          const errorMessage =
+            await getErrorMessageFromResponse(keywordsResponse)
+          throw new Error(errorMessage)
         }
 
         const keywordsData: KeywordSearchResponse =
@@ -302,7 +307,7 @@ export default function SearchPage() {
                   aria-label="No search results"
                 >
                   <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
+                    className="mx-auto h-12 w-12 text-gray-600"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -318,7 +323,7 @@ export default function SearchPage() {
                   <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                     No results yet
                   </h3>
-                  <p className="mt-2 text-gray-500 dark:text-gray-400">
+                  <p className="mt-2 text-gray-600 dark:text-gray-400">
                     Enter keywords in the form to get started with your research
                   </p>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
+import { fetchWithCsrf } from '@/lib/utils/csrf'
 import type { SavedSearchSummary } from '@/types/saved-search'
 
 interface SavedSearchesListProps {
@@ -48,7 +49,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
       setDeletingId(searchId)
 
       try {
-        const response = await fetch(`/api/searches/${searchId}`, {
+        const response = await fetchWithCsrf(`/api/searches/${searchId}`, {
           method: 'DELETE',
         })
 
@@ -130,7 +131,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
           No saved searches yet
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-500">
+        <p className="text-xs text-gray-600 dark:text-gray-400">
           Run a search and click &quot;Save&quot; to save it
         </p>
       </div>
@@ -157,11 +158,11 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
                   {search.name}
                 </div>
                 {search.description && (
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                  <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
                     {search.description}
                   </p>
                 )}
-                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-1 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                   <span>{search.keywordCount} keywords</span>
                   <span>•</span>
                   <span>{search.location}</span>

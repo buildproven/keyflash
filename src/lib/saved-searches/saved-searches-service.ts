@@ -83,23 +83,11 @@ class SavedSearchesService {
 
     try {
       const indexKey = this.getIndexKey(clerkUserId)
-
-      // Check count BEFORE adding (prevent race condition)
-      const currentCount = await this.client!.scard(indexKey)
-      if (currentCount >= MAX_SAVED_SEARCHES_PER_USER) {
-        logger.warn('User reached saved searches limit', {
-          module: 'SavedSearchesService',
-          clerkUserId,
-          limit: MAX_SAVED_SEARCHES_PER_USER,
-          currentCount,
-        })
-        return null // Business logic: limit exceeded is not an infra error
-      }
-
       const searchId = generateSearchId()
       const searchKey = this.getSearchKey(clerkUserId, searchId)
 
-      // Now add atomically
+      // SEC-012 FIX: Add FIRST, then check count (prevents TOCTOU race)
+      // This prevents concurrent requests from bypassing the quota
       const addResult = await this.client!.sadd(indexKey, searchId)
 
       if (addResult === 0) {
@@ -110,6 +98,20 @@ class SavedSearchesService {
           searchId,
         })
         return null // Business logic: collision is not an infra error
+      }
+
+      // Check count AFTER adding atomically
+      const currentCount = await this.client!.scard(indexKey)
+      if (currentCount > MAX_SAVED_SEARCHES_PER_USER) {
+        // Rollback: remove the search we just added
+        await this.client!.srem(indexKey, searchId)
+        logger.warn('User exceeded saved searches limit (rolled back)', {
+          module: 'SavedSearchesService',
+          clerkUserId,
+          limit: MAX_SAVED_SEARCHES_PER_USER,
+          currentCount,
+        })
+        return null // Business logic: limit exceeded is not an infra error
       }
 
       const now = new Date().toISOString()

@@ -139,26 +139,14 @@ export async function POST(request: NextRequest) {
     if (!brief.mockData) {
       const briefCacheTTL = 24 * 60 * 60 // 1 day in seconds
 
-      const cacheWrite = cache
-        .setRaw(cacheKey, brief, briefCacheTTL)
-        .catch(error => {
-          logger.error('Failed to cache content brief', error, {
-            module: 'Cache',
-            errorId: 'CACHE_WRITE_FAILED',
-            cacheKey,
-          })
+      // Fire-and-forget: cache write runs in background without blocking response
+      cache.setRaw(cacheKey, brief, briefCacheTTL).catch(error => {
+        logger.error('Failed to cache content brief', error, {
+          module: 'Cache',
+          errorId: 'CACHE_WRITE_FAILED',
+          cacheKey,
         })
-
-      const timeout = new Promise(resolve =>
-        setTimeout(() => {
-          logger.warn(`Cache write timeout for content brief key ${cacheKey}`, {
-            module: 'Cache',
-          })
-          resolve(null)
-        }, 150)
-      )
-
-      await Promise.race([cacheWrite, timeout])
+      })
     } else {
       logger.warn('Skipping cache write for mock content brief', {
         module: 'ContentBrief',

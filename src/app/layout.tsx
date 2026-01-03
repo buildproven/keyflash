@@ -71,10 +71,14 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
+          {/* DNS prefetch and preconnect for external services */}
           <link
             rel="preconnect"
             href="https://clean-feline-0.clerk.accounts.dev"
           />
+          <link rel="preconnect" href="https://api.stripe.com" />
+          <link rel="dns-prefetch" href="https://api.dataforseo.com" />
+          <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

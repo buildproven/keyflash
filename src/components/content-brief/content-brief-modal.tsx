@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { fetchWithCsrf } from '@/lib/utils/csrf'
 import type { ContentBrief } from '@/types/content-brief'
 
 interface ContentBriefModalProps {
@@ -89,7 +90,7 @@ export function ContentBriefModal({
     setError(null)
 
     try {
-      const response = await fetch('/api/content-brief', {
+      const response = await fetchWithCsrf('/api/content-brief', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword, location }),
@@ -153,7 +154,7 @@ export function ContentBriefModal({
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Close modal"
           >
             <svg
@@ -224,7 +225,7 @@ export function ContentBriefModal({
                     words (avg)
                   </div>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
                   Range: {brief.recommendedWordCount.min.toLocaleString()} -{' '}
                   {brief.recommendedWordCount.max.toLocaleString()} words
                 </div>
@@ -330,7 +331,7 @@ export function ContentBriefModal({
                     className="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-600">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
                         {result.position}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -342,7 +343,7 @@ export function ContentBriefModal({
                         >
                           {result.title}
                         </a>
-                        <div className="text-xs text-gray-500 dark:text-gray-500">
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
                           {result.domain}
                           {result.wordCount &&
                             ` • ~${result.wordCount.toLocaleString()} words`}

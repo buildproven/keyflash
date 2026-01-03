@@ -43,6 +43,7 @@ const EMAIL_INDEX_PREFIX = 'email:'
 const STRIPE_CUSTOMER_PREFIX = 'stripe:'
 const USER_LOCK_PREFIX = 'lock:user:'
 const LOCK_TTL_SECONDS = 10 // Lock expires after 10 seconds to prevent deadlocks
+const USER_DATA_TTL_SECONDS = 365 * 24 * 60 * 60 // 1 year - inactive accounts auto-expire
 
 class UserService {
   private client: Redis | null = null
@@ -192,13 +193,16 @@ class UserService {
     }
 
     try {
-      // Store user data
-      await this.client!.set(`${USER_KEY_PREFIX}${clerkUserId}`, userData)
+      // Store user data with 1 year TTL (auto-expire inactive accounts)
+      await this.client!.set(`${USER_KEY_PREFIX}${clerkUserId}`, userData, {
+        ex: USER_DATA_TTL_SECONDS,
+      })
 
-      // Create email index for lookup
+      // Create email index for lookup with same TTL
       await this.client!.set(
         `${EMAIL_INDEX_PREFIX}${email.toLowerCase()}`,
-        clerkUserId
+        clerkUserId,
+        { ex: USER_DATA_TTL_SECONDS }
       )
 
       logger.info('User created', {
@@ -238,7 +242,15 @@ class UserService {
       }
 
       // Runtime validation to ensure data integrity
-      return UserDataSchema.parse(raw)
+      const validated = UserDataSchema.parse(raw)
+
+      // Refresh TTL on access (keeps active users' data alive)
+      await this.client!.expire(
+        `${USER_KEY_PREFIX}${clerkUserId}`,
+        USER_DATA_TTL_SECONDS
+      )
+
+      return validated
     } catch (error) {
       logger.error('Failed to get user', error, {
         module: 'UserService',
@@ -340,7 +352,10 @@ class UserService {
         updatedAt: new Date().toISOString(),
       }
 
-      await this.client!.set(`${USER_KEY_PREFIX}${clerkUserId}`, updated)
+      // Refresh TTL on update (keeps active users' data alive)
+      await this.client!.set(`${USER_KEY_PREFIX}${clerkUserId}`, updated, {
+        ex: USER_DATA_TTL_SECONDS,
+      })
 
       // Update Stripe customer index if provided
       if (
@@ -349,7 +364,8 @@ class UserService {
       ) {
         await this.client!.set(
           `${STRIPE_CUSTOMER_PREFIX}${updates.stripeCustomerId}`,
-          clerkUserId
+          clerkUserId,
+          { ex: USER_DATA_TTL_SECONDS }
         )
       }
 

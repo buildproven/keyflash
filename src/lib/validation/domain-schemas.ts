@@ -1,6 +1,34 @@
 import { z } from 'zod'
 
 /**
+ * Runtime validation schema for Monthly Trend data
+ */
+const MonthlyTrendSchema = z.object({
+  month: z.number().int().min(1).max(12),
+  year: z.number().int(),
+  volume: z.number().int().min(0),
+})
+
+/**
+ * Runtime validation schema for KeywordData
+ * Ensures data integrity for cached keyword results
+ */
+export const KeywordDataSchema = z.object({
+  keyword: z.string(),
+  searchVolume: z.number().int().min(0),
+  difficulty: z.number().min(0).max(100),
+  cpc: z.number().min(0),
+  competition: z.enum(['low', 'medium', 'high']),
+  intent: z.enum([
+    'informational',
+    'commercial',
+    'transactional',
+    'navigational',
+  ]),
+  trends: z.array(MonthlyTrendSchema).optional(),
+})
+
+/**
  * Runtime validation schema for UserData retrieved from Redis
  * Ensures data integrity and type safety for user records
  */
@@ -46,9 +74,8 @@ export const SavedSearchSchema = z.object({
     language: z.string().optional(),
     matchType: z.enum(['phrase', 'exact']).optional(),
   }),
-  // Results can be complex and vary by provider, so we validate the structure
-  // but allow flexibility in the actual result data
-  results: z.array(z.any()).optional(),
+  // Validated keyword results with proper schema
+  results: z.array(KeywordDataSchema).optional(),
   metadata: z.object({
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),

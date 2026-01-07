@@ -2,7 +2,7 @@
 
 import React, { memo, useState } from 'react'
 import dynamic from 'next/dynamic'
-import type { KeywordData } from '@/types/keyword'
+import type { KeywordData, Competition } from '@/types/keyword'
 import {
   TrendSparkline,
   TrendChartExpanded,
@@ -14,13 +14,48 @@ const ContentBriefModal = dynamic(
     import('@/components/content-brief/content-brief-modal')
       .then(mod => mod.ContentBriefModal)
       .catch(err => {
-        console.error('Failed to load ContentBriefModal component:', err)
-        // Return a fallback component
-        return () => null
+        console.error(
+          'CRITICAL: Failed to load ContentBriefModal component:',
+          err
+        )
+        // Return error component instead of null to inform user
+        return function ContentBriefModalError({
+          isOpen,
+          onClose,
+        }: {
+          isOpen: boolean
+          onClose: () => void
+        }) {
+          if (!isOpen) return null
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+              onClick={onClose}
+            >
+              <div
+                className="rounded-lg bg-red-50 p-6 dark:bg-red-900/20 max-w-md"
+                role="alert"
+                onClick={e => e.stopPropagation()}
+              >
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Failed to load content brief
+                </p>
+                <p className="mt-1 text-xs text-red-700 dark:text-red-300">
+                  Try refreshing the page. If the problem persists, contact
+                  support.
+                </p>
+                <button
+                  onClick={onClose}
+                  className="mt-4 rounded-lg bg-red-800 px-4 py-2 text-sm text-white hover:bg-red-900"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )
+        }
       }),
-  {
-    ssr: false,
-  }
+  { ssr: false }
 )
 
 const RelatedKeywordsModal = dynamic(
@@ -28,14 +63,72 @@ const RelatedKeywordsModal = dynamic(
     import('@/components/related-keywords/related-keywords-modal')
       .then(mod => mod.RelatedKeywordsModal)
       .catch(err => {
-        console.error('Failed to load RelatedKeywordsModal component:', err)
-        // Return a fallback component
-        return () => null
+        console.error(
+          'CRITICAL: Failed to load RelatedKeywordsModal component:',
+          err
+        )
+        // Return error component instead of null to inform user
+        return function RelatedKeywordsModalError({
+          isOpen,
+          onClose,
+        }: {
+          isOpen: boolean
+          onClose: () => void
+        }) {
+          if (!isOpen) return null
+          return (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+              onClick={onClose}
+            >
+              <div
+                className="rounded-lg bg-red-50 p-6 dark:bg-red-900/20 max-w-md"
+                role="alert"
+                onClick={e => e.stopPropagation()}
+              >
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Failed to load related keywords
+                </p>
+                <p className="mt-1 text-xs text-red-700 dark:text-red-300">
+                  Try refreshing the page. If the problem persists, contact
+                  support.
+                </p>
+                <button
+                  onClick={onClose}
+                  className="mt-4 rounded-lg bg-red-800 px-4 py-2 text-sm text-white hover:bg-red-900"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )
+        }
       }),
-  {
-    ssr: false,
-  }
+  { ssr: false }
 )
+
+function getDifficultyLabel(difficulty: number): string {
+  if (difficulty < 30) return 'Easy'
+  if (difficulty < 70) return 'Medium'
+  return 'Hard'
+}
+
+function getDifficultyColor(difficulty: number): string {
+  if (difficulty < 30) return 'bg-green-500'
+  if (difficulty < 70) return 'bg-yellow-500'
+  return 'bg-red-500'
+}
+
+function getCompetitionStyles(competition: Competition): string {
+  switch (competition) {
+    case 'low':
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    case 'medium':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+    case 'high':
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+  }
+}
 
 interface KeywordResultsTableProps {
   data: KeywordData[]
@@ -204,21 +297,11 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                     <div className="flex items-center">
                       <span className="sr-only">
                         Difficulty: {row.difficulty}/100 -{' '}
-                        {row.difficulty < 30
-                          ? 'Easy'
-                          : row.difficulty < 70
-                            ? 'Medium'
-                            : 'Hard'}
+                        {getDifficultyLabel(row.difficulty)}
                       </span>
                       <div className="mr-2 h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                         <div
-                          className={`h-2 rounded-full ${
-                            row.difficulty < 30
-                              ? 'bg-green-500'
-                              : row.difficulty < 70
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
-                          }`}
+                          className={`h-2 rounded-full ${getDifficultyColor(row.difficulty)}`}
                           style={{ width: `${row.difficulty}%` }}
                           aria-hidden="true"
                         />
@@ -231,13 +314,7 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm">
                     <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold leading-5 ${
-                        row.competition === 'low'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : row.competition === 'medium'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}
+                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold leading-5 ${getCompetitionStyles(row.competition)}`}
                     >
                       {row.competition}
                     </span>

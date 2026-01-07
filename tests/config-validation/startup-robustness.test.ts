@@ -66,9 +66,8 @@ describe('Startup Robustness', () => {
 
       try {
         // Dynamic import to avoid module caching issues
-        const { validateEnvironment } = await import(
-          '../../src/lib/config/env-validation.js'
-        )
+        const { validateEnvironment } =
+          await import('../../src/lib/config/env-validation.js')
         validateEnvironment()
       } catch (error) {
         didThrow = true
@@ -88,9 +87,8 @@ describe('Startup Robustness', () => {
 
       let errorMessage = ''
       try {
-        const { validateEnvironment } = await import(
-          '../../src/lib/config/env-validation.js'
-        )
+        const { validateEnvironment } =
+          await import('../../src/lib/config/env-validation.js')
         validateEnvironment()
       } catch (error) {
         errorMessage = (error as Error).message
@@ -108,9 +106,8 @@ describe('Startup Robustness', () => {
 
       let errorMessage = ''
       try {
-        const { validateEnvironment } = await import(
-          '../../src/lib/config/env-validation.js'
-        )
+        const { validateEnvironment } =
+          await import('../../src/lib/config/env-validation.js')
         validateEnvironment()
       } catch (error) {
         errorMessage = (error as Error).message
@@ -163,9 +160,8 @@ describe('Startup Robustness', () => {
 
       let caughtError = false
       try {
-        const { validateEnvironment } = await import(
-          '../../src/lib/config/env-validation.js'
-        )
+        const { validateEnvironment } =
+          await import('../../src/lib/config/env-validation.js')
         validateEnvironment()
       } catch (error) {
         caughtError = true
@@ -189,9 +185,8 @@ describe('Startup Robustness', () => {
 
       let didThrow = false
       try {
-        const { validateEnvironment } = await import(
-          '../../src/lib/config/env-validation.js'
-        )
+        const { validateEnvironment } =
+          await import('../../src/lib/config/env-validation.js')
         validateEnvironment()
       } catch {
         didThrow = true

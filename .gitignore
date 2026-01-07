@@ -47,3 +47,6 @@ next-env.d.ts
 *.log
 .cache
 .turbo
+
+# clerk configuration (can include secrets)
+/.clerk/

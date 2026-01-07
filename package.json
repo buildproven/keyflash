@@ -39,6 +39,9 @@
     "security:config": "npx create-qa-architect@latest --security-config",
     "lighthouse:ci": "lhci autorun",
     "lighthouse:upload": "lhci upload",
+    "perf:analyze": "bash scripts/analyze-bundle.sh",
+    "perf:audit": "npm run build && npm run lighthouse:ci",
+    "perf:audit:live": "bash scripts/lighthouse-audit.sh",
     "validate:docs": "npx create-qa-architect@latest --validate-docs",
     "validate:comprehensive": "npx create-qa-architect@latest --comprehensive",
     "validate:all": "npm run validate:comprehensive && npm run security:audit",
@@ -58,6 +61,7 @@
     "quality:ci": "npm run quality:check && npm run security:audit"
   },
   "devDependencies": {
+    "@axe-core/cli": "^4.11.0",
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.1.1",
     "@playwright/test": "^1.56.1",

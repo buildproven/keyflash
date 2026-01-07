@@ -119,7 +119,11 @@ export function ContentBriefModal({
     }
 
     if (!brief && !isLoading && !error) {
-      void generateBrief()
+      // FIX: Handle promise rejection explicitly instead of void operator
+      generateBrief().catch(err => {
+        console.error('Unhandled promise rejection in generateBrief:', err)
+        // Error state is already set in generateBrief's catch block
+      })
     }
   }, [brief, error, generateBrief, isLoading, isOpen])
 

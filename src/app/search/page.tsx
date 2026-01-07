@@ -25,8 +25,27 @@ const SavedSearchesList = dynamic(
     import('@/components/saved-searches/saved-searches-list')
       .then(mod => mod.SavedSearchesList)
       .catch(err => {
-        console.error('Failed to load SavedSearchesList component:', err)
-        return () => null
+        console.error(
+          'CRITICAL: Failed to load SavedSearchesList component:',
+          err
+        )
+        // Return error component instead of null to inform user
+        return function SavedSearchesListError() {
+          return (
+            <div
+              className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
+              role="alert"
+            >
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                Failed to load saved searches
+              </p>
+              <p className="mt-1 text-xs text-red-700 dark:text-red-300">
+                Try refreshing the page. If the problem persists, contact
+                support.
+              </p>
+            </div>
+          )
+        }
       }),
   { ssr: false }
 )
@@ -36,8 +55,27 @@ const SaveSearchModal = dynamic(
     import('@/components/saved-searches/save-search-modal')
       .then(mod => mod.SaveSearchModal)
       .catch(err => {
-        console.error('Failed to load SaveSearchModal component:', err)
-        return () => null
+        console.error(
+          'CRITICAL: Failed to load SaveSearchModal component:',
+          err
+        )
+        // Return error component instead of null to inform user
+        return function SaveSearchModalError() {
+          return (
+            <div
+              className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20"
+              role="alert"
+            >
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                Failed to load save dialog
+              </p>
+              <p className="mt-1 text-xs text-red-700 dark:text-red-300">
+                Try refreshing the page. If the problem persists, contact
+                support.
+              </p>
+            </div>
+          )
+        }
       }),
   { ssr: false }
 )
@@ -155,65 +193,84 @@ export default function SearchPage() {
     [currentSearchParams, results]
   )
 
-  const handleLoadSearch = useCallback(async (searchId: string) => {
-    setIsLoading(true)
-    setError(null)
+  const applySearchResults = useCallback(
+    (
+      data: KeywordData[],
+      params: SavedSearchParams,
+      isMock = false,
+      providerName?: string
+    ) => {
+      setResults(data)
+      setMockData(isMock)
+      setProvider(providerName)
+      setSearchLocation(params.location)
+      setCurrentSearchParams(params)
+    },
+    []
+  )
 
-    try {
-      const response = await fetch(`/api/searches/${searchId}`)
+  const fetchKeywordsForParams = useCallback(
+    async (params: SavedSearchParams): Promise<KeywordSearchResponse> => {
+      const response = await fetchWithCsrf('/api/keywords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keywords: params.keywords,
+          matchType: params.matchType,
+          location: params.location,
+        }),
+      })
+
       if (!response.ok) {
         const errorMessage = await getErrorMessageFromResponse(response)
         throw new Error(errorMessage)
       }
 
-      const data = await response.json()
-      const search: SavedSearch = data.search
+      return response.json()
+    },
+    []
+  )
 
-      // If the search has cached results, use them
-      if (search.results && search.results.length > 0) {
-        setResults(search.results)
-        setMockData(false)
-        setProvider(undefined)
-        setSearchLocation(search.searchParams.location)
-        setCurrentSearchParams(search.searchParams)
-      } else {
-        // Otherwise, run the search again
-        const keywordsResponse = await fetchWithCsrf('/api/keywords', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            keywords: search.searchParams.keywords,
-            matchType: search.searchParams.matchType,
-            location: search.searchParams.location,
-          }),
-        })
+  const handleLoadSearch = useCallback(
+    async (searchId: string) => {
+      setIsLoading(true)
+      setError(null)
 
-        if (!keywordsResponse.ok) {
-          const errorMessage =
-            await getErrorMessageFromResponse(keywordsResponse)
+      try {
+        const response = await fetch(`/api/searches/${searchId}`)
+        if (!response.ok) {
+          const errorMessage = await getErrorMessageFromResponse(response)
           throw new Error(errorMessage)
         }
 
-        const keywordsData: KeywordSearchResponse =
-          await keywordsResponse.json()
-        setResults(keywordsData.data)
-        setMockData(keywordsData.mockData || false)
-        setProvider(keywordsData.provider)
-        setSearchLocation(search.searchParams.location)
-        setCurrentSearchParams(search.searchParams)
+        const data = await response.json()
+        const search: SavedSearch = data.search
+
+        if (search.results && search.results.length > 0) {
+          applySearchResults(search.results, search.searchParams)
+        } else {
+          const keywordsData = await fetchKeywordsForParams(search.searchParams)
+          applySearchResults(
+            keywordsData.data,
+            search.searchParams,
+            keywordsData.mockData || false,
+            keywordsData.provider
+          )
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load saved search'
+        )
+      } finally {
+        setIsLoading(false)
       }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load saved search'
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+    },
+    [applySearchResults, fetchKeywordsForParams]
+  )
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="container mx-auto grow px-6 py-12">
+      <main className="container mx-auto grow px-6 py-12">
         {/* Skip Link for Keyboard Navigation */}
         <a
           href="#main-content"
@@ -232,10 +289,10 @@ export default function SearchPage() {
           </Link>
         </nav>
 
-        <main id="main-content" className="mx-auto max-w-6xl">
+        <div id="main-content" className="mx-auto max-w-6xl">
           <header className="mb-6">
             <h1 className="text-4xl font-bold">Keyword Research</h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-gray-700 dark:text-gray-400">
               Research keyword search volume, difficulty, and competition data
             </p>
           </header>
@@ -352,8 +409,8 @@ export default function SearchPage() {
               )}
             </section>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
       <Footer />
 
       {/* Save Search Modal */}

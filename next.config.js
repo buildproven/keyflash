@@ -9,7 +9,21 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
-  // Security headers
+  // Performance: Enable experimental features
+  experimental: {
+    optimizePackageImports: ['@clerk/nextjs', '@upstash/redis', 'zod'],
+    webpackBuildWorker: true,
+  },
+
+  // Performance: Optimize images
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 31536000, // 1 year
+  },
+
+  // Performance: Static asset optimization
   async headers() {
     return [
       {
@@ -64,11 +78,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev", // Next.js + Clerk
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://va.vercel-scripts.com", // Next.js + Clerk + Vercel Analytics
               "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
               "img-src 'self' data: https: https://img.clerk.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev",
+              "connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev https://vitals.vercel-insights.com", // Added Vercel Analytics
               "frame-src 'self' https://*.clerk.accounts.dev", // Clerk auth modals
               "worker-src 'self' blob:", // Clerk service workers
               "frame-ancestors 'none'",
@@ -85,6 +99,27 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-store, max-age=0',
+          },
+        ],
+      },
+      // Performance: Cache static assets aggressively
+      {
+        source:
+          '/(.*).(jpg|jpeg|png|gif|ico|svg|webp|avif|woff|woff2|ttf|otf|eot)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Performance: Cache CSS and JS with revalidation
+      {
+        source: '/(.*).(css|js)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

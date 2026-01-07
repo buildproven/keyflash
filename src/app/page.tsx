@@ -6,13 +6,15 @@ export const dynamic = 'force-static'
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <main className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
       {/* Hero */}
       <div className="mx-auto max-w-3xl px-6 pt-20 pb-16 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
           Keyword Research,
           <br />
-          <span className="text-blue-600">Without the Bloat</span>
+          <span className="text-blue-700 dark:text-blue-400">
+            Without the Bloat
+          </span>
         </h1>
         <p className="mt-6 text-lg text-slate-600 dark:text-slate-300">
           Get search volume, difficulty, CPC, and trends for up to 200 keywords
@@ -25,7 +27,7 @@ export default function Home() {
           >
             Start Free Trial
           </Link>
-          <span className="text-sm text-slate-500 dark:text-slate-400">
+          <span className="text-sm text-slate-600 dark:text-slate-400">
             7 days free, then $29/mo
           </span>
         </div>
@@ -35,20 +37,26 @@ export default function Home() {
       <div className="mx-auto max-w-3xl px-6 pb-16">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-2xl font-bold text-blue-600">200</div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+              200
+            </div>
+            <div className="mt-1 text-sm text-slate-700 dark:text-slate-400">
               Keywords per search
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-2xl font-bold text-blue-600">Real</div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+              Real
+            </div>
+            <div className="mt-1 text-sm text-slate-700 dark:text-slate-400">
               Google data
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-2xl font-bold text-blue-600">7 days</div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+              7 days
+            </div>
+            <div className="mt-1 text-sm text-slate-700 dark:text-slate-400">
               Free trial
             </div>
           </div>
@@ -83,7 +91,7 @@ export default function Home() {
                 <div className="text-sm font-medium text-slate-900 dark:text-white">
                   {feature.title}
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
+                <div className="text-xs text-slate-700 dark:text-slate-400">
                   {feature.desc}
                 </div>
               </div>
@@ -116,6 +124,6 @@ export default function Home() {
       <div className="grow" />
 
       <Footer />
-    </div>
+    </main>
   )
 }

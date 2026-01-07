@@ -124,7 +124,14 @@ export function RelatedKeywordsModal({
     }
 
     if (relatedKeywords.length === 0 && !isLoading && !error) {
-      void fetchRelatedKeywords()
+      // FIX: Handle promise rejection explicitly instead of void operator
+      fetchRelatedKeywords().catch(err => {
+        console.error(
+          'Unhandled promise rejection in fetchRelatedKeywords:',
+          err
+        )
+        // Error state is already set in fetchRelatedKeywords's catch block
+      })
     }
   }, [error, fetchRelatedKeywords, isLoading, isOpen, relatedKeywords.length])
 

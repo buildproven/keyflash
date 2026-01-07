@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { AuthHeaderWrapper } from '@/components/layout/auth-header-wrapper'
+import { WebVitals } from './web-vitals'
 import { getAppUrl } from '@/lib/utils/app-url'
 import './globals.css'
 
@@ -71,22 +72,24 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
-          {/* DNS prefetch and preconnect for external services */}
+          {/* Preconnect only to critical origins used on initial page load */}
           <link
             rel="preconnect"
             href="https://clean-feline-0.clerk.accounts.dev"
+            crossOrigin="anonymous"
           />
-          <link rel="preconnect" href="https://api.stripe.com" />
+          {/* DNS prefetch for non-critical origins */}
+          <link rel="dns-prefetch" href="https://api.stripe.com" />
           <link rel="dns-prefetch" href="https://api.dataforseo.com" />
-          <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
         </head>
         <body className="font-sans antialiased">
+          <WebVitals />
           <AuthHeaderWrapper />
-          <main className="min-h-screen">{children}</main>
+          {children}
         </body>
       </html>
     </ClerkProvider>

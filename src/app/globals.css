@@ -1,19 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
+  /* Use system font stack for better performance (no font downloads) */
   --font-sans:
     system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto,
     'Helvetica Neue', arial, sans-serif;
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
+
+  /* Only define colors actually used in the app - darkened for WCAG AA compliance */
+  --color-primary-600: #0369a1;
+  --color-primary-700: #0c4a6e;
 }
 
 :root {
@@ -30,36 +25,14 @@
   }
 }
 
+/* Remove complex gradients for better paint performance */
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: rgb(var(--background-start-rgb));
   min-height: 100vh;
 }
 
-/* Base heading styles */
-h1 {
-  font-size: 2.25rem; /* text-4xl */
-  line-height: 2.5rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-h2 {
-  font-size: 1.875rem; /* text-3xl */
-  line-height: 2.25rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-h3 {
-  font-size: 1.5rem; /* text-2xl */
-  line-height: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-}
+/* Remove base heading styles - use Tailwind classes directly for better tree-shaking */
 
 /* Accessibility: Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {

@@ -102,7 +102,10 @@ export function KeywordSearchForm({
             {errors.keywordsInput}
           </p>
         )}
-        <p id="keywords-help" className="mt-1 text-sm text-gray-600">
+        <p
+          id="keywords-help"
+          className="mt-1 text-sm text-gray-700 dark:text-gray-400"
+        >
           Enter up to 200 keywords, separated by commas or new lines
         </p>
       </div>
@@ -138,7 +141,10 @@ export function KeywordSearchForm({
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Phrase Match
-              <span id="phrase-description" className="ml-2 text-gray-600">
+              <span
+                id="phrase-description"
+                className="ml-2 text-gray-700 dark:text-gray-400"
+              >
                 (includes variations and related terms)
               </span>
             </span>
@@ -161,7 +167,10 @@ export function KeywordSearchForm({
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Exact Match
-              <span id="exact-description" className="ml-2 text-gray-600">
+              <span
+                id="exact-description"
+                className="ml-2 text-gray-700 dark:text-gray-400"
+              >
                 (exact keyword only)
               </span>
             </span>

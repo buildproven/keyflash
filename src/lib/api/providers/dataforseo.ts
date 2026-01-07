@@ -27,52 +27,103 @@ interface DataForSEOKeywordMetrics {
   }>
 }
 
-interface DataForSEOTask {
-  status_code?: number
-  status_message?: string
-  result?: Array<{
-    keyword?: string
-    // Direct response fields (search_volume/live endpoint)
+interface DataForSEOResultItem {
+  keyword?: string
+  search_volume?: number
+  competition?: string
+  competition_index?: number
+  cpc?: number
+  low_top_of_page_bid?: number
+  high_top_of_page_bid?: number
+  monthly_searches?: Array<{
+    month?: number
+    year?: number
     search_volume?: number
-    competition?: string
-    competition_index?: number
-    cpc?: number
-    low_top_of_page_bid?: number
-    high_top_of_page_bid?: number
+  }>
+  keyword_info?: {
+    keyword?: string
     monthly_searches?: Array<{
       month?: number
       year?: number
       search_volume?: number
     }>
-    // Nested response fields (other endpoints)
-    keyword_info?: {
-      keyword?: string
-      monthly_searches?: Array<{
-        month?: number
-        year?: number
-        search_volume?: number
-      }>
-    }
-    keyword_properties?: {
-      keyword?: string
-      keyword_difficulty?: number
-    }
-    search_volume_info?: {
-      keyword?: string
-      search_volume?: number
-      competition?: number
-      competition_level?: string
-      cpc?: number
-      low_top_of_page_bid?: number
-      high_top_of_page_bid?: number
-    }
-  }>
+  }
+  keyword_properties?: {
+    keyword?: string
+    keyword_difficulty?: number
+  }
+  search_volume_info?: {
+    keyword?: string
+    search_volume?: number
+    competition?: number
+    competition_level?: string
+    cpc?: number
+    low_top_of_page_bid?: number
+    high_top_of_page_bid?: number
+  }
+}
+
+interface DataForSEOTask {
+  status_code?: number
+  status_message?: string
+  result?: DataForSEOResultItem[]
 }
 
 interface DataForSEOResponse {
   status_code?: number
   status_message?: string
   tasks?: DataForSEOTask[]
+}
+
+function getDefaultKeywordData(keyword: string): KeywordData {
+  return {
+    keyword,
+    searchVolume: 0,
+    difficulty: 50,
+    cpc: 0,
+    competition: 'low' as Competition,
+    intent: 'informational' as const,
+  }
+}
+
+function extractKeywordFromResult(result: DataForSEOResultItem): string | null {
+  return (
+    result.keyword ||
+    result.keyword_info?.keyword ||
+    result.keyword_properties?.keyword ||
+    result.search_volume_info?.keyword ||
+    null
+  )
+}
+
+function extractMetricsFromResult(
+  result: DataForSEOResultItem
+): DataForSEOKeywordMetrics {
+  const keyword = extractKeywordFromResult(result) || ''
+  return {
+    keyword,
+    search_volume:
+      result.search_volume ??
+      result.search_volume_info?.search_volume ??
+      result.keyword_info?.monthly_searches?.[0]?.search_volume ??
+      0,
+    competition:
+      result.competition_index ?? result.search_volume_info?.competition,
+    competition_level:
+      result.competition ?? result.search_volume_info?.competition_level,
+    cpc: result.cpc ?? result.search_volume_info?.cpc ?? 0,
+    low_top_of_page_bid:
+      result.low_top_of_page_bid ??
+      result.search_volume_info?.low_top_of_page_bid ??
+      0,
+    high_top_of_page_bid:
+      result.high_top_of_page_bid ??
+      result.search_volume_info?.high_top_of_page_bid ??
+      0,
+    keyword_difficulty: result.keyword_properties?.keyword_difficulty ?? 50,
+    monthly_searches:
+      result.monthly_searches ?? result.keyword_info?.monthly_searches,
+  }
 }
 
 /**
@@ -244,105 +295,55 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     const tasks = response.tasks || []
 
     if (tasks.length === 0) {
-      // No results - return default values for all keywords
-      return requestedKeywords.map(keyword => ({
-        keyword,
-        searchVolume: 0,
-        difficulty: 50,
-        cpc: 0,
-        competition: 'low' as Competition,
-        intent: 'informational' as const,
-      }))
+      return requestedKeywords.map(getDefaultKeywordData)
     }
 
-    const task = tasks[0]
-    const results = task.result || []
+    const results = tasks[0].result || []
+    const metricsMap = this.buildMetricsMap(results)
 
-    // Create a map of results by keyword
-    const resultMap = new Map<string, DataForSEOKeywordMetrics>()
-
-    results.forEach(result => {
-      // Extract keyword from different possible locations
-      const keyword =
-        result.keyword ||
-        result.keyword_info?.keyword ||
-        result.keyword_properties?.keyword ||
-        result.search_volume_info?.keyword
-
-      if (!keyword) return
-
-      // Consolidate metrics - check direct fields first, then nested
-      const metrics: DataForSEOKeywordMetrics = {
-        keyword,
-        search_volume:
-          result.search_volume ??
-          result.search_volume_info?.search_volume ??
-          result.keyword_info?.monthly_searches?.[0]?.search_volume ??
-          0,
-        competition:
-          result.competition_index ?? result.search_volume_info?.competition,
-        competition_level:
-          result.competition ?? result.search_volume_info?.competition_level,
-        cpc: result.cpc ?? result.search_volume_info?.cpc ?? 0,
-        low_top_of_page_bid:
-          result.low_top_of_page_bid ??
-          result.search_volume_info?.low_top_of_page_bid ??
-          0,
-        high_top_of_page_bid:
-          result.high_top_of_page_bid ??
-          result.search_volume_info?.high_top_of_page_bid ??
-          0,
-        keyword_difficulty: result.keyword_properties?.keyword_difficulty ?? 50,
-        monthly_searches:
-          result.monthly_searches ?? result.keyword_info?.monthly_searches,
-      }
-
-      resultMap.set(keyword.toLowerCase(), metrics)
-    })
-
-    // Transform each requested keyword
     return requestedKeywords.map(keyword => {
-      const metrics = resultMap.get(keyword.toLowerCase())
-
+      const metrics = metricsMap.get(keyword.toLowerCase())
       if (!metrics) {
-        // No data found for this keyword - return default values
-        return {
-          keyword,
-          searchVolume: 0,
-          difficulty: 50,
-          cpc: 0,
-          competition: 'low' as Competition,
-          intent: 'informational' as const,
-        }
+        return getDefaultKeywordData(keyword)
       }
-
-      // Extract metrics
-      const searchVolume = metrics.search_volume || 0
-      const difficulty = metrics.keyword_difficulty || 50
-      const cpc = metrics.cpc || 0
-
-      // Map competition level
-      const competition = this.mapCompetition(
-        metrics.competition_level,
-        metrics.competition
-      )
-
-      // Infer intent from metrics
-      const intent = this.inferIntent(searchVolume, cpc, competition)
-
-      // Extract trend data (last 12 months of search volume)
-      const trends = this.extractTrends(metrics.monthly_searches)
-
-      return {
-        keyword,
-        searchVolume,
-        difficulty,
-        cpc,
-        competition,
-        intent,
-        trends,
-      }
+      return this.metricsToKeywordData(keyword, metrics)
     })
+  }
+
+  private buildMetricsMap(
+    results: DataForSEOResultItem[]
+  ): Map<string, DataForSEOKeywordMetrics> {
+    const map = new Map<string, DataForSEOKeywordMetrics>()
+    for (const result of results) {
+      const keyword = extractKeywordFromResult(result)
+      if (keyword) {
+        map.set(keyword.toLowerCase(), extractMetricsFromResult(result))
+      }
+    }
+    return map
+  }
+
+  private metricsToKeywordData(
+    keyword: string,
+    metrics: DataForSEOKeywordMetrics
+  ): KeywordData {
+    const searchVolume = metrics.search_volume || 0
+    const difficulty = metrics.keyword_difficulty || 50
+    const cpc = metrics.cpc || 0
+    const competition = this.mapCompetition(
+      metrics.competition_level,
+      metrics.competition
+    )
+
+    return {
+      keyword,
+      searchVolume,
+      difficulty,
+      cpc,
+      competition,
+      intent: this.inferIntent(searchVolume, cpc, competition),
+      trends: this.extractTrends(metrics.monthly_searches),
+    }
   }
 
   /**
@@ -555,39 +556,35 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     }
 
     const results = tasks[0].result
-    const relatedKeywords: RelatedKeyword[] = []
+    const seedKeywordLower = seedKeyword.toLowerCase()
 
-    results.forEach((result, index) => {
-      const kw =
-        result.keyword ||
-        result.keyword_info?.keyword ||
-        result.search_volume_info?.keyword
+    return results
+      .map((result, index) => {
+        const keyword = extractKeywordFromResult(result)
+        if (!keyword || keyword.toLowerCase() === seedKeywordLower) {
+          return null
+        }
 
-      if (!kw || kw.toLowerCase() === seedKeyword.toLowerCase()) return
+        const metrics = extractMetricsFromResult(result)
+        const searchVolume = metrics.search_volume || 0
+        const cpc = metrics.cpc || 0
+        const competition = this.mapCompetition(
+          metrics.competition_level,
+          metrics.competition
+        )
 
-      const searchVolume = result.search_volume_info?.search_volume || 0
-      const difficulty = result.keyword_properties?.keyword_difficulty || 50
-      const cpc = result.search_volume_info?.cpc || 0
-      const competition = this.mapCompetition(
-        result.search_volume_info?.competition_level,
-        result.search_volume_info?.competition
-      )
-
-      // Calculate relevance based on position in results (higher = more relevant)
-      const relevance = Math.max(0, 100 - index * 3)
-
-      relatedKeywords.push({
-        keyword: kw,
-        searchVolume,
-        difficulty,
-        cpc,
-        competition,
-        intent: this.inferIntent(searchVolume, cpc, competition),
-        relevance,
+        const relatedKeyword: RelatedKeyword = {
+          keyword,
+          searchVolume,
+          difficulty: metrics.keyword_difficulty || 50,
+          cpc,
+          competition,
+          intent: this.inferIntent(searchVolume, cpc, competition),
+          relevance: Math.max(0, 100 - index * 3),
+        }
+        return relatedKeyword
       })
-    })
-
-    // Return top 20 most relevant keywords
-    return relatedKeywords.slice(0, 20)
+      .filter((item): item is RelatedKeyword => item !== null)
+      .slice(0, 20)
   }
 }

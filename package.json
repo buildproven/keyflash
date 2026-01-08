@@ -58,7 +58,22 @@
     "type-check:tests": "tsc --noEmit --project tests/tsconfig.json",
     "type-check:all": "npm run type-check && npm run type-check:tests",
     "quality:check": "npm run type-check:all && npm run lint && npm run test",
-    "quality:ci": "npm run quality:check && npm run security:audit"
+    "quality:ci": "npm run quality:check && npm run security:audit",
+    "python:format": "black .",
+    "python:format:check": "black --check .",
+    "python:lint": "ruff check .",
+    "python:lint:fix": "ruff check --fix .",
+    "python:type-check": "mypy .",
+    "python:quality": "black --check . && ruff check . && isort --check-only . && mypy .",
+    "python:test": "pytest",
+    "test:fast": "vitest run --reporter=basic --coverage=false",
+    "test:medium": "vitest run --reporter=basic --testPathIgnorePatterns=e2e,integration",
+    "test:comprehensive": "vitest run && npm run lint && npm run format:check && npm run security:audit 2>/dev/null || true",
+    "test:smart": "bash scripts/smart-test-strategy.sh",
+    "size": "size-limit",
+    "size:why": "size-limit --why",
+    "test:a11y": "vitest run tests/accessibility.test.js",
+    "test:coverage:check": "vitest run --coverage --coverage.thresholds.lines=70 --coverage.thresholds.functions=70"
   },
   "devDependencies": {
     "@axe-core/cli": "^4.11.0",
@@ -76,6 +91,7 @@
     "@typescript-eslint/parser": "^8.9.0",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.10",
+    "create-qa-architect": "^5.4.3",
     "eslint": "^9.16.0",
     "eslint-config-next": "^16.0.7",
     "eslint-plugin-security": "^3.0.1",
@@ -92,7 +108,12 @@
     "stylelint-config-standard": "^39.0.1",
     "tailwindcss": "^4",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.10"
+    "vitest": "^4.0.10",
+    "size-limit": "^11.0.0",
+    "@size-limit/file": "^11.0.0",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "axe-core": "^4.10.0"
   },
   "lint-staged": {
     "package.json": [
@@ -127,6 +148,17 @@
       "prettier --write"
     ],
     "tests/**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "tsc --noEmit --project tests/tsconfig.json"
+    ],
+    "**/*.py": [
+      "black --check --diff",
+      "ruff check --fix",
+      "isort --check-only --diff"
+    ],
+    "**/*.{ts,tsx}": [
+      "tsc --noEmit --skipLibCheck",
       "eslint --fix",
       "prettier --write"
     ]

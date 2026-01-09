@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { logger } from '@/lib/utils/logger'
 
 // Lazy load auth header to reduce initial bundle size
 const AuthHeader = dynamic(
@@ -8,7 +9,10 @@ const AuthHeader = dynamic(
     import('./auth-header')
       .then(mod => mod.AuthHeader)
       .catch(err => {
-        console.error('CRITICAL: Failed to load AuthHeader component:', err)
+        logger.error('CRITICAL: Failed to load AuthHeader component', err, {
+          module: 'AuthHeaderWrapper',
+          errorId: 'COMPONENT_LOAD_FAILED',
+        })
         // Return error component instead of null to inform user
         return function AuthHeaderError() {
           return (

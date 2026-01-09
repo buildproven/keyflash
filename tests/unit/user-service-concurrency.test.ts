@@ -12,9 +12,11 @@ const mockRedis = {
   incrby: vi.fn(),
 }
 
-// Mock @upstash/redis module
+// Mock @upstash/redis module - use function implementation to avoid Vitest warning
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(() => mockRedis),
+  Redis: vi.fn().mockImplementation(function MockRedis() {
+    return mockRedis
+  }),
 }))
 
 // Set environment variables for tests
@@ -203,6 +205,7 @@ describe('User Service Concurrency', () => {
       const email = 'race001@example.com'
 
       let userCreationAttempts = 0
+      let lockHeld = false
       const mockUser = createMockUser(clerkUserId, email)
 
       mockRedis.get.mockImplementation(async (key: string) => {
@@ -214,13 +217,29 @@ describe('User Service Concurrency', () => {
       })
 
       mockRedis.set.mockImplementation(
-        async (key: string, _value: unknown, _options?: unknown) => {
+        async (key: string, _value: unknown, options?: { nx?: boolean }) => {
+          // Lock acquisition - only first request gets the lock
+          if (key.startsWith('lock:')) {
+            if (options?.nx && lockHeld) {
+              return null // Lock already held
+            }
+            lockHeld = true
+            return 'OK'
+          }
+          // User creation
           if (key.startsWith('user:')) {
             userCreationAttempts++
           }
           return 'OK'
         }
       )
+
+      mockRedis.del.mockImplementation(async (key: string) => {
+        if (key.startsWith('lock:')) {
+          lockHeld = false
+        }
+        return 1
+      })
 
       // Multiple concurrent requests
       const requests = Array(5)
@@ -404,6 +423,7 @@ describe('User Service Concurrency', () => {
       const mockUser = createMockUser(clerkUserId, email)
 
       let creationAttempts = 0
+      let lockHeld = false
 
       mockRedis.get.mockImplementation(async (key: string) => {
         if (key.startsWith('user:')) {
@@ -412,11 +432,29 @@ describe('User Service Concurrency', () => {
         return null
       })
 
-      mockRedis.set.mockImplementation(async (key: string) => {
-        if (key.startsWith('user:')) {
-          creationAttempts++
+      mockRedis.set.mockImplementation(
+        async (key: string, _value: unknown, options?: { nx?: boolean }) => {
+          // Lock acquisition - only first request gets the lock
+          if (key.startsWith('lock:')) {
+            if (options?.nx && lockHeld) {
+              return null // Lock already held
+            }
+            lockHeld = true
+            return 'OK'
+          }
+          // User creation
+          if (key.startsWith('user:')) {
+            creationAttempts++
+          }
+          return 'OK'
         }
-        return 'OK'
+      )
+
+      mockRedis.del.mockImplementation(async (key: string) => {
+        if (key.startsWith('lock:')) {
+          lockHeld = false
+        }
+        return 1
       })
 
       // Simulate 50 concurrent requests

@@ -7,6 +7,11 @@ const mockRedis = {
     store.set(key, value)
     return Promise.resolve('OK')
   }),
+  expire: vi.fn(() => Promise.resolve(1)),
+  del: vi.fn((key: string) => {
+    store.delete(key)
+    return Promise.resolve(1)
+  }),
 }
 
 vi.mock('@upstash/redis', () => ({

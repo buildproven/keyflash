@@ -120,7 +120,14 @@ describe('Keywords API Integration', () => {
       expect(data.data).toHaveLength(3)
 
       // Verify each keyword result has correct structure
-      data.data.forEach((result: any) => {
+      data.data.forEach((result: {
+        keyword: string
+        searchVolume: number
+        difficulty: number
+        cpc: number
+        competition: string
+        intent: string
+      }) => {
         expect(result).toHaveProperty('keyword')
         expect(result).toHaveProperty('searchVolume')
         expect(result).toHaveProperty('difficulty')

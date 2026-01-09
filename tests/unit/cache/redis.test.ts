@@ -12,7 +12,10 @@ const mockPing = vi.fn()
 // Mock @upstash/redis
 vi.mock('@upstash/redis', () => {
   return {
-    Redis: vi.fn().mockImplementation(function MockRedis(config: any) {
+    Redis: vi.fn().mockImplementation(function MockRedis(config: {
+      url: string
+      token: string
+    }) {
       if (!config.url || !config.url.startsWith('https://')) {
         throw new Error(
           `UrlError: Upstash Redis client was passed an invalid URL. You should pass a URL starting with https. Received: "${config.url}".`

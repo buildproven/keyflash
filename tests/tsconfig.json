@@ -5,8 +5,7 @@
     "noEmit": true,
     "types": [
       "vitest/globals",
-      "node",
-      "@types/jest"
+      "node"
     ]
   },
   "include": [

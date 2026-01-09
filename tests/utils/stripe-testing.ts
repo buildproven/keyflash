@@ -57,7 +57,7 @@ export const TEST_PRICES = {
 // Mock Factories
 // ============================================
 
-type MockFn = ReturnType<typeof vi.fn<(...args: any[]) => any>>
+type MockFn = ReturnType<typeof vi.fn>
 
 export interface StripeMock {
   checkout: {

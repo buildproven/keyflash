@@ -11,8 +11,15 @@ const nextConfig = {
 
   // Performance: Enable experimental features
   experimental: {
-    optimizePackageImports: ['@clerk/nextjs', '@upstash/redis', 'zod'],
+    optimizePackageImports: [
+      '@clerk/nextjs',
+      '@upstash/redis',
+      'zod',
+      'stripe',
+    ],
     webpackBuildWorker: true,
+    // PERF: Enable optimized CSS loading
+    optimizeCss: true,
   },
 
   // Performance: Optimize images
@@ -21,6 +28,9 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 31536000, // 1 year
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // Performance: Static asset optimization

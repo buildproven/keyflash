@@ -10,6 +10,7 @@ import { getProvider, getMockProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
 import { logger } from '@/lib/utils/logger'
 import { userService } from '@/lib/user/user-service'
+import { isBillingEnabled } from '@/lib/billing'
 import type { KeywordSearchResponse } from '@/types/keyword'
 import { readJsonWithLimit } from '@/lib/utils/request'
 
@@ -107,47 +108,54 @@ export async function POST(request: NextRequest) {
     // Check user authentication and tier
     const authResult = await auth()
     const userId = authResult.userId
-    let userTier: 'trial' | 'pro' = 'trial'
-    let useMockData = true // Default: unauthenticated users get mock data
+    let userTier: 'trial' | 'pro' = 'pro' // Default to pro when billing disabled
+    let useMockData = false // Default: real data when billing disabled
 
-    if (userId) {
-      // Get email from Clerk session
-      const sessionClaims = authResult.sessionClaims as
-        | { email?: string }
-        | undefined
-      const email = sessionClaims?.email || `${userId}@keyflash.local`
+    if (!userId) {
+      const error: HttpError = new Error(
+        'Authentication required. Please sign in to use KeyFlash.'
+      )
+      error.status = 401
+      return handleAPIError(error)
+    }
 
-      // Get user from database (or create if new) - race-condition safe
-      const user = await userService.getOrCreateUser(userId, email)
+    // Get email from Clerk session
+    const sessionClaims = authResult.sessionClaims as
+      | { email?: string }
+      | undefined
+    const email = sessionClaims?.email || `${userId}@keyflash.local`
 
-      if (user) {
-        // PERF-012: Pass user data to avoid redundant Redis GET
-        const limitCheck = await userService.checkKeywordLimit(userId, user)
+    // Get user from database (or create if new) - race-condition safe
+    const user = await userService.getOrCreateUser(userId, email)
 
-        if (limitCheck) {
-          if (limitCheck.trialExpired) {
-            const error: HttpError = new Error(
-              'Your 7-day free trial has expired. Upgrade to Pro to continue using KeyFlash.'
-            )
-            error.status = 403
-            return handleAPIError(error)
-          }
+    // Only check limits when billing is enabled
+    if (isBillingEnabled() && user) {
+      // PERF-012: Pass user data to avoid redundant Redis GET
+      const limitCheck = await userService.checkKeywordLimit(userId, user)
 
-          if (!limitCheck.allowed) {
-            const error: HttpError = new Error(
-              `Monthly keyword limit reached (${limitCheck.used}/${limitCheck.limit}). ` +
-                (limitCheck.tier === 'trial'
-                  ? 'Upgrade to Pro for 1,000 keywords/month.'
-                  : 'Your limit resets at the start of next month.')
-            )
-            error.status = 429
-            return handleAPIError(error)
-          }
-
-          userTier = limitCheck.tier
-          // Pro users get real data, trial users get mock data
-          useMockData = userTier === 'trial'
+      if (limitCheck) {
+        if (limitCheck.trialExpired) {
+          const error: HttpError = new Error(
+            'Your 7-day free trial has expired. Upgrade to Pro to continue using KeyFlash.'
+          )
+          error.status = 403
+          return handleAPIError(error)
         }
+
+        if (!limitCheck.allowed) {
+          const error: HttpError = new Error(
+            `Monthly keyword limit reached (${limitCheck.used}/${limitCheck.limit}). ` +
+              (limitCheck.tier === 'trial'
+                ? 'Upgrade to Pro for 1,000 keywords/month.'
+                : 'Your limit resets at the start of next month.')
+          )
+          error.status = 429
+          return handleAPIError(error)
+        }
+
+        userTier = limitCheck.tier
+        // Pro users get real data, trial users get mock data
+        useMockData = userTier === 'trial'
       }
     }
 

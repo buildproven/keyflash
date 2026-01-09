@@ -119,11 +119,9 @@ export function ContentBriefModal({
     }
 
     if (!brief && !isLoading && !error) {
-      // FIX: Handle promise rejection explicitly instead of void operator
-      generateBrief().catch(err => {
-        console.error('Unhandled promise rejection in generateBrief:', err)
-        // Error state is already set in generateBrief's catch block
-      })
+      // Error handling is done inside generateBrief via setError
+      // No need for outer catch since the error state is managed internally
+      void generateBrief()
     }
   }, [brief, error, generateBrief, isLoading, isOpen])
 
@@ -184,10 +182,13 @@ export function ContentBriefModal({
             role="status"
             aria-live="polite"
           >
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" aria-hidden="true"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-300">
               Analyzing top search results...
             </p>
+            <span className="sr-only">
+              Loading content brief. Please wait, this usually takes a few seconds.
+            </span>
           </div>
         )}
 

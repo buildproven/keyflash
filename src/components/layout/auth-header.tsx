@@ -10,7 +10,7 @@ import {
 
 export function AuthHeader() {
   return (
-    <header className="fixed top-0 right-0 p-4 z-50">
+    <header role="banner" className="fixed top-0 right-0 p-4 z-50">
       <SignedOut>
         <div className="flex items-center gap-2">
           <SignInButton mode="modal">

@@ -6,7 +6,14 @@ export const dynamic = 'force-static'
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900">
+    <main id="main-content" className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900" itemScope itemType="https://schema.org/WebPage">
+      {/* Skip Link for Keyboard Navigation */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 bg-blue-600 text-white px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+      >
+        Skip to main content
+      </a>
       {/* Hero */}
       <div className="mx-auto max-w-3xl px-6 pt-20 pb-16 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
@@ -84,7 +91,7 @@ export default function Home() {
               key={feature.title}
               className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800"
             >
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white dark:bg-blue-700 dark:text-white" aria-hidden="true">
                 ✓
               </span>
               <div>
@@ -108,6 +115,7 @@ export default function Home() {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

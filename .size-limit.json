@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Homepage Client Bundle",
+    "path": ".next/static/chunks/app/page.js",
+    "limit": "100 KB",
+    "webpack": false
+  },
+  {
+    "name": "Search Page Client Bundle",
+    "path": ".next/static/chunks/app/search/page.js",
+    "limit": "200 KB",
+    "webpack": false
+  },
+  {
+    "name": "Total CSS",
+    "path": ".next/static/css/*.css",
+    "limit": "15 KB",
+    "webpack": false
+  },
+  {
+    "name": "API Keywords Route",
+    "path": ".next/server/app/api/keywords/route.js",
+    "limit": "150 KB",
+    "webpack": false,
+    "running": false
+  }
+]

@@ -81,7 +81,9 @@ vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
 }))
 
 describe('Location Normalization', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockCache: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockProvider: any
 
   beforeEach(async () => {

@@ -131,6 +131,23 @@ if (tsPlugin && tsParser) {
   // Looser rules for test files to reduce false positives
   configs.push({
     files: ['tests/**/*.{ts,tsx,js,jsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        React: 'readonly',
+        JSX: 'readonly',
+        NodeJS: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',

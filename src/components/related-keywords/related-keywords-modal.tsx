@@ -124,14 +124,9 @@ export function RelatedKeywordsModal({
     }
 
     if (relatedKeywords.length === 0 && !isLoading && !error) {
-      // FIX: Handle promise rejection explicitly instead of void operator
-      fetchRelatedKeywords().catch(err => {
-        console.error(
-          'Unhandled promise rejection in fetchRelatedKeywords:',
-          err
-        )
-        // Error state is already set in fetchRelatedKeywords's catch block
-      })
+      // Error handling is done inside fetchRelatedKeywords via setError
+      // No need for outer catch since the error state is managed internally
+      void fetchRelatedKeywords()
     }
   }, [error, fetchRelatedKeywords, isLoading, isOpen, relatedKeywords.length])
 
@@ -192,10 +187,13 @@ export function RelatedKeywordsModal({
             role="status"
             aria-live="polite"
           >
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" aria-hidden="true"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">
               Finding related keywords...
             </p>
+            <span className="sr-only">
+              Loading related keywords. Please wait, this usually takes a few seconds.
+            </span>
           </div>
         )}
 

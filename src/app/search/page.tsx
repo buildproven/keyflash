@@ -12,6 +12,7 @@ import { Footer } from '@/components/layout/footer'
 import { exportToCSV } from '@/lib/utils/csv-export'
 import { fetchWithCsrf } from '@/lib/utils/csrf'
 import { getErrorMessageFromResponse } from '@/lib/utils/error-messages'
+import { logger } from '@/lib/utils/logger'
 import type {
   KeywordSearchFormData,
   KeywordData,
@@ -25,9 +26,13 @@ const SavedSearchesList = dynamic(
     import('@/components/saved-searches/saved-searches-list')
       .then(mod => mod.SavedSearchesList)
       .catch(err => {
-        console.error(
-          'CRITICAL: Failed to load SavedSearchesList component:',
-          err
+        logger.error(
+          'CRITICAL: Failed to load SavedSearchesList component',
+          err,
+          {
+            module: 'SearchPage',
+            errorId: 'COMPONENT_LOAD_FAILED',
+          }
         )
         // Return error component instead of null to inform user
         return function SavedSearchesListError() {
@@ -55,9 +60,13 @@ const SaveSearchModal = dynamic(
     import('@/components/saved-searches/save-search-modal')
       .then(mod => mod.SaveSearchModal)
       .catch(err => {
-        console.error(
-          'CRITICAL: Failed to load SaveSearchModal component:',
-          err
+        logger.error(
+          'CRITICAL: Failed to load SaveSearchModal component',
+          err,
+          {
+            module: 'SearchPage',
+            errorId: 'COMPONENT_LOAD_FAILED',
+          }
         )
         // Return error component instead of null to inform user
         return function SaveSearchModalError() {
@@ -350,13 +359,15 @@ export default function SearchPage() {
                     <div className="mb-4 flex justify-end">
                       <button
                         onClick={() => setShowSaveModal(true)}
-                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                        aria-label="Save current search results"
                       >
                         <svg
                           className="h-4 w-4"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
+                          aria-hidden="true"
                         >
                           <path
                             strokeLinecap="round"

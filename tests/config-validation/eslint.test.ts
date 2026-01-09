@@ -78,11 +78,12 @@ describe('ESLint configuration', () => {
 
       // Should not crash (output might have warnings, that's okay)
       expect(output).toBeDefined()
-    } catch (error: any) {
+    } catch (error) {
       // If it fails, it should be due to linting errors, not config errors
-      expect(error.message).not.toContain('config')
-      expect(error.message).not.toContain('Cannot read')
-      expect(error.message).not.toContain('Invalid configuration')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      expect(errorMessage).not.toContain('config')
+      expect(errorMessage).not.toContain('Cannot read')
+      expect(errorMessage).not.toContain('Invalid configuration')
     } finally {
       // Cleanup
       try {
@@ -107,9 +108,11 @@ describe('ESLint configuration', () => {
           stdio: 'pipe',
           timeout: 30000,
         })
-      } catch (error: any) {
+      } catch (error) {
         // Should have detected the eval usage
-        const output = error.stdout + error.stderr
+        const stdout = error && typeof error === 'object' && 'stdout' in error ? String(error.stdout) : ''
+        const stderr = error && typeof error === 'object' && 'stderr' in error ? String(error.stderr) : ''
+        const output = stdout + stderr
         expect(output).toMatch(/eval|dangerous/)
       }
     } finally {
@@ -187,12 +190,13 @@ describe('ESLint execution', () => {
       })
       // Success
       expect(true).toBe(true)
-    } catch (error: any) {
+    } catch (error) {
       // May have lint warnings/errors - that's okay
       // Should not have config errors
-      expect(error.message).not.toContain('Cannot find module')
-      expect(error.message).not.toContain('Invalid configuration')
-      expect(error.message).not.toContain('config')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      expect(errorMessage).not.toContain('Cannot find module')
+      expect(errorMessage).not.toContain('Invalid configuration')
+      expect(errorMessage).not.toContain('config')
     }
   }, 60000)
 

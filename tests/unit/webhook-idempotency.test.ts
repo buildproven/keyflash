@@ -21,9 +21,11 @@ const mockRedis = {
   incrby: vi.fn(),
 }
 
-// Mock @upstash/redis module
+// Mock @upstash/redis module - use function implementation to avoid Vitest warning
 vi.mock('@upstash/redis', () => ({
-  Redis: vi.fn(() => mockRedis),
+  Redis: vi.fn().mockImplementation(function MockRedis() {
+    return mockRedis
+  }),
 }))
 
 // Mock Stripe module
@@ -34,7 +36,9 @@ const mockStripe = {
 }
 
 vi.mock('stripe', () => ({
-  default: vi.fn(() => mockStripe),
+  default: vi.fn().mockImplementation(function MockStripe() {
+    return mockStripe
+  }),
 }))
 
 // Mock user service methods
@@ -63,20 +67,41 @@ describe('Webhook Idempotency', () => {
     eventId: string,
     eventType: string
   ): NextRequest {
+    // Create proper Stripe event data based on event type
+    let dataObject: Record<string, unknown>
+
+    if (eventType === 'checkout.session.completed') {
+      dataObject = {
+        id: 'cs_test123',
+        object: 'checkout.session',
+        customer: 'cus_test123',
+        subscription: 'sub_test123',
+        customer_email: 'test@example.com',
+        metadata: {
+          clerkUserId: 'user_test123',
+        },
+      }
+    } else if (eventType.startsWith('customer.subscription')) {
+      dataObject = {
+        id: 'sub_test123',
+        object: 'subscription',
+        customer: 'cus_test123',
+        status: 'active',
+        metadata: {},
+      }
+    } else {
+      dataObject = {
+        id: `${eventType}_123`,
+        customer: 'cus_test123',
+        status: 'active',
+      }
+    }
+
     const event = {
       id: eventId,
       type: eventType,
       data: {
-        object: {
-          id: `${eventType}_123`,
-          customer: 'cus_test123',
-          subscription: 'sub_test123',
-          customer_email: 'test@example.com',
-          status: 'active',
-          metadata: {
-            clerkUserId: 'user_test123',
-          },
-        },
+        object: dataObject,
       },
     }
 
@@ -200,6 +225,13 @@ describe('Webhook Idempotency', () => {
       mockRedis.set.mockImplementation(async () => {
         callOrder.push('mark_processed')
         return 'OK'
+      })
+
+      // The checkout handler first checks getUser (with clerkUserId from metadata)
+      // then falls back to getUserByEmail - track both as business logic
+      vi.spyOn(userService, 'getUser').mockImplementation(async () => {
+        callOrder.push('business_logic')
+        return null
       })
 
       vi.spyOn(userService, 'getUserByEmail').mockImplementation(async () => {

@@ -375,13 +375,17 @@ export class RedisRateLimiter {
       return {new_count, remaining_ttl}
     `
 
-    // Execute Lua script atomically via Redis eval (not JavaScript eval)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = (await (this.redis as any).eval(
-      luaScript,
-      [key],
-      [windowSeconds]
-    )) as [number, number]
+    // Execute Lua script atomically via Redis eval (NOT JavaScript eval - this is Redis Lua)
+    // Type assertion needed because @upstash/redis types don't include eval method
+    const result = (await (
+      this.redis as unknown as {
+        eval: (
+          script: string,
+          keys: string[],
+          args: (string | number)[]
+        ) => Promise<[number, number]>
+      }
+    ).eval(luaScript, [key], [windowSeconds])) as [number, number]
 
     const [newCount, ttlSeconds] = result
 

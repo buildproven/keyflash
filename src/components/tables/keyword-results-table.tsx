@@ -7,6 +7,7 @@ import {
   TrendSparkline,
   TrendChartExpanded,
 } from '@/components/trends/trend-sparkline'
+import { logger } from '@/lib/utils/logger'
 
 // Dynamic imports for modals to reduce initial bundle size
 const ContentBriefModal = dynamic(
@@ -14,9 +15,13 @@ const ContentBriefModal = dynamic(
     import('@/components/content-brief/content-brief-modal')
       .then(mod => mod.ContentBriefModal)
       .catch(err => {
-        console.error(
-          'CRITICAL: Failed to load ContentBriefModal component:',
-          err
+        logger.error(
+          'CRITICAL: Failed to load ContentBriefModal component',
+          err,
+          {
+            module: 'KeywordResultsTable',
+            errorId: 'COMPONENT_LOAD_FAILED',
+          }
         )
         // Return error component instead of null to inform user
         return function ContentBriefModalError({
@@ -63,9 +68,13 @@ const RelatedKeywordsModal = dynamic(
     import('@/components/related-keywords/related-keywords-modal')
       .then(mod => mod.RelatedKeywordsModal)
       .catch(err => {
-        console.error(
-          'CRITICAL: Failed to load RelatedKeywordsModal component:',
-          err
+        logger.error(
+          'CRITICAL: Failed to load RelatedKeywordsModal component',
+          err,
+          {
+            module: 'KeywordResultsTable',
+            errorId: 'COMPONENT_LOAD_FAILED',
+          }
         )
         // Return error component instead of null to inform user
         return function RelatedKeywordsModalError({

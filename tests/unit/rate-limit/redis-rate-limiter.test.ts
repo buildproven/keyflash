@@ -74,18 +74,13 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 10, enabled: true }
 
-      // Mock Redis to return null (new client)
-      mockRedis.get.mockResolvedValueOnce(null)
-
       await rateLimiter.checkRateLimit(request, config)
 
-      // Should use CF-Connecting-IP in the key (hash truncated to 8 chars)
       // PERF-013: Lua script is called with key via eval
       expect(mockRedis.eval).toHaveBeenCalled()
       const evalCall = mockRedis.eval.mock.calls[0]
-      expect(evalCall[1][0]).toBe(
-        expect.stringMatching(/^rate:1\.2\.3\.4:mockedha$/)
-      )
+      // evalCall[1] is the keys array, evalCall[1][0] is the first key
+      expect(evalCall[1][0]).toMatch(/^rate:1\.2\.3\.4:mockedha$/)
     })
 
     it('falls back to x-forwarded-for when CF-Connecting-IP not available', async () => {
@@ -97,14 +92,13 @@ describe('RedisRateLimiter', () => {
       })
 
       const config = { requestsPerHour: 10, enabled: true }
-      mockRedis.get.mockResolvedValueOnce(null)
 
       await rateLimiter.checkRateLimit(request, config)
 
-      // Should use first IP from x-forwarded-for (hash truncated to 8 chars)
-      expect(mockRedis.incr).toHaveBeenCalledWith(
-        expect.stringMatching(/^rate:5\.6\.7\.8:mockedha$/)
-      )
+      // PERF-013: Lua script is called with key via eval
+      expect(mockRedis.eval).toHaveBeenCalled()
+      const evalCall = mockRedis.eval.mock.calls[0]
+      expect(evalCall[1][0]).toMatch(/^rate:5\.6\.7\.8:mockedha$/)
     })
 
     it('includes user-agent hash to prevent simple spoofing', async () => {
@@ -116,12 +110,13 @@ describe('RedisRateLimiter', () => {
       })
 
       const config = { requestsPerHour: 10, enabled: true }
-      mockRedis.get.mockResolvedValueOnce(null)
 
       await rateLimiter.checkRateLimit(request, config)
 
-      // Should include HMAC hash of user-agent (truncated to 8 chars)
-      expect(mockRedis.incr).toHaveBeenCalledWith('rate:1.2.3.4:mockedha')
+      // PERF-013: Lua script is called with key via eval
+      expect(mockRedis.eval).toHaveBeenCalled()
+      const evalCall = mockRedis.eval.mock.calls[0]
+      expect(evalCall[1][0]).toBe('rate:1.2.3.4:mockedha')
     })
 
     it('falls back to unknown when proxy trust is disabled', async () => {
@@ -135,13 +130,13 @@ describe('RedisRateLimiter', () => {
       })
 
       const config = { requestsPerHour: 10, enabled: true }
-      mockRedis.ttl.mockResolvedValueOnce(-2)
-      mockRedis.incr.mockResolvedValueOnce(1)
-      mockRedis.expire.mockResolvedValueOnce(true)
 
       await untrustedLimiter.checkRateLimit(request, config)
 
-      expect(mockRedis.incr).toHaveBeenCalledWith('rate:unknown:mockedha')
+      // PERF-013: Lua script is called with key via eval
+      expect(mockRedis.eval).toHaveBeenCalled()
+      const evalCall = mockRedis.eval.mock.calls[0]
+      expect(evalCall[1][0]).toBe('rate:unknown:mockedha')
     })
 
     it('defaults to trusting proxy headers in production when unset', async () => {
@@ -160,13 +155,13 @@ describe('RedisRateLimiter', () => {
       })
 
       const config = { requestsPerHour: 10, enabled: true }
-      mockRedis.ttl.mockResolvedValueOnce(-2)
-      mockRedis.incr.mockResolvedValueOnce(1)
-      mockRedis.expire.mockResolvedValueOnce(true)
 
       await productionLimiter.checkRateLimit(request, config)
 
-      expect(mockRedis.incr).toHaveBeenCalledWith('rate:1.2.3.4:mockedha')
+      // PERF-013: Lua script is called with key via eval
+      expect(mockRedis.eval).toHaveBeenCalled()
+      const evalCall = mockRedis.eval.mock.calls[0]
+      expect(evalCall[1][0]).toBe('rate:1.2.3.4:mockedha')
     })
   })
 
@@ -180,13 +175,15 @@ describe('RedisRateLimiter', () => {
       })
 
       const config = { requestsPerHour: 10, enabled: true }
-      mockRedis.get.mockResolvedValueOnce(null)
+      // PERF-013: Lua script returns [newCount, ttlSeconds]
+      // For first request, count=1, TTL=3600 (1 hour)
+      mockRedis.eval.mockResolvedValueOnce([1, 3600])
 
       const result = await rateLimiter.checkRateLimit(request, config)
 
       expect(result.allowed).toBe(true)
       expect(result.remaining).toBe(9)
-      expect(mockRedis.incr).toHaveBeenCalled()
+      expect(mockRedis.eval).toHaveBeenCalled()
     })
 
     it('tracks subsequent requests correctly', async () => {
@@ -199,15 +196,15 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 10, enabled: true }
 
-      // Mock existing entry with TTL and 4th request
-      mockRedis.ttl.mockResolvedValueOnce(3500) // Key exists with TTL
-      mockRedis.incr.mockResolvedValueOnce(4) // 3 existing + 1 current = 4
+      // PERF-013: Lua script returns [newCount, ttlSeconds]
+      // 4th request in window, 3500s TTL remaining
+      mockRedis.eval.mockResolvedValueOnce([4, 3500])
 
       const result = await rateLimiter.checkRateLimit(request, config)
 
       expect(result.allowed).toBe(true)
       expect(result.remaining).toBe(6) // 10 - 4
-      expect(mockRedis.incr).toHaveBeenCalled()
+      expect(mockRedis.eval).toHaveBeenCalled()
     })
 
     it('blocks requests when limit exceeded', async () => {
@@ -220,16 +217,16 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 5, enabled: true }
 
-      // Mock existing entry with TTL, increment exceeds limit
-      mockRedis.ttl.mockResolvedValueOnce(3500) // Key exists with TTL
-      mockRedis.incr.mockResolvedValueOnce(6) // Exceeds limit of 5
+      // PERF-013: Lua script returns [newCount, ttlSeconds]
+      // 6th request exceeds limit of 5
+      mockRedis.eval.mockResolvedValueOnce([6, 3500])
 
       const result = await rateLimiter.checkRateLimit(request, config)
 
       expect(result.allowed).toBe(false)
       expect(result.remaining).toBe(0)
       expect(result.retryAfter).toBeGreaterThan(0)
-      expect(mockRedis.incr).toHaveBeenCalled()
+      expect(mockRedis.eval).toHaveBeenCalled()
     })
 
     it('handles expired entries automatically via TTL', async () => {
@@ -242,16 +239,15 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 10, enabled: true }
 
-      // Mock expired key - TTL returns -2 (key doesn't exist)
-      mockRedis.ttl.mockResolvedValueOnce(-2) // Key expired/doesn't exist
-      mockRedis.incr.mockResolvedValueOnce(1) // First request in new window
+      // PERF-013: Lua script handles expiry internally
+      // Returns count=1 (first in new window), TTL=3600 (freshly set)
+      mockRedis.eval.mockResolvedValueOnce([1, 3600])
 
       const result = await rateLimiter.checkRateLimit(request, config)
 
       expect(result.allowed).toBe(true)
       expect(result.remaining).toBe(9) // Should be treated as new client
-      expect(mockRedis.incr).toHaveBeenCalled()
-      expect(mockRedis.expire).toHaveBeenCalled() // Set new TTL
+      expect(mockRedis.eval).toHaveBeenCalled()
     })
 
     it('bypasses rate limiting when disabled', async () => {
@@ -348,15 +344,14 @@ describe('RedisRateLimiter', () => {
 
       const config = { requestsPerHour: 10, enabled: true }
 
-      // Mock new keys for both requests (different user agents = different hashes)
-      mockRedis.ttl.mockResolvedValue(-2) // Key doesn't exist for both
-      mockRedis.incr.mockResolvedValue(1) // First request for each key
+      // PERF-013: Lua script returns [newCount, ttlSeconds]
+      mockRedis.eval.mockResolvedValue([1, 3600])
 
       await rateLimiter.checkRateLimit(request1, config)
       await rateLimiter.checkRateLimit(request2, config)
 
       // Both should be treated as separate clients due to different user-agent hashes
-      expect(mockRedis.incr).toHaveBeenCalledTimes(2)
+      expect(mockRedis.eval).toHaveBeenCalledTimes(2)
     })
   })
 
@@ -402,8 +397,8 @@ describe('RedisRateLimiter', () => {
 
   describe('Fail-safe Behavior', () => {
     it('allows requests when fail-safe is open and Redis fails', async () => {
-      // Make Redis fail
-      mockRedis.ttl.mockRejectedValueOnce(new Error('Redis error'))
+      // PERF-013: Make Redis eval fail
+      mockRedis.eval.mockRejectedValueOnce(new Error('Redis error'))
 
       const request = new Request('https://example.com', {
         headers: {
@@ -425,8 +420,8 @@ describe('RedisRateLimiter', () => {
     })
 
     it('blocks requests when fail-safe is closed and Redis fails', async () => {
-      // Make Redis fail
-      mockRedis.ttl.mockRejectedValueOnce(new Error('Redis error'))
+      // PERF-013: Make Redis eval fail
+      mockRedis.eval.mockRejectedValueOnce(new Error('Redis error'))
 
       const request = new Request('https://example.com', {
         headers: {

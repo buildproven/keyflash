@@ -63,6 +63,9 @@ class SSRFProtection {
       clearInterval(this.cleanupIntervalHandle)
       this.cleanupIntervalHandle = null
     }
+    // Clear rate limit state for testing
+    this.userLimits.clear()
+    this.ipLimits.clear()
   }
 
   private isPrivateIP(ip: string): boolean {

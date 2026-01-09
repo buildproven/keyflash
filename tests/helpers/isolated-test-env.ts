@@ -167,14 +167,17 @@ export class IsolatedTestEnv {
         env,
       })
       return { stdout, stderr: '', exitCode: 0 }
-    } catch (error: any) {
+    } catch (error) {
       if (options.throwOnError !== false) {
         throw error
       }
+      const stdout = error && typeof error === 'object' && 'stdout' in error ? String(error.stdout) : ''
+      const stderr = error && typeof error === 'object' && 'stderr' in error ? String(error.stderr) : ''
+      const exitCode = error && typeof error === 'object' && 'status' in error && typeof error.status === 'number' ? error.status : 1
       return {
-        stdout: error.stdout?.toString() || '',
-        stderr: error.stderr?.toString() || '',
-        exitCode: error.status || 1,
+        stdout,
+        stderr,
+        exitCode,
       }
     }
   }

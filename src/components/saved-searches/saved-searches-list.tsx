@@ -120,6 +120,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -183,6 +184,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
                     className="h-4 w-4 animate-spin"
                     fill="none"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <circle
                       className="opacity-25"
@@ -204,6 +206,7 @@ export function SavedSearchesList({ onLoadSearch }: SavedSearchesListProps) {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"

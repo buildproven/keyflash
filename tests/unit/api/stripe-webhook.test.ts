@@ -414,7 +414,8 @@ describe('Stripe Webhook API Route', () => {
 
     it('should mock checkout session creation', async () => {
       const stripeMock = createStripeMock()
-      const session = await stripeMock.checkout.sessions.create({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const session = await (stripeMock.checkout.sessions.create as any)({
         mode: 'subscription',
         line_items: [{ price: TEST_PRICES.keyflashProMonthly }],
       })
@@ -425,14 +426,16 @@ describe('Stripe Webhook API Route', () => {
 
     it('should mock subscription cancellation', async () => {
       const stripeMock = createStripeMock()
-      const canceled = await stripeMock.subscriptions.cancel('sub_123')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const canceled = await (stripeMock.subscriptions.cancel as any)('sub_123')
 
       expect(canceled.status).toBe('canceled')
     })
 
     it('should mock billing portal creation', async () => {
       const stripeMock = createStripeMock()
-      const portal = await stripeMock.billingPortal.sessions.create({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const portal = await (stripeMock.billingPortal.sessions.create as any)({
         customer: 'cus_123',
         return_url: 'https://keyflash.com/account',
       })

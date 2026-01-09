@@ -180,5 +180,12 @@
     "pino-pretty": "^13.1.2",
     "stripe": "^20.1.0",
     "zod": "^4.1.12"
-  }
+  },
+  "size-limit": [
+    {
+      "path": ".next/static/**/*.js",
+      "limit": "300 kB",
+      "webpack": false
+    }
+  ]
 }

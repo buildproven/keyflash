@@ -80,8 +80,10 @@ All providers implement `KeywordAPIProvider` interface.
 
 - **Auth**: Clerk (`@clerk/nextjs`) - handles sign up, sign in, user management
 - **Lazy Loading**: Auth UI components are dynamically imported with `ssr: false` to reduce initial bundle
-- **Payments**: Stripe subscriptions - $29/mo Pro tier
-- **User tiers**: Trial (7 days, mock data) → Pro (real DataForSEO data)
+- **Billing Toggle**: Set `BILLING_ENABLED=true` to enable Stripe payments (disabled by default)
+- **Open Source Mode**: When billing is disabled, all features are free and unlimited
+- **Payments** (when enabled): Stripe subscriptions for Pro tier
+- **User tiers** (when billing enabled): Trial (7 days, mock data) → Pro (real DataForSEO data)
 
 ### Saved Searches
 

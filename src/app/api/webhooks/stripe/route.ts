@@ -11,6 +11,7 @@ import {
   StripeCheckoutSessionSchema,
   StripeSubscriptionSchema,
 } from '@/lib/validation/domain-schemas'
+import { isBillingEnabled } from '@/lib/billing'
 
 // FIX-005: Custom error for infrastructure failures that should trigger retry
 class InfrastructureError extends Error {
@@ -134,6 +135,17 @@ function getStripe() {
 }
 
 export async function POST(request: NextRequest) {
+  // Check if billing is enabled
+  if (!isBillingEnabled()) {
+    return NextResponse.json(
+      {
+        error: 'Billing Disabled',
+        message: 'This is an open source instance with billing disabled.',
+      },
+      { status: 503 }
+    )
+  }
+
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   if (!webhookSecret) {
     logger.error('Stripe webhook: STRIPE_WEBHOOK_SECRET not configured')

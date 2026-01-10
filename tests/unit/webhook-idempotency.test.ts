@@ -41,6 +41,13 @@ vi.mock('stripe', () => ({
   }),
 }))
 
+// Mock billing module - enable billing for these tests
+vi.mock('@/lib/billing', () => ({
+  isBillingEnabled: vi.fn(() => true),
+  isStripeConfigured: vi.fn(() => true),
+  isBillingOperational: vi.fn(() => true),
+}))
+
 // Mock user service methods
 vi.spyOn(userService, 'getUser').mockImplementation(async () => null)
 vi.spyOn(userService, 'getUserByEmail').mockImplementation(async () => null)

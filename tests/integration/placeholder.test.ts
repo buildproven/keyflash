@@ -15,7 +15,19 @@ import { NextRequest } from 'next/server'
 
 // Mock Clerk auth BEFORE importing the route
 vi.mock('@clerk/nextjs/server', () => ({
-  auth: vi.fn(() => Promise.resolve({ userId: null, sessionClaims: null })),
+  auth: vi.fn(() =>
+    Promise.resolve({
+      userId: 'test-user-123',
+      sessionClaims: { email: 'test@example.com' },
+    })
+  ),
+}))
+
+// Mock billing module - enable billing for these tests
+vi.mock('@/lib/billing', () => ({
+  isBillingEnabled: vi.fn(() => true),
+  isStripeConfigured: vi.fn(() => true),
+  isBillingOperational: vi.fn(() => true),
 }))
 
 // Mock userService BEFORE importing the route - use importOriginal to keep error classes

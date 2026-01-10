@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-KeyFlash is an AI-powered keyword research tool built with Next.js 16 (App Router), TypeScript 5+, and Tailwind CSS v4. It uses Upstash Redis for caching and supports multiple API providers (Google Ads, DataForSEO, or mock).
+KeyFlash is a **free and open source** AI-powered keyword research tool built with Next.js 16 (App Router), TypeScript 5+, and Tailwind CSS v4. It uses Upstash Redis for caching and supports multiple API providers (Google Ads, DataForSEO, or mock). MIT licensed - bring your own DataForSEO API key for real keyword data.
 
 ## Key Commands
 
@@ -48,12 +48,13 @@ Switch providers via `KEYWORD_API_PROVIDER` env var. All providers implement `Ke
 - `PUT /api/searches/[id]` - Update saved search
 - `DELETE /api/searches/[id]` - Delete saved search
 
-### Authentication & Payments
+### Authentication & Billing
 
 - **Auth**: Clerk (`@clerk/nextjs`) - handles sign up, sign in, user management
 - **Auth lazy loading**: Clerk UI components dynamically imported (`src/components/layout/auth-header-wrapper.tsx`)
-- **Payments**: Stripe subscriptions - $29/mo Pro tier
-- **User tiers**: Trial (7 days, mock data) → Pro (real DataForSEO data)
+- **Billing Toggle**: `BILLING_ENABLED=true` enables Stripe payments (disabled by default)
+- **Open Source Mode**: When billing disabled, all features are free and unlimited
+- **Payments** (when enabled): Stripe subscriptions for Pro tier
 - **User storage**: Redis via `src/lib/user/user-service.ts`
 
 ### Saved Searches
@@ -83,7 +84,8 @@ Copy `.env.example` to `.env.local` for local development. Key variables:
 - `KEYWORD_API_PROVIDER` - `mock` (default), `google-ads`, or `dataforseo`
 - `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` - Redis connection
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` - Clerk auth
-- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRICE_PRO` - Stripe payments
+- `BILLING_ENABLED` - `true` to enable Stripe payments (disabled by default for open source)
+- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRICE_PRO` - Stripe payments (only when billing enabled)
 - `RATE_LIMIT_FAIL_SAFE` - `closed` (secure) or `open` (available when Redis fails)
 - `PRIVACY_MODE` - `true` to disable keyword caching
 

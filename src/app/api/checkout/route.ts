@@ -4,6 +4,7 @@ import Stripe from 'stripe'
 import { logger } from '@/lib/utils/logger'
 import { getAppUrl } from '@/lib/utils/app-url'
 import { userService } from '@/lib/user/user-service'
+import { isBillingEnabled } from '@/lib/billing'
 import {
   rateLimiter,
   type RateLimitConfig,
@@ -67,6 +68,18 @@ export function resolveCheckoutOrigin(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if billing is enabled
+    if (!isBillingEnabled()) {
+      return NextResponse.json(
+        {
+          error: 'Billing Disabled',
+          message:
+            'This is an open source instance with billing disabled. All features are free.',
+        },
+        { status: 503 }
+      )
+    }
+
     // FIX-004: Require authentication
     const authResult = await auth()
     if (!authResult.userId) {

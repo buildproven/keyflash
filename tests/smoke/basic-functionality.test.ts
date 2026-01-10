@@ -187,8 +187,8 @@ describe('Documentation smoke tests', () => {
     const licensePath = join(process.cwd(), 'LICENSE')
     const content = readFileSync(licensePath, 'utf-8')
 
-    // KeyFlash uses a commercial license
-    expect(content).toContain('KEYFLASH')
+    // KeyFlash uses MIT license (open source)
+    expect(content).toContain('MIT License')
     expect(content).toContain('Vibe Build Lab')
   })
 })

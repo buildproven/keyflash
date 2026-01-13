@@ -356,7 +356,7 @@ npm run perf:audit:live
 ### Web Vitals Monitoring
 
 - Development: Check browser console
-- Production: https://vercel.com/vibebuildlab/keyflash/analytics
+- Production: Check your project's analytics in your Vercel dashboard
 
 ---
 

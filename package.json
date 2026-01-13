@@ -175,7 +175,6 @@
     "@clerk/nextjs": "^6.36.5",
     "@sentry/nextjs": "^10.29.0",
     "@upstash/redis": "^1.35.6",
-    "@vbl/shared": "file:../vibebuildlab/packages/shared",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "stripe": "^20.1.0",

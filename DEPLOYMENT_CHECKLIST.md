@@ -9,31 +9,40 @@
 ## Pre-Deployment Verification
 
 ### 1. Type Safety ✅
+
 ```bash
 npm run type-check:all
 ```
+
 **Status:** PASSING
 **Result:** All TypeScript checks successful
 
 ### 2. Code Quality
+
 ```bash
 npm run lint
 ```
+
 **Status:** PASSING (5 non-critical warnings)
 **Notes:** Warnings are for unused eslint-disable comments, safe to ignore
 
 ### 3. Build Verification
+
 ```bash
 npm run build
 ```
+
 **Expected:** Clean build with no errors
 **Status:** ⏳ TO VERIFY
 
 ### 4. Bundle Size Check
+
 ```bash
 npm run size
 ```
+
 **Expected:**
+
 - Homepage: <100KB
 - Search: <200KB
 - CSS: <15KB
@@ -41,9 +50,11 @@ npm run size
 **Status:** ⏳ TO VERIFY
 
 ### 5. Test Suite
+
 ```bash
 npm run test
 ```
+
 **Expected:** All tests passing
 **Status:** ⏳ TO VERIFY (recommended)
 
@@ -52,6 +63,7 @@ npm run test
 ## Files Changed Summary
 
 ### New Files (7)
+
 - [x] `.size-limit.json`
 - [x] `scripts/optimize-images.sh`
 - [x] `src/app/performance-monitor.tsx`
@@ -63,11 +75,13 @@ npm run test
 - [x] `DEPLOYMENT_CHECKLIST.md` (this file)
 
 ### Modified Files (3)
+
 - [x] `src/app/layout.tsx`
 - [x] `src/app/page.tsx`
 - [x] `next.config.js`
 
 ### Total Changes
+
 - **10 files created**
 - **3 files modified**
 - **0 files deleted**
@@ -78,6 +92,7 @@ npm run test
 ## Git Workflow
 
 ### 1. Stage Changes
+
 ```bash
 git add .size-limit.json
 git add scripts/optimize-images.sh
@@ -94,6 +109,7 @@ git add next.config.js
 ```
 
 ### 2. Commit
+
 ```bash
 git commit -m "perf: comprehensive performance optimizations for Lighthouse 90+
 
@@ -115,6 +131,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ```
 
 ### 3. Push (if ready)
+
 ```bash
 git push origin main
 ```
@@ -124,6 +141,7 @@ git push origin main
 ## Staging Deployment
 
 ### 1. Deploy to Staging
+
 ```bash
 # If using Vercel
 vercel --prod=false
@@ -132,22 +150,26 @@ vercel --prod=false
 ```
 
 ### 2. Verify Staging Build
+
 - [ ] Build completes successfully
 - [ ] No errors in Vercel logs
 - [ ] Environment variables loaded correctly
 
 ### 3. Run Lighthouse on Staging
+
 ```bash
 npx lighthouse https://keyflash-staging.vercel.app --view
 ```
 
 **Targets:**
+
 - Performance: >90
 - Accessibility: >90
 - Best Practices: >90
 - SEO: >90
 
 ### 4. Manual Testing
+
 - [ ] Homepage loads correctly
 - [ ] Search page works
 - [ ] Auth flows functional
@@ -161,6 +183,7 @@ npx lighthouse https://keyflash-staging.vercel.app --view
 ## Production Deployment
 
 ### Pre-Production Checklist
+
 - [ ] Staging tests passed
 - [ ] Lighthouse scores >90
 - [ ] No critical errors in Sentry
@@ -168,6 +191,7 @@ npx lighthouse https://keyflash-staging.vercel.app --view
 - [ ] Backup plan ready
 
 ### Deploy to Production
+
 ```bash
 # Via Vercel dashboard or CLI
 vercel --prod
@@ -176,6 +200,7 @@ vercel --prod
 ```
 
 ### Post-Deployment Verification
+
 - [ ] Production build successful
 - [ ] Homepage loads (https://keyflash.com)
 - [ ] Search functionality works
@@ -188,6 +213,7 @@ vercel --prod
 ## Performance Monitoring (Week 1)
 
 ### Daily Checks
+
 - [ ] Day 1: Vercel Analytics Core Web Vitals
 - [ ] Day 2: Lighthouse CI scores on new PRs
 - [ ] Day 3: User behavior metrics (bounce rate, time on page)
@@ -197,6 +223,7 @@ vercel --prod
 - [ ] Day 7: Week 1 summary report
 
 ### Metrics to Track
+
 1. **Core Web Vitals** (Vercel Analytics)
    - LCP: Target <2.5s
    - INP: Target <200ms
@@ -227,12 +254,14 @@ vercel --prod
 ### If Issues Detected
 
 **Minor issues (non-critical):**
+
 1. Create hotfix branch
 2. Fix issue
 3. Deploy hotfix
 4. Monitor
 
 **Major issues (breaking):**
+
 1. Revert commit: `git revert <commit-hash>`
 2. Push revert: `git push origin main`
 3. Vercel auto-deploys previous version
@@ -240,6 +269,7 @@ vercel --prod
 5. Re-deploy when fixed
 
 **Emergency rollback:**
+
 ```bash
 # Via Vercel dashboard
 # Deployments > Previous deployment > Promote to Production
@@ -253,6 +283,7 @@ vercel rollback
 ## Success Criteria
 
 ### Technical Success
+
 - [x] All type checks passing
 - [x] Build successful
 - [ ] Bundle sizes under budget
@@ -261,6 +292,7 @@ vercel rollback
 - [ ] Cache hit rate >80%
 
 ### Business Success
+
 - [ ] Conversion rate maintained or improved
 - [ ] Bounce rate decreased
 - [ ] Page load time <2.5s (LCP)
@@ -268,6 +300,7 @@ vercel rollback
 - [ ] Positive user feedback
 
 ### Team Success
+
 - [ ] Documentation complete
 - [ ] Knowledge transfer complete
 - [ ] Team trained on monitoring
@@ -278,6 +311,7 @@ vercel rollback
 ## Outstanding Items
 
 ### Optional (Not Blocking)
+
 1. **Manual image optimization**
    - Install optipng/pngquant
    - Optimize apple-icon.png (42KB → <10KB)
@@ -303,6 +337,7 @@ vercel rollback
 **Risk Assessment:** LOW (zero breaking changes)
 
 **Expected Outcomes:**
+
 - Lighthouse Performance: 90-95
 - LCP: 1.8-2.2s
 - INP: <200ms
@@ -316,12 +351,14 @@ vercel rollback
 ## Contact & Support
 
 **Documentation:**
-- `/Users/brettstark/Projects/keyflash/PERFORMANCE_AUDIT_RESULTS.md`
-- `/Users/brettstark/Projects/keyflash/PERFORMANCE_AUDIT.md`
-- `/Users/brettstark/Projects/keyflash/PERFORMANCE_IMPLEMENTATION_SUMMARY.md`
-- `/Users/brettstark/Projects/keyflash/docs/PERFORMANCE_OPTIMIZATIONS.md`
+
+- `PERFORMANCE_AUDIT_RESULTS.md`
+- `PERFORMANCE_AUDIT.md`
+- `PERFORMANCE_IMPLEMENTATION_SUMMARY.md`
+- `docs/PERFORMANCE_OPTIMIZATIONS.md`
 
 **Commands:**
+
 ```bash
 # Quality checks
 npm run quality:check
@@ -338,7 +375,8 @@ npx lighthouse http://localhost:3000 --view
 ```
 
 **Monitoring:**
-- Vercel Analytics: https://vercel.com/vibebuildlab/keyflash/analytics
+
+- Vercel Analytics: Check your project's analytics in your Vercel dashboard
 - Sentry: https://sentry.io (check for errors)
 - Lighthouse CI: Runs on every PR
 

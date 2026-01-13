@@ -200,7 +200,7 @@ await Promise.race([cacheWrite, timeout]).catch(error => {
 
 **Fix:** Track cache health, expose in API response, monitor failure rate
 
-**Full report:** `/Users/brettstark/Projects/keyflash/ERROR_HANDLING_AUDIT.md`
+**Full report:** `ERROR_HANDLING_AUDIT.md`
 
 ---
 
@@ -559,5 +559,5 @@ The codebase is **production-ready** after addressing the critical items listed 
 **Total analysis time:** ~45 minutes (parallel execution)
 **Detailed reports available in:**
 
-- `/Users/brettstark/Projects/keyflash/ERROR_HANDLING_AUDIT.md`
+- `ERROR_HANDLING_AUDIT.md`
 - Agent outputs: `/tmp/claude/-Users-brettstark-Projects-keyflash/tasks/`

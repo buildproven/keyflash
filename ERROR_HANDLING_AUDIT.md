@@ -21,7 +21,7 @@ Reviewed 9 files across 5 commits focusing on error handling, silent failures, a
 
 ### CRITICAL-001: Silent Webhook Idempotency Failures
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/app/api/webhooks/stripe/route.ts:71-77`
+**Location:** `src/app/api/webhooks/stripe/route.ts:71-77`
 
 **Issue:**
 
@@ -78,7 +78,7 @@ This ensures Stripe retries the webhook until it can be successfully marked as p
 
 ### CRITICAL-002: Webhook Idempotency Check Failure Proceeds Silently
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/app/api/webhooks/stripe/route.ts:52-58`
+**Location:** `src/app/api/webhooks/stripe/route.ts:52-58`
 
 **Issue:**
 
@@ -139,7 +139,7 @@ For financial operations, failing closed (assuming already processed) is safer t
 
 ### CRITICAL-003: Cache Write Failures Silently Swallowed
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/app/api/keywords/route.ts:204-207`
+**Location:** `src/app/api/keywords/route.ts:204-207`
 
 **Issue:**
 
@@ -206,7 +206,7 @@ At minimum, track and expose cache health so users understand degraded performan
 
 ### CRITICAL-004: Related Keywords Cache Failure Silent
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/app/api/keywords/related/route.ts:141-145`
+**Location:** `src/app/api/keywords/related/route.ts:141-145`
 
 **Issue:**
 Same pattern as CRITICAL-003:
@@ -229,7 +229,7 @@ await Promise.race([cacheWrite, timeout]).catch(error => {
 
 ### CRITICAL-005: Webhook Redis Initialization Failure Returns Null
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/app/api/webhooks/stripe/route.ts:34-39`
+**Location:** `src/app/api/webhooks/stripe/route.ts:34-39`
 
 **Issue:**
 
@@ -295,7 +295,7 @@ Financial operations should never proceed with broken infrastructure.
 
 ### HIGH-001: Edge Rate Limit Fail-Open in Production
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/lib/edge-rate-limit.ts:255-266`
+**Location:** `src/lib/edge-rate-limit.ts:255-266`
 
 **Issue:**
 
@@ -386,7 +386,7 @@ Distinguish infrastructure failures (fail closed) from code bugs (fail open + al
 
 ### HIGH-002: Edge Rate Limit Status Check Same Issue
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/lib/edge-rate-limit.ts:294-305`
+**Location:** `src/lib/edge-rate-limit.ts:294-305`
 
 **Issue:**
 Same broad catch pattern as HIGH-001 in `getEdgeRateLimitStatus()`.
@@ -399,7 +399,7 @@ Same broad catch pattern as HIGH-001 in `getEdgeRateLimitStatus()`.
 
 ### HIGH-003: Provider Factory Swallows Invalid Config in Production
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/lib/api/factory.ts:170-180`
+**Location:** `src/lib/api/factory.ts:170-180`
 
 **Issue:**
 
@@ -469,7 +469,7 @@ Validate provider configuration at startup, not on first request.
 
 ### HIGH-004: Checkout Session Error Hides Infrastructure vs Config Issues
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/app/api/checkout/route.ts:153-160`
+**Location:** `src/app/api/checkout/route.ts:153-160`
 
 **Issue:**
 
@@ -571,7 +571,7 @@ Validate provider configuration at startup, not on first request.
 
 ### MEDIUM-001: isProviderAvailable Swallows All Errors
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/lib/api/factory.ts:230-243`
+**Location:** `src/lib/api/factory.ts:230-243`
 
 **Issue:**
 
@@ -631,7 +631,7 @@ At minimum, log why the check failed for debugging.
 
 ### MEDIUM-002: Memory Storage Eviction Could Delete Active Entries
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/lib/edge-rate-limit.ts:155-164`
+**Location:** `src/lib/edge-rate-limit.ts:155-164`
 
 **Issue:**
 
@@ -701,7 +701,7 @@ Prioritize evicting expired entries before active ones.
 
 ### MEDIUM-003: Redis Rate Limiter Health Check Swallows Error
 
-**Location:** `/Users/brettstark/Projects/keyflash/src/lib/rate-limit/redis-rate-limiter.ts:264-275`
+**Location:** `src/lib/rate-limit/redis-rate-limiter.ts:264-275`
 
 **Issue:**
 

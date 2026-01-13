@@ -18,7 +18,6 @@ AI-powered keyword research tool. Get keyword data in under 3 seconds. **Free an
 - **Lightning Fast** - Results in <3 seconds
 - **Simple UX** - Maximum 3 clicks from landing to results
 - **Privacy-First** - We don't store your keyword searches
-- **Self-Hosted** - Run on your own infrastructure
 - **Bring Your Own API Key** - Use your DataForSEO account for real data
 
 ### Keyword Data Provided
@@ -78,19 +77,19 @@ Without DataForSEO credentials, the app runs in mock mode with sample data.
 - **Content creators** researching topics for blogs and videos
 - **Small marketing teams** who don't need enterprise tools
 - **Freelancers** doing keyword research for clients
-- **Developers** who want to self-host their SEO tools
+- **Developers** who want open source SEO tools
 
 ## Tech Stack
 
-| Layer         | Technology                          |
-| ------------- | ----------------------------------- |
-| **Framework** | Next.js 16 (App Router)             |
-| **Language**  | TypeScript 5.9                      |
-| **Styling**   | Tailwind CSS 4                      |
-| **Caching**   | Upstash Redis                       |
-| **APIs**      | DataForSEO                          |
-| **Hosting**   | Vercel (or self-hosted)             |
-| **Testing**   | Vitest + Playwright                 |
+| Layer         | Technology              |
+| ------------- | ----------------------- |
+| **Framework** | Next.js 16 (App Router) |
+| **Language**  | TypeScript 5.9          |
+| **Styling**   | Tailwind CSS 4          |
+| **Caching**   | Upstash Redis           |
+| **APIs**      | DataForSEO              |
+| **Hosting**   | Vercel                  |
+| **Testing**   | Vitest + Playwright     |
 
 ## Documentation
 

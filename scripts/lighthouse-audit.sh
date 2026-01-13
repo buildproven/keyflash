@@ -3,7 +3,7 @@
 
 set -e
 
-SITE_URL="${1:-https://keyflash.vibebuildlab.com}"
+SITE_URL="${1:-http://localhost:3000}"
 
 echo "🔍 Running Lighthouse audit on: $SITE_URL"
 echo ""

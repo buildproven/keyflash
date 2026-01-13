@@ -96,7 +96,7 @@ jobs:
           fi
 
       - name: Report to vibebuildlab
-        if: always()
+        if: always() && secrets.AUDIT_WEBHOOK_SECRET != ''
         run: |
           # Get project slug from repo name
           PROJECT_SLUG="${{ github.event.repository.name }}"

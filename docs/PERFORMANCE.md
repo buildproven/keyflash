@@ -220,8 +220,7 @@ Web Vitals are logged to console with the format:
 
 ### Production
 
-Metrics are automatically sent to Vercel Analytics. View at:
-https://vercel.com/vibebuildlab/keyflash/analytics
+Metrics are automatically sent to Vercel Analytics. View in your project's analytics dashboard on Vercel.
 
 ### Alerts
 

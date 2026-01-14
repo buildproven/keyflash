@@ -123,6 +123,9 @@
     "@commitlint/config-conventional": "^19.0.0",
     "axe-core": "^4.10.0"
   },
+  "overrides": {
+    "tmp": "0.2.4"
+  },
   "lint-staged": {
     "package.json": [
       "prettier --write"

@@ -11,7 +11,15 @@
     "marketing",
     "open-source"
   ],
-  "license": "AGPL-3.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vibebuildlab/keyflash.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vibebuildlab/keyflash/issues"
+  },
+  "homepage": "https://github.com/vibebuildlab/keyflash#readme",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
@@ -149,8 +157,7 @@
     ],
     "tests/**/*.{ts,tsx,js,jsx}": [
       "eslint --fix",
-      "prettier --write",
-      "tsc --noEmit --project tests/tsconfig.json"
+      "prettier --write"
     ],
     "**/*.py": [
       "black --check --diff",

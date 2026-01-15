@@ -15,6 +15,16 @@ const isProtectedRoute = createRouteMatcher([
 const isWebhookRoute = createRouteMatcher(['/api/webhooks/(.*)'])
 
 /**
+ * CORS Configuration
+ * Explicitly define allowed origins for cross-origin requests
+ */
+const ALLOWED_ORIGINS = [
+  process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  'https://keyflash.vibebuildlab.com',
+  ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
+].filter(Boolean)
+
+/**
  * Generate a cryptographically secure CSRF token using Web Crypto API
  * (Edge Runtime compatible)
  */
@@ -43,7 +53,7 @@ function validateCsrfToken(req: NextRequest): boolean {
 }
 
 /**
- * Validate request origin matches expected host
+ * Validate request origin matches expected host or is in allowlist
  */
 function validateOrigin(req: NextRequest): boolean {
   const origin = req.headers.get('origin')
@@ -54,7 +64,12 @@ function validateOrigin(req: NextRequest): boolean {
 
   // Check Origin header first (more reliable)
   if (origin) {
-    return origin === expectedOrigin
+    // Same-origin requests always allowed
+    if (origin === expectedOrigin) {
+      return true
+    }
+    // Check against CORS allowlist
+    return ALLOWED_ORIGINS.includes(origin)
   }
 
   // Fallback to Referer header
@@ -62,7 +77,12 @@ function validateOrigin(req: NextRequest): boolean {
     try {
       const refererUrl = new URL(referer)
       const refererOrigin = `${refererUrl.protocol}//${refererUrl.host}`
-      return refererOrigin === expectedOrigin
+      // Same-origin requests always allowed
+      if (refererOrigin === expectedOrigin) {
+        return true
+      }
+      // Check against CORS allowlist
+      return ALLOWED_ORIGINS.includes(refererOrigin)
     } catch {
       return false
     }
@@ -72,16 +92,48 @@ function validateOrigin(req: NextRequest): boolean {
   return false
 }
 
+/**
+ * Set CORS headers for cross-origin requests
+ */
+function setCorsHeaders(req: NextRequest, response: NextResponse): void {
+  const origin = req.headers.get('origin')
+
+  // Only set CORS headers if origin is present and allowed
+  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin === `${req.nextUrl.protocol}//${req.nextUrl.host}`)) {
+    response.headers.set('Access-Control-Allow-Origin', origin)
+    response.headers.set('Access-Control-Allow-Credentials', 'true')
+    response.headers.set(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+    )
+    response.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-CSRF-Token, X-Requested-With'
+    )
+    response.headers.set('Access-Control-Max-Age', '86400') // 24 hours
+  }
+}
+
 // Public routes (default - no protection needed):
 // /, /search, /sign-in, /sign-up, /api/webhooks/*, /api/health
 
 export default clerkMiddleware(async (auth, req) => {
+  // Handle OPTIONS requests for CORS preflight
+  if (req.method === 'OPTIONS') {
+    const response = NextResponse.json({}, { status: 200 })
+    setCorsHeaders(req, response)
+    return response
+  }
+
   // Protect routes that require authentication
   if (isProtectedRoute(req)) {
     await auth.protect()
   }
 
   const response = NextResponse.next()
+
+  // Set CORS headers for all requests
+  setCorsHeaders(req, response)
 
   // CSRF Protection: Generate token for all GET requests
   if (req.method === 'GET') {

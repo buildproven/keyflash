@@ -6,16 +6,19 @@
 ## 📊 VBL Adopt Summary (2026-01-14)
 
 **Overall Assessment**:
+
 - 🔴 **Security Audit**: 0/100 - FAILED (6 critical OWASP issues)
 - 🟠 **Architecture Review**: 62/100 - NEEDS REVISION (8 major gaps)
 - 🟢 **Code Review**: 82/100 - APPROVED WITH SUGGESTIONS (7 improvements)
 
 **Action Items Added**: 21 items across Critical/High/Medium priority
+
 - **Critical**: 6 security audit failures (SEC-021 through SEC-026)
 - **High**: 8 architecture/code issues (ARCH-001 through CODE-003)
 - **Medium**: 7 code quality improvements (CODE-004 through CODE-010)
 
 **Recommended Fix Order**:
+
 1. SEC-021, SEC-022 - Remove hardcoded secrets (< 1 hour)
 2. ARCH-004, CODE-002 - Security fundamentals (CORS, timeouts) (< 4 hours)
 3. SEC-023 through SEC-026 - OWASP compliance (2-4 weeks)
@@ -29,38 +32,44 @@
 **Value Score: 13-26 (Revenue:5, Retention:5, Differentiation:3)**
 **Source**: VBL Adopt Security Audit (0/100 score - FAILED)
 
-| ID          | Issue                                         | Category      | CVSS | Effort | Status      |
-| ----------- | --------------------------------------------- | ------------- | ---- | ------ | ----------- |
-| **SEC-021** | Hardcoded Stripe test keys in test files     | Security      | 9.0  | S      | 🔴 Critical |
-| **SEC-022** | Base64 strings in tsconfig.json (potential)  | Security      | 6.0  | S      | 🔴 Critical |
-| **SEC-023** | OWASP A02: Cryptographic Failures            | Security      | 8.5  | M      | 🔴 Critical |
-| **SEC-024** | OWASP A03: Injection vulnerabilities         | Security      | 8.0  | M      | 🔴 Critical |
-| **SEC-025** | OWASP A04: Insecure Design patterns          | Security      | 7.5  | L      | 🔴 Critical |
-| **SEC-026** | OWASP A05: Security Misconfiguration         | Security      | 7.0  | M      | 🔴 Critical |
+| ID          | Item                                        | Type     | CVSS | Effort | Status      |
+| ----------- | ------------------------------------------- | -------- | ---- | ------ | ----------- |
+| **SEC-021** | Hardcoded Stripe test keys in test files    | Security | 9.0  | S      | 🔴 Critical |
+| **SEC-022** | Base64 strings in tsconfig.json (potential) | Security | 6.0  | S      | 🔴 Critical |
+| **SEC-023** | OWASP A02: Cryptographic Failures           | Security | 8.5  | M      | 🔴 Critical |
+| **SEC-024** | OWASP A03: Injection vulnerabilities        | Security | 8.0  | M      | 🔴 Critical |
+| **SEC-025** | OWASP A04: Insecure Design patterns         | Security | 7.5  | L      | 🔴 Critical |
+| **SEC-026** | OWASP A05: Security Misconfiguration        | Security | 7.0  | M      | 🔴 Critical |
 
 **SEC-021 Details**: Hardcoded Stripe test keys in tests/unit/api/stripe-webhook.test.ts:75
+
 - **Exploit**: Test keys committed to repo may expose patterns or be accidentally used
 - **Impact**: Potential credential leakage, pattern exposure for production keys
 - **Fix**: Move to .env.test, use environment variables, add to .gitignore validation
 
 **SEC-022 Details**: Long base64 string detected in tsconfig.json:23
+
 - **Exploit**: Potential secret encoded in config file
 - **Impact**: Credential exposure if legitimate secret
 - **Fix**: Investigate string, remove if secret, add to secret scanning exceptions if false positive
 
 **SEC-023 Details**: Cryptographic failures detected (OWASP A02)
+
 - **Impact**: Weak encryption, improper key management, or crypto misuse
 - **Fix**: Audit all crypto usage in encryption.ts, ensure AES-256-GCM properly implemented
 
 **SEC-024 Details**: Injection vulnerabilities detected (OWASP A03)
+
 - **Impact**: SQL injection, command injection, or other injection attacks
 - **Fix**: Audit all external inputs, ensure Zod validation covers all API endpoints
 
 **SEC-025 Details**: Insecure design patterns (OWASP A04)
+
 - **Impact**: Architectural flaws enabling attacks
 - **Fix**: Implement security by design, review authentication flows, add security controls
 
 **SEC-026 Details**: Security misconfiguration (OWASP A05)
+
 - **Impact**: Exposed admin interfaces, default credentials, verbose errors
 - **Fix**: Harden all configurations, review CORS, CSP headers, error messages
 
@@ -71,7 +80,7 @@
 **Value Score: 13-26 (Revenue:5, Retention:5, Differentiation:3)**
 **All items completed 2026-01-02**
 
-| ID           | Issue                                         | Category    | CVSS | Effort | Status  |
+| ID           | Item                                          | Type        | CVSS | Effort | Status  |
 | ------------ | --------------------------------------------- | ----------- | ---- | ------ | ------- |
 | **SEC-010**  | Trial period bypass - race condition          | Security    | 8.1  | M      | ✅ Done |
 | **SEC-011**  | Webhook replay attack - idempotency timing    | Security    | 7.5  | S      | ✅ Done |
@@ -107,53 +116,61 @@
 **Value Score: 6.5-13 (Revenue:4, Retention:5, Differentiation:4)**
 **Source**: VBL Adopt Architecture Review (62/100 - NEEDS REVISION)
 
-| ID          | Issue                                              | Category      | Effort | Status      |
-| ----------- | -------------------------------------------------- | ------------- | ------ | ----------- |
-| **ARCH-001** | Add API versioning strategy (/api/v1/)           | Architecture  | M      | 🟠 High     |
-| **ARCH-002** | DataForSEO failover/circuit breaker strategy     | Reliability   | L      | 🟠 High     |
-| **ARCH-003** | Database layer for persistence (Postgres/Neon)   | Architecture  | XL     | 🟠 High     |
-| **ARCH-004** | CORS policies explicit configuration             | Security      | S      | 🟠 High     |
-| **ARCH-005** | Enhanced logging/observability (OpenTelemetry)   | Observability | M      | 🟠 High     |
-| **CODE-001** | Redis connection pooling                         | Performance   | M      | 🟠 High     |
-| **CODE-002** | Fetch timeout for external APIs                  | Reliability   | S      | 🟠 High     |
-| **CODE-003** | Standardize error response formats               | Reliability   | M      | 🟠 High     |
+| ID           | Item                                           | Type          | Effort | Status  |
+| ------------ | ---------------------------------------------- | ------------- | ------ | ------- |
+| **ARCH-001** | Add API versioning strategy (/api/v1/)         | Architecture  | M      | 🟠 High |
+| **ARCH-002** | DataForSEO failover/circuit breaker strategy   | Reliability   | L      | 🟠 High |
+| **ARCH-003** | Database layer for persistence (Postgres/Neon) | Architecture  | XL     | 🟠 High |
+| **ARCH-004** | CORS policies explicit configuration           | Security      | S      | 🟠 High |
+| **ARCH-005** | Enhanced logging/observability (OpenTelemetry) | Observability | M      | 🟠 High |
+| **CODE-001** | Redis connection pooling                       | Performance   | M      | 🟠 High |
+| **CODE-002** | Fetch timeout for external APIs                | Reliability   | S      | 🟠 High |
+| **CODE-003** | Standardize error response formats             | Reliability   | M      | 🟠 High |
 
 **ARCH-001 Details**: No API versioning strategy (breaking changes risk)
+
 - **Impact**: Breaking changes to API will affect all clients simultaneously
 - **Fix**: Implement `/api/v1/` versioning, document deprecation policy
 - **Priority**: Required for production maturity
 
 **ARCH-002 Details**: Heavy reliance on DataForSEO with no fallback
+
 - **Impact**: Single point of failure, no graceful degradation on API outages
 - **Fix**: Implement circuit breaker pattern, fallback to mock/cache, retry logic
 - **Priority**: Critical for 99.9% uptime SLA
 
 **ARCH-003 Details**: No persistent storage for user data/analytics
+
 - **Impact**: All user preferences lost on Redis cache eviction, no historical analytics
 - **Fix**: Add Postgres/Neon for user data, search history, usage analytics
 - **Priority**: Required for enterprise features (reporting, trends)
 
 **ARCH-004 Details**: CORS not explicitly configured
+
 - **Impact**: Potential security vulnerabilities, unclear allowed origins
 - **Fix**: Add explicit CORS middleware with origin allowlist in middleware.ts
 - **Priority**: Production security requirement
 
 **ARCH-005 Details**: Limited observability beyond Sentry
+
 - **Impact**: No request/response logging, performance metrics, tracing
 - **Fix**: Add OpenTelemetry for distributed tracing, structured logging with Pino
 - **Priority**: Required for debugging production issues
 
 **CODE-001 Details**: No Redis connection pooling (src/lib/user/user-service.ts:85)
+
 - **Impact**: Connection exhaustion under load, poor performance
 - **Fix**: Implement connection pooling/reuse for Redis client
 - **Priority**: Scalability blocker
 
 **CODE-002 Details**: Missing timeout on fetch operations (src/lib/api/serp-service.ts:123)
+
 - **Impact**: Requests hang indefinitely on slow APIs
 - **Fix**: Add fetch timeout and proper cancellation (AbortController)
 - **Priority**: Reliability requirement
 
 **CODE-003 Details**: Inconsistent error response formats across API routes
+
 - **Impact**: Client-side error handling complexity, poor UX
 - **Fix**: Standardize on handleAPIError utility for all routes
 - **Priority**: API consistency requirement
@@ -165,7 +182,7 @@
 **Value Score: 6.5-13 (Revenue:4, Retention:5, Differentiation:4)**
 **Completion: 8/8 items done (updated 2026-01-03)**
 
-| ID           | Issue                                   | Category      | Effort | Status  |
+| ID           | Item                                    | Type          | Effort | Status  |
 | ------------ | --------------------------------------- | ------------- | ------ | ------- |
 | **TYPE-002** | Non-null assertions (133 instances)     | Type Safety   | M      | ✅ Done |
 | **SEC-012**  | Saved search quota bypass - TOCTOU      | Security      | S      | ✅ Done |
@@ -223,47 +240,54 @@
 **Value Score: 4-8 (Revenue:3, Retention:4, Differentiation:3)**
 **Source**: VBL Adopt Code Review (82/100 - APPROVED WITH SUGGESTIONS)
 
-| ID          | Issue                                              | Category      | Effort | Status      |
-| ----------- | -------------------------------------------------- | ------------- | ------ | ----------- |
-| **CODE-004** | Mock data decision logic in route handler        | Architecture  | M      | 🟡 Medium   |
-| **CODE-005** | Redis rate limiter race condition                | Security      | M      | 🟡 Medium   |
-| **CODE-006** | Simple hash collision risk in cache keys         | Security      | S      | 🟡 Medium   |
-| **CODE-007** | Hardcoded API rate limits in providers           | Config        | S      | 🟡 Medium   |
-| **CODE-008** | Add virtualization for large result sets         | Performance   | M      | 🟡 Medium   |
-| **CODE-009** | Add error boundary for client crashes            | Reliability   | S      | 🟡 Medium   |
-| **CODE-010** | Health check endpoint validation at startup      | Reliability   | S      | 🟡 Medium   |
+| ID           | Item                                        | Type         | Effort | Status    |
+| ------------ | ------------------------------------------- | ------------ | ------ | --------- |
+| **CODE-004** | Mock data decision logic in route handler   | Architecture | M      | 🟡 Medium |
+| **CODE-005** | Redis rate limiter race condition           | Security     | M      | 🟡 Medium |
+| **CODE-006** | Simple hash collision risk in cache keys    | Security     | S      | 🟡 Medium |
+| **CODE-007** | Hardcoded API rate limits in providers      | Config       | S      | 🟡 Medium |
+| **CODE-008** | Add virtualization for large result sets    | Performance  | M      | 🟡 Medium |
+| **CODE-009** | Add error boundary for client crashes       | Reliability  | S      | 🟡 Medium |
+| **CODE-010** | Health check endpoint validation at startup | Reliability  | S      | 🟡 Medium |
 
 **CODE-004 Details**: Mock data logic in route handler bypasses preferences (src/app/api/keywords/route.ts:149)
+
 - **Impact**: User preferences not respected, logic duplicated
 - **Fix**: Move mock/real data decision to provider factory, remove from route
 - **Priority**: Architecture cleanup
 
 **CODE-005 Details**: Race condition in atomic increment (src/lib/rate-limit/redis-rate-limiter.ts:165)
+
 - **Impact**: Rate limit bypass under concurrent requests
 - **Fix**: Implement Redis transactions or single EVAL script
 - **Priority**: Security gap under load
 
 **CODE-006 Details**: Simple hash function collision risk (src/lib/cache/redis.ts:89)
+
 - **Impact**: Cache poisoning at scale with hash collisions
 - **Fix**: Use crypto.createHash('sha256') instead of manual hash
 - **Priority**: Already fixed as SEC-014 ✅
 
 **CODE-007 Details**: Hardcoded rate limits (src/lib/api/providers/dataforseo.ts:198)
+
 - **Impact**: Can't adjust limits without code changes
 - **Fix**: Make rate limits configurable via environment variables
 - **Priority**: Operational flexibility
 
 **CODE-008 Details**: Large result sets lack virtualization (src/components/tables/keyword-results-table.tsx:45)
+
 - **Impact**: Poor performance with 1000+ keywords
 - **Fix**: Add react-window or similar for virtual scrolling
 - **Priority**: UX improvement for power users
 
 **CODE-009 Details**: No error boundary for client-side crashes (src/app/layout.tsx:25)
+
 - **Impact**: White screen of death on React errors
 - **Fix**: Add ErrorBoundary component wrapping app
 - **Priority**: Graceful degradation
 
 **CODE-010 Details**: No health check validation at startup (src/lib/config/startup.ts:25)
+
 - **Impact**: App starts with broken dependencies
 - **Fix**: Validate Redis, Clerk, Stripe connectivity on startup
 - **Priority**: Fail-fast in production
@@ -275,7 +299,7 @@
 **Value Score: 4-8 (Revenue:3, Retention:4, Differentiation:3)**
 **Completion: 9/9 items done (updated 2026-01-03)**
 
-| ID           | Issue                                    | Category      | Effort | Status  |
+| ID           | Item                                     | Type          | Effort | Status  |
 | ------------ | ---------------------------------------- | ------------- | ------ | ------- |
 | **SEC-016**  | Unbounded cache key scan (OOM risk)      | Security      | S      | ✅ Done |
 | **TYPE-003** | Weak generic constraints on Redis get<T> | Type Safety   | M      | ✅ Done |
@@ -357,11 +381,11 @@
 
 **Target: 70%+ on all modules | Current: 73.75% overall**
 
-| ID           | Module                    | Current | Target | Effort | Status      |
-| ------------ | ------------------------- | ------- | ------ | ------ | ----------- |
-| **TEST-010** | saved-searches-service.ts | 13.76%  | 70%+   | M      | 🔴 Critical |
-| **TEST-011** | user-service.ts           | 25.38%  | 70%+   | M      | 🔴 Critical |
-| **TEST-012** | app/api/checkout/route.ts | 30.18%  | 70%+   | M      | 🟠 High     |
+| ID           | Item                      | Type   | Current | Target | Effort      | Status |
+| ------------ | ------------------------- | ------ | ------- | ------ | ----------- | ------ |
+| **TEST-010** | saved-searches-service.ts | 13.76% | 70%+    | M      | 🔴 Critical |
+| **TEST-011** | user-service.ts           | 25.38% | 70%+    | M      | 🔴 Critical |
+| **TEST-012** | app/api/checkout/route.ts | 30.18% | 70%+    | M      | 🟠 High     |
 
 **TEST-010 Details**: Add integration tests for saved searches
 
@@ -456,42 +480,48 @@
 
 ## 🔥 High Value - Next Up
 
-| ID           | Feature                        | Value Drivers                                                                      | Effort | Status     |
-| ------------ | ------------------------------ | ---------------------------------------------------------------------------------- | ------ | ---------- |
-| **TOOL-001** | /bs:audit integrated workflow  | Efficiency: 2-3hr → 90min, Quality: zero gaps, Automation: one-command ship-ready | M      | 💡 Planned |
-| **FEAT-001** | Saved searches                 | Retention: saves user work, Revenue: premium feature                               | M      | ✅ Done    |
-| **FEAT-005** | Bulk CSV upload                | Revenue: enterprise/agency appeal, Retention: power users                          | M      | 💡 Planned |
+| ID           | Item                          | Type    | Value Drivers                                                                     | Effort | Score | Status     |
+| ------------ | ----------------------------- | ------- | --------------------------------------------------------------------------------- | ------ | ----- | ---------- |
+| **TOOL-001** | /bs:audit integrated workflow | Feature | Efficiency: 2-3hr → 90min, Quality: zero gaps, Automation: one-command ship-ready | M      | TBD   | 💡 Planned |
+| **FEAT-001** | Saved searches                | Feature | Retention: saves user work, Revenue: premium feature                              | M      | TBD   | ✅ Done    |
+| **FEAT-005** | Bulk CSV upload               | Feature | Revenue: enterprise/agency appeal, Retention: power users                         | M      | TBD   | 💡 Planned |
 
 **Recommended next**: TOOL-001 (/bs:audit) for 5x productivity improvement on quality workflow
 
 ### TOOL-001: /bs:audit Integrated Workflow
 
 **Problem**: Manual workflow between VBL Adopt and /bs:quality
+
 - VBL Adopt finds issues (10 min) → read reports (30 min) → update backlog (20 min) → run /bs:quality (90 min)
 - **Total**: 150 min + manual effort + context loss
 
 **Solution**: Integrated one-command workflow
+
 - `/bs:audit` → VBL Adopt scan → auto-update backlog → /bs:quality auto-fix → commit
 - **Total**: 90 min, zero manual steps
 
 **Implementation** (3 phases):
 
 **Phase 1: Quick Wins (< 4 hours) - HIGH PRIORITY**
+
 - Add Gitleaks pre-flight to /bs:quality (Step 0.5 before agents)
 - Add `--security-deep` flag to run OWASP + secret scanning
 - Add `--update-backlog` to parse VBL Adopt reports → BACKLOG.md
 
 **Phase 2: Integration (1-2 days)**
+
 - Create `/bs:audit` command combining VBL Adopt + /bs:quality
 - Test handoff: VBL Adopt findings → agent context
 - Add `--report-only`, `--fix-critical`, `--update-backlog` flags
 
 **Phase 3: Polish (optional)**
+
 - Add audit history tracking to .qualityrc.json
 - Create `/bs:audit --status` dashboard
 - Add incremental mode (`--incremental` for changed files only)
 
 **Value Drivers**:
+
 - **Efficiency**: 2-3hr manual workflow → 90min autonomous
 - **Quality**: Eliminates gaps (VBL Adopt OWASP/secrets + /bs:quality fixing)
 - **Automation**: One command from audit to ship-ready code
@@ -500,6 +530,7 @@
 **Effort**: M (1-2 days for core, < 4 hours for Phase 1 quick wins)
 
 **ROI Calculation**:
+
 - Time savings: 60-90 min per quality cycle
 - Frequency: 2-3x per week
 - Annual savings: ~150 hours/year (3-4 weeks)
@@ -508,6 +539,7 @@
 **Reference**: See `docs/TOOLING_IMPROVEMENTS_PROPOSAL.md` for detailed implementation
 
 **Next Steps**:
+
 1. Implement Phase 1 (Gileaks + --update-backlog) - < 4 hours
 2. Test on KeyFlash with next quality run
 3. Ship Phase 2 within 1 week if Phase 1 successful
@@ -516,10 +548,10 @@
 
 ## 📊 Medium Value - Worth Doing
 
-| ID           | Feature                    | Value Drivers                                                  | Effort | Status     |
-| ------------ | -------------------------- | -------------------------------------------------------------- | ------ | ---------- |
-| **TEST-004** | Improve test coverage >85% | Quality: reduce bugs, Retention: reliability                   | M      | 💡 Planned |
-| **FEAT-003** | Keyword clustering         | Differentiation: unique vs competitors, Retention: power users | L      | 💭 Idea    |
+| ID           | Item                       | Type      | Value Drivers                                                  | Effort | Score | Status     |
+| ------------ | -------------------------- | --------- | -------------------------------------------------------------- | ------ | ----- | ---------- |
+| **TEST-004** | Improve test coverage >85% | Tech Debt | Quality: reduce bugs, Retention: reliability                   | M      | TBD   | 💡 Planned |
+| **FEAT-003** | Keyword clustering         | Feature   | Differentiation: unique vs competitors, Retention: power users | L      | TBD   | 💭 Idea    |
 
 **TEST-004 Details**: Current coverage 79%. Gaps:
 
@@ -531,17 +563,19 @@
 
 ## 📚 Low Value - When Needed
 
-| ID           | Feature                            | Value Drivers                            | Effort | Status  |
-| ------------ | ---------------------------------- | ---------------------------------------- | ------ | ------- |
-| **DOCS-001** | API integration guide (Google Ads) | Enables self-service setup               | M      | 💭 Idea |
-| **DOCS-002** | Self-hosting guide                 | AGPL compliance, niche audience          | M      | 💭 Idea |
-| **FEAT-004** | Browser extension                  | Differentiation, but XL effort kills ROI | XL     | 💭 Idea |
+| ID           | Item                               | Type    | Value Drivers                            | Effort | Score | Status  |
+| ------------ | ---------------------------------- | ------- | ---------------------------------------- | ------ | ----- | ------- |
+| **DOCS-001** | API integration guide (Google Ads) | Docs    | Enables self-service setup               | M      | TBD   | 💭 Idea |
+| **DOCS-002** | Self-hosting guide                 | Docs    | AGPL compliance, niche audience          | M      | TBD   | 💭 Idea |
+| **FEAT-004** | Browser extension                  | Feature | Differentiation, but XL effort kills ROI | XL     | TBD   | 💭 Idea |
 
 ---
 
 ## Completed ✅
 
-| ID                        | Feature                                                          | Completed  |
+| ID                        | Item                                                             | Type       | Completed |
+| ------------------------- | ---------------------------------------------------------------- | ---------- | --------- |
+| Feature                   | Completed                                                        |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
 | **TYPE-002**              | Non-null assertions → getClient() helper (133→3 instances)       | 2026-01-03 |
 | **A11Y-013**              | Focus indicators for saved search buttons                        | 2026-01-03 |

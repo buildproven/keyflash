@@ -7,6 +7,7 @@ import type {
 import type { KeywordData, Competition, MonthlyTrend } from '@/types/keyword'
 import type { RelatedKeyword } from '@/types/related-keywords'
 import { logger } from '@/lib/utils/logger'
+import { fetchWithTimeout, API_TIMEOUTS } from '@/lib/utils/fetch-with-timeout'
 
 /**
  * DataForSEO API Response Types
@@ -226,7 +227,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     const languageCode = this.getLanguageCode(options.language)
 
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${apiBaseUrl}/keywords_data/google_ads/search_volume/live`,
         {
           method: 'POST',
@@ -244,7 +245,8 @@ export class DataForSEOProvider implements KeywordAPIProvider {
               date_to: null,
             },
           ]),
-        }
+        },
+        API_TIMEOUTS.DEFAULT
       )
 
       if (!response.ok) {

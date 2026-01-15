@@ -85,9 +85,12 @@
   },
   "devDependencies": {
     "@axe-core/cli": "^4.11.0",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.1.1",
     "@playwright/test": "^1.56.1",
+    "@size-limit/file": "^11.0.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -99,7 +102,9 @@
     "@typescript-eslint/parser": "^8.9.0",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.10",
+    "axe-core": "^4.10.0",
     "create-qa-architect": "^5.4.3",
+    "dotenv": "^17.2.3",
     "eslint": "^9.16.0",
     "eslint-config-next": "^16.0.7",
     "eslint-plugin-security": "^3.0.1",
@@ -112,16 +117,12 @@
     "prettier": "^3.3.3",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
+    "size-limit": "^11.0.0",
     "stylelint": "^16.8.0",
     "stylelint-config-standard": "^39.0.1",
     "tailwindcss": "^4",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.10",
-    "size-limit": "^11.0.0",
-    "@size-limit/file": "^11.0.0",
-    "@commitlint/cli": "^19.0.0",
-    "@commitlint/config-conventional": "^19.0.0",
-    "axe-core": "^4.10.0"
+    "vitest": "^4.0.10"
   },
   "overrides": {
     "tmp": "0.2.4"
@@ -167,11 +168,6 @@
       "black --check --diff",
       "ruff check --fix",
       "isort --check-only --diff"
-    ],
-    "**/*.{ts,tsx}": [
-      "tsc --noEmit --skipLibCheck",
-      "eslint --fix",
-      "prettier --write"
     ]
   },
   "engines": {

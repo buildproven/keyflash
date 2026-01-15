@@ -1066,7 +1066,7 @@ focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
 
 **For accessibility questions or issues:**
 
-- GitHub Issues: https://github.com/brettstark73/keyflash/issues
+- GitHub Issues: https://github.com/vibebuildlab/keyflash/issues
 - Label issues with: `accessibility`
 - WCAG Reference: https://www.w3.org/WAI/WCAG21/quickref/
 

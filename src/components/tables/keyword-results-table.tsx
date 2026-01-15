@@ -198,7 +198,7 @@ export const KeywordResultsTable = memo(function KeywordResultsTable({
                 This data is generated for demonstration purposes only. To get
                 real keyword metrics,{' '}
                 <a
-                  href="https://github.com/brettstark73/keyflash#api-setup"
+                  href="https://github.com/vibebuildlab/keyflash#api-setup"
                   className="underline hover:text-orange-600 dark:hover:text-orange-200"
                   target="_blank"
                   rel="noopener noreferrer"

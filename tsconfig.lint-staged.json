@@ -1,5 +1,13 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
   "include": ["src/**/*", "*.ts", "*.tsx"],
   "exclude": [
     "node_modules",

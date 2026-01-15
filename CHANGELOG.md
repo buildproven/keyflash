@@ -258,7 +258,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Links
 
-- [Repository](https://github.com/brettstark73/keyflash)
-- [Issues](https://github.com/brettstark73/keyflash/issues)
-- [Pull Requests](https://github.com/brettstark73/keyflash/pulls)
-- [License](https://github.com/brettstark73/keyflash/blob/main/LICENSE) (AGPL-3.0)
+- [Repository](https://github.com/vibebuildlab/keyflash)
+- [Issues](https://github.com/vibebuildlab/keyflash/issues)
+- [Pull Requests](https://github.com/vibebuildlab/keyflash/pulls)
+- [License](https://github.com/vibebuildlab/keyflash/blob/main/LICENSE) (AGPL-3.0)

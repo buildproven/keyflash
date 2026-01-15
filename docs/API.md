@@ -860,8 +860,8 @@ See [CHANGELOG.md](../CHANGELOG.md) for API version history and breaking changes
 
 ## Support
 
-- **GitHub Issues**: [https://github.com/brettstark73/keyflash/issues](https://github.com/brettstark73/keyflash/issues)
-- **Documentation**: [https://github.com/brettstark73/keyflash](https://github.com/brettstark73/keyflash)
+- **GitHub Issues**: [https://github.com/vibebuildlab/keyflash/issues](https://github.com/vibebuildlab/keyflash/issues)
+- **Documentation**: [https://github.com/vibebuildlab/keyflash](https://github.com/vibebuildlab/keyflash)
 - **License**: AGPL-3.0
 
 ---

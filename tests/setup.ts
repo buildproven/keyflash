@@ -4,7 +4,7 @@ import * as matchers from '@testing-library/jest-dom/matchers'
 import { config } from 'dotenv'
 import path from 'path'
 
-// Load .env.test for test environment
+// Load .env.test for test environment (Redis vars commented out to allow mocking)
 config({ path: path.resolve(process.cwd(), '.env.test') })
 
 process.env.VITEST = 'true'

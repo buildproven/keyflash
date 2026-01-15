@@ -52,7 +52,7 @@ describe('Stripe Webhook API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Stripe keys loaded from .env.test (git-ignored)
-    // Verify they're set by CI/test environment
+    // Verify they're set by test environment
     if (!process.env.STRIPE_SECRET_KEY) {
       throw new Error('STRIPE_SECRET_KEY must be set in .env.test')
     }

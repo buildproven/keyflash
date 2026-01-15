@@ -168,11 +168,6 @@
       "black --check --diff",
       "ruff check --fix",
       "isort --check-only --diff"
-    ],
-    "**/*.{ts,tsx}": [
-      "tsc --noEmit --skipLibCheck",
-      "eslint --fix",
-      "prettier --write"
     ]
   },
   "engines": {

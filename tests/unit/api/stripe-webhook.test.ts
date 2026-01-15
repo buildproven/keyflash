@@ -51,8 +51,14 @@ vi.mock('@/lib/utils/logger', () => ({
 describe('Stripe Webhook API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env.STRIPE_SECRET_KEY = 'sk_test_123'
-    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret'
+    // Stripe keys loaded from .env.test (git-ignored)
+    // Verify they're set by CI/test environment
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY must be set in .env.test')
+    }
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      throw new Error('STRIPE_WEBHOOK_SECRET must be set in .env.test')
+    }
   })
 
   afterEach(() => {
@@ -66,19 +72,22 @@ describe('Stripe Webhook API Route', () => {
     it('should require STRIPE_WEBHOOK_SECRET environment variable', () => {
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
       expect(webhookSecret).toBeDefined()
-      expect(webhookSecret).toBe('whsec_test_secret')
+      expect(webhookSecret).toMatch(/^whsec_/)
     })
 
     it('should require STRIPE_SECRET_KEY environment variable', () => {
       const secretKey = process.env.STRIPE_SECRET_KEY
       expect(secretKey).toBeDefined()
-      expect(secretKey).toBe('sk_test_123')
+      expect(secretKey).toMatch(/^sk_test_/)
     })
 
     it('should fail gracefully without webhook secret', () => {
+      const originalSecret = process.env.STRIPE_WEBHOOK_SECRET
       delete process.env.STRIPE_WEBHOOK_SECRET
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
       expect(webhookSecret).toBeUndefined()
+      // Restore for subsequent tests
+      process.env.STRIPE_WEBHOOK_SECRET = originalSecret
     })
   })
 

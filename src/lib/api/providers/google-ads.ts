@@ -6,6 +6,7 @@ import type {
 } from '../types'
 import type { KeywordData, Competition } from '@/types/keyword'
 import { logger } from '@/lib/utils/logger'
+import { fetchWithTimeout, API_TIMEOUTS } from '@/lib/utils/fetch-with-timeout'
 
 /**
  * Google Ads API Response Types
@@ -163,16 +164,20 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
    */
   private async getAccessToken(): Promise<string> {
     try {
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
+      const response = await fetchWithTimeout(
+        'https://oauth2.googleapis.com/token',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
           client_id: this.config.clientId,
           client_secret: this.config.clientSecret,
           refresh_token: this.config.refreshToken,
           grant_type: 'refresh_token',
         }),
-      })
+        },
+        API_TIMEOUTS.AUTH
+      )
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -225,7 +230,7 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
     `.trim()
 
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `https://googleads.googleapis.com/v17/customers/${customerId}/googleAdsService:searchStream`,
         {
           method: 'POST',
@@ -241,7 +246,8 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
             geo_target_constants: [`geoTargetConstants/${locationCode}`],
             language_constants: [languageConstant],
           }),
-        }
+        },
+        API_TIMEOUTS.DEFAULT
       )
 
       if (!response.ok) {

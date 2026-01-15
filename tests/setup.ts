@@ -1,6 +1,11 @@
 import { expect, afterEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import * as matchers from '@testing-library/jest-dom/matchers'
+import { config } from 'dotenv'
+import path from 'path'
+
+// Load .env.test for test environment
+config({ path: path.resolve(process.cwd(), '.env.test') })
 
 process.env.VITEST = 'true'
 

@@ -6,6 +6,7 @@
  * the application from starting with broken services.
  */
 
+import https from 'https'
 import { logger } from '@/lib/utils/logger'
 
 export interface HealthCheckResult {
@@ -35,9 +36,19 @@ export async function checkRedisHealth(): Promise<HealthCheckResult> {
       }
     }
 
-    // Try to ping Redis
+    // CODE-001: Try to ping Redis with connection pooling
     const { Redis } = await import('@upstash/redis')
-    const redis = new Redis({ url, token })
+    const redis = new Redis({
+      url,
+      token,
+      // CODE-001: Configure HTTPS agent with connection pooling
+      // Even for startup-only health checks, this prevents connection buildup
+      // if health checks are triggered multiple times during initialization
+      agent: new https.Agent({
+        keepAlive: true,
+        maxSockets: 50,
+      }),
+    })
     const result = await redis.ping()
 
     const latencyMs = Date.now() - startTime

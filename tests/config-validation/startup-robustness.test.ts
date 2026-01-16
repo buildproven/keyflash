@@ -59,7 +59,8 @@ describe('Startup Robustness', () => {
   describe('Environment Validation Error Handling', () => {
     it('should throw errors instead of exiting when validation fails', async () => {
       ;(process.env as Record<string, string>).NODE_ENV = 'production'
-      delete process.env.RATE_LIMIT_HMAC_SECRET // Required in production
+      ;(process.env as Record<string, string>).RATE_LIMIT_ENABLED = 'true' // Enable rate limiting to trigger validation
+      delete process.env.RATE_LIMIT_HMAC_SECRET // Required in production when rate limiting enabled
 
       let didThrow = false
       let errorMessage = ''
@@ -130,18 +131,27 @@ describe('Startup Robustness', () => {
       )
       const startupContent = readFileSync(startupFilePath, 'utf-8')
 
-      // Should skip validation in development (no try/catch for validateEnvironment in dev branch)
+      // Should skip validation in development
       expect(startupContent).toContain(
         'Development mode: environment validation skipped'
       )
-      expect(startupContent).not.toContain('try {')
 
       // Should check for development mode
       expect(startupContent).toContain('isDevelopment')
       expect(startupContent).toContain("NODE_ENV === 'development'")
 
-      // Production should still call validateEnvironment
+      // Development branch should not call validateEnvironment or validateHealthChecks
       const lines = startupContent.split('\n')
+      const devSection = lines
+        .slice(
+          lines.findIndex(line => line.includes('if (isDevelopment)')),
+          lines.findIndex(line => line.includes('} else {'))
+        )
+        .join('\n')
+      expect(devSection).not.toContain('validateEnvironment')
+      expect(devSection).not.toContain('validateHealthChecks')
+
+      // Production should still call validateEnvironment
       const prodSection = lines
         .slice(
           lines.findIndex(line => line.includes('} else {')),
@@ -155,6 +165,7 @@ describe('Startup Robustness', () => {
       // Test that errors are throwable and catchable (not process.exit)
       // Use production mode to ensure validation is strict
       ;(process.env as Record<string, string>).NODE_ENV = 'production'
+      ;(process.env as Record<string, string>).RATE_LIMIT_ENABLED = 'true' // Enable rate limiting to trigger validation
       delete process.env.KEYWORD_API_PROVIDER
       delete process.env.RATE_LIMIT_HMAC_SECRET // Force validation failure
 
@@ -179,6 +190,7 @@ describe('Startup Robustness', () => {
   describe('Production Safety', () => {
     it('should still enforce strict validation in production', async () => {
       ;(process.env as Record<string, string>).NODE_ENV = 'production'
+      ;(process.env as Record<string, string>).RATE_LIMIT_ENABLED = 'true' // Enable rate limiting to trigger validation
       // Remove critical production requirements
       delete process.env.RATE_LIMIT_HMAC_SECRET
       delete process.env.KEYWORD_API_PROVIDER

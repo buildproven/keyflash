@@ -147,13 +147,14 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
   }
 
   getBatchLimit(): number {
-    // Google Ads allows up to 1000 keywords per request
-    return 1000
+    // CODE-007: Configurable batch limit via env var
+    return Number(process.env.GOOGLE_ADS_BATCH_LIMIT) || 1000
   }
 
   getRateLimit(): RateLimit {
+    // CODE-007: Configurable rate limit via env var
     return {
-      requests: 1000,
+      requests: Number(process.env.GOOGLE_ADS_RATE_LIMIT_REQUESTS) || 1000,
       period: 'day',
     }
   }
@@ -190,9 +191,9 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       return data.access_token
     } catch (error) {
       logger.error('OAuth token refresh error', error, { module: 'Google Ads' })
-      throw new Error(
-        `Failed to refresh OAuth token: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
+      // Re-throw original error to preserve stack trace and error type
+      // for proper error handling by caller
+      throw error
     }
   }
 
@@ -261,9 +262,9 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
       return data
     } catch (error) {
       logger.error('API call error', error, { module: 'Google Ads' })
-      throw new Error(
-        `Google Ads API call failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
+      // Re-throw original error to preserve stack trace and error type
+      // for proper error handling by caller
+      throw error
     }
   }
 

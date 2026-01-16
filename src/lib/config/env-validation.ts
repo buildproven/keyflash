@@ -34,6 +34,12 @@ const envSchema = z.object({
   DATAFORSEO_API_LOGIN: z.string().optional(),
   DATAFORSEO_API_PASSWORD: z.string().optional(),
 
+  // API Rate Limits (CODE-007: Configurable rate limits)
+  DATAFORSEO_RATE_LIMIT_REQUESTS: z.coerce.number().min(1).default(2000),
+  DATAFORSEO_BATCH_LIMIT: z.coerce.number().min(1).default(10000),
+  GOOGLE_ADS_RATE_LIMIT_REQUESTS: z.coerce.number().min(1).default(1000),
+  GOOGLE_ADS_BATCH_LIMIT: z.coerce.number().min(1).default(1000),
+
   // Redis cache (optional but recommended for production)
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
@@ -189,12 +195,18 @@ export function validateEnvironment() {
         console.error(issues.map(issue => `   • ${issue}`).join('\n'))
       }
       errorMessage = `Environment validation failed: ${issues.join(', ')}`
-    } else {
-      const message = (error as Error).message
+    } else if (error instanceof Error) {
+      const message = error.message
       if (shouldLogErrors) {
         console.error(`   • ${message}`)
       }
       errorMessage = `Environment validation failed: ${message}`
+    } else {
+      // Handle unknown error types
+      if (shouldLogErrors) {
+        console.error('   • Unknown error type:', error)
+      }
+      errorMessage = 'Environment validation failed: Unknown error'
     }
 
     if (shouldLogErrors) {

@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@/lib/utils/logger'
+import { fetchWithTimeout, API_TIMEOUTS } from '@/lib/utils/fetch-with-timeout'
 
 // FIX-013: Maximum entries in memory store to prevent unbounded growth
 const MAX_MEMORY_ENTRIES = 10000
@@ -44,14 +45,18 @@ class RedisStorage implements RateLimitStorage {
   }
 
   private async request(command: string[]): Promise<unknown> {
-    const response = await fetch(`${this.baseUrl}/pipeline`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        'Content-Type': 'application/json',
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}/pipeline`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([command]),
       },
-      body: JSON.stringify([command]),
-    })
+      API_TIMEOUTS.DEFAULT
+    )
 
     if (!response.ok) {
       throw new Error(`Redis request failed: ${response.status}`)
@@ -99,17 +104,21 @@ class RedisStorage implements RateLimitStorage {
 
   async increment(key: string, ttlMs: number): Promise<number> {
     try {
-      const response = await fetch(`${this.baseUrl}/pipeline`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          'Content-Type': 'application/json',
+      const response = await fetchWithTimeout(
+        `${this.baseUrl}/pipeline`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            ['INCR', key],
+            ['EXPIRE', key, Math.ceil(ttlMs / 1000).toString()],
+          ]),
         },
-        body: JSON.stringify([
-          ['INCR', key],
-          ['EXPIRE', key, Math.ceil(ttlMs / 1000).toString()],
-        ]),
-      })
+        API_TIMEOUTS.DEFAULT
+      )
 
       if (!response.ok) {
         throw new Error(`Redis pipeline failed: ${response.status}`)

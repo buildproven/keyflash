@@ -190,13 +190,14 @@ export class DataForSEOProvider implements KeywordAPIProvider {
   }
 
   getBatchLimit(): number {
-    // DataForSEO allows larger batches than Google Ads
-    return 10000
+    // CODE-007: Configurable batch limit via env var
+    return Number(process.env.DATAFORSEO_BATCH_LIMIT) || 10000
   }
 
   getRateLimit(): RateLimit {
+    // CODE-007: Configurable rate limit via env var
     return {
-      requests: 2000,
+      requests: Number(process.env.DATAFORSEO_RATE_LIMIT_REQUESTS) || 2000,
       period: 'day',
     }
   }
@@ -280,9 +281,9 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       return data
     } catch (error) {
       logger.error('API call error', error, { module: 'DataForSEO' })
-      throw new Error(
-        `DataForSEO API call failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
+      // Re-throw original error to preserve stack trace and error type
+      // for proper error handling by caller
+      throw error
     }
   }
 
@@ -365,10 +366,13 @@ export class DataForSEOProvider implements KeywordAPIProvider {
 
     // Transform and sort by date (oldest first for charting)
     return monthlySearches
-      .filter(m => m.month !== undefined && m.year !== undefined)
+      .filter(
+        (m): m is { month: number; year: number; search_volume?: number } =>
+          m.month !== undefined && m.year !== undefined
+      )
       .map(m => ({
-        month: m.month!,
-        year: m.year!,
+        month: m.month, // Type guard ensures these exist
+        year: m.year,
         volume: m.search_volume || 0,
       }))
       .sort((a, b) => {
@@ -539,9 +543,9 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       logger.error('Related keywords API error', error, {
         module: 'DataForSEO',
       })
-      throw new Error(
-        `DataForSEO related keywords failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
+      // Re-throw original error to preserve stack trace and error type
+      // for proper error handling by caller
+      throw error
     }
   }
 

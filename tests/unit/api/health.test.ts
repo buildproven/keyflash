@@ -90,6 +90,7 @@ describe('/api/health', () => {
       process.env.UPSTASH_REDIS_REST_URL = 'https://redis.upstash.io'
       process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
       process.env.KEYWORD_API_PROVIDER = 'mock'
+      delete process.env.PRIVACY_MODE // Ensure privacy mode is off to test Redis errors
       mockCache.ping.mockRejectedValue(new Error('Connection timeout'))
 
       const response = await GET(createMockRequest())
@@ -189,6 +190,7 @@ describe('/api/health', () => {
       // Redis not configured, but provider OK
       delete process.env.UPSTASH_REDIS_REST_URL
       delete process.env.UPSTASH_REDIS_REST_TOKEN
+      delete process.env.PRIVACY_MODE // Ensure privacy mode is off to test Redis not configured
       process.env.KEYWORD_API_PROVIDER = 'mock'
 
       const response = await GET(createMockRequest())
@@ -204,6 +206,7 @@ describe('/api/health', () => {
       // Redis not configured but mock provider is available
       delete process.env.UPSTASH_REDIS_REST_URL
       delete process.env.UPSTASH_REDIS_REST_TOKEN
+      delete process.env.PRIVACY_MODE // Ensure privacy mode is off to test Redis not configured
       delete process.env.KEYWORD_API_PROVIDER // Defaults to mock
 
       const response = await GET(createMockRequest())

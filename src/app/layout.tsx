@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { AuthHeaderWrapper } from '@/components/layout/auth-header-wrapper'
+import { ErrorBoundary } from '@/components/error-boundary'
 import { WebVitals } from './web-vitals'
 import { PerformanceMonitor } from './performance-monitor'
 import { getAppUrl } from '@/lib/utils/app-url'
@@ -88,10 +89,12 @@ export default function RootLayout({
           />
         </head>
         <body className="font-sans antialiased">
-          <WebVitals />
-          <PerformanceMonitor />
-          <AuthHeaderWrapper />
-          {children}
+          <ErrorBoundary>
+            <WebVitals />
+            <PerformanceMonitor />
+            <AuthHeaderWrapper />
+            {children}
+          </ErrorBoundary>
         </body>
       </html>
     </ClerkProvider>

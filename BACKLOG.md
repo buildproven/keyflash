@@ -32,14 +32,14 @@
 **Value Score: 13-26 (Revenue:5, Retention:5, Differentiation:3)**
 **Source**: VBL Adopt Security Audit (0/100 score - FAILED)
 
-| ID          | Item                                        | Type     | CVSS | Effort | Status      |
-| ----------- | ------------------------------------------- | -------- | ---- | ------ | ----------- |
-| **SEC-021** | Hardcoded Stripe test keys in test files    | Security | 9.0  | S      | 🔴 Critical |
-| **SEC-022** | Base64 strings in tsconfig.json (potential) | Security | 6.0  | S      | 🔴 Critical |
-| **SEC-023** | OWASP A02: Cryptographic Failures           | Security | 8.5  | M      | ✅ Done    |
-| **SEC-024** | OWASP A03: Injection vulnerabilities        | Security | 8.0  | M      | ✅ Done    |
-| **SEC-025** | OWASP A04: Insecure Design patterns         | Security | 7.5  | L      | ✅ Done    |
-| **SEC-026** | OWASP A05: Security Misconfiguration        | Security | 7.0  | M      | ✅ Done    |
+| ID          | Item                                        | Type     | CVSS | Effort | Status  |
+| ----------- | ------------------------------------------- | -------- | ---- | ------ | ------- |
+| **SEC-021** | Hardcoded Stripe test keys in test files    | Security | 9.0  | S      | ✅ Done |
+| **SEC-022** | Base64 strings in tsconfig.json (potential) | Security | 6.0  | S      | ✅ Done |
+| **SEC-023** | OWASP A02: Cryptographic Failures           | Security | 8.5  | M      | ✅ Done |
+| **SEC-024** | OWASP A03: Injection vulnerabilities        | Security | 8.0  | M      | ✅ Done |
+| **SEC-025** | OWASP A04: Insecure Design patterns         | Security | 7.5  | L      | ✅ Done |
+| **SEC-026** | OWASP A05: Security Misconfiguration        | Security | 7.0  | M      | ✅ Done |
 
 **SEC-021 Details**: Hardcoded Stripe test keys in tests/unit/api/stripe-webhook.test.ts:75
 
@@ -585,6 +585,8 @@
 | ------------------------- | ---------------------------------------------------------------- | ---------- | --------- |
 | Feature                   | Completed                                                        |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **SEC-021**               | Hardcoded Stripe test keys → .env.test (git-ignored)             | 2026-01-15 |
+| **SEC-022**               | Base64 string investigation (false positive, added comment)      | 2026-01-15 |
 | **TYPE-002**              | Non-null assertions → getClient() helper (133→3 instances)       | 2026-01-03 |
 | **A11Y-013**              | Focus indicators for saved search buttons                        | 2026-01-03 |
 | **PERF-011**              | Cache write fire-and-forget (removed Promise.race timeout)       | 2026-01-03 |

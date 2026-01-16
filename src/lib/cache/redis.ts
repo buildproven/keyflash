@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis'
+import * as https from 'https'
 import type { KeywordData } from '@/types/keyword'
 import { logger } from '@/lib/utils/logger'
 import {
@@ -6,7 +7,7 @@ import {
   RedisOperationError,
   RedisConfigurationError,
 } from './errors'
-import crypto from 'crypto'
+import * as crypto from 'crypto'
 
 /**
  * Redis Cache Client
@@ -60,9 +61,15 @@ class RedisCache {
 
     if (url && token) {
       try {
+        // CODE-001: Enable HTTP keepAlive for connection pooling
+        // Improves performance by reusing TCP connections
         this.client = new Redis({
           url,
           token,
+          agent: new https.Agent({
+            keepAlive: true,
+            maxSockets: 50, // Allow up to 50 concurrent connections
+          }),
         })
         this.isConfigured = true
         this.defaultTTL = ttl

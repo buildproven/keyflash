@@ -99,7 +99,11 @@ function setCorsHeaders(req: NextRequest, response: NextResponse): void {
   const origin = req.headers.get('origin')
 
   // Only set CORS headers if origin is present and allowed
-  if (origin && (ALLOWED_ORIGINS.includes(origin) || origin === `${req.nextUrl.protocol}//${req.nextUrl.host}`)) {
+  if (
+    origin &&
+    (ALLOWED_ORIGINS.includes(origin) ||
+      origin === `${req.nextUrl.protocol}//${req.nextUrl.host}`)
+  ) {
     response.headers.set('Access-Control-Allow-Origin', origin)
     response.headers.set('Access-Control-Allow-Credentials', 'true')
     response.headers.set(

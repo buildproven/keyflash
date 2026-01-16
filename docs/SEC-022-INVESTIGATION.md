@@ -7,6 +7,7 @@
 ## Issue Description
 
 VBL Adopt audit flagged potential base64 string in `tsconfig.json:23`:
+
 - **CVSS**: 6.0
 - **Concern**: Potential secret encoded in config file
 - **Recommendation**: Investigate string, remove if secret, add to secret scanning exceptions if false positive
@@ -14,6 +15,7 @@ VBL Adopt audit flagged potential base64 string in `tsconfig.json:23`:
 ## Investigation
 
 ### Files Checked
+
 1. `tsconfig.json` - Line 23 contains: `"forceConsistentCasingInFileNames": true`
 2. All JSON files in project (excluding node_modules, .next)
 
@@ -22,6 +24,7 @@ VBL Adopt audit flagged potential base64 string in `tsconfig.json:23`:
 **No base64-encoded secrets found.**
 
 Line 23 of tsconfig.json:
+
 ```json
 "forceConsistentCasingInFileNames": true,
 ```
@@ -31,6 +34,7 @@ This is a standard TypeScript compiler option, not a secret or base64-encoded st
 ### Verification
 
 Searched entire codebase for base64-like patterns (`[A-Za-z0-9+/]{30,}={0,2}`):
+
 - No matches found in configuration files
 - No matches found in source code
 - No hardcoded credentials or keys

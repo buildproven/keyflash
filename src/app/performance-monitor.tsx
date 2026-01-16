@@ -83,7 +83,7 @@ export function PerformanceMonitor() {
             'TTFB (ms)': metrics.timeToFirstByte?.toFixed(0),
             'FCP (ms)': metrics.firstContentfulPaint?.toFixed(0),
             'LCP (ms)': metrics.largestContentfulPaint?.toFixed(0),
-            'CLS': metrics.cumulativeLayoutShift?.toFixed(3),
+            CLS: metrics.cumulativeLayoutShift?.toFixed(3),
             'FID (ms)': metrics.firstInputDelay?.toFixed(0),
             'INP (ms)': metrics.interactionToNextPaint?.toFixed(0),
           })

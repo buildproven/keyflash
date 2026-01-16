@@ -24,15 +24,26 @@ vi.mock('@upstash/redis', () => ({
   }),
 }))
 
-// Mock crypto for consistent testing
-vi.mock('crypto', () => ({
-  default: {
-    createHmac: vi.fn(() => ({
-      update: vi.fn(() => ({
-        digest: vi.fn(() => 'mockedhash'),
-      })),
-    })),
+// Mock https module to prevent real Agent creation (CODE-001: connection pooling)
+vi.mock('https', () => ({
+  Agent: class MockAgent {
+    keepAlive: boolean
+    maxSockets: number
+    constructor() {
+      this.keepAlive = true
+      this.maxSockets = 50
+    }
   },
+}))
+
+// Mock crypto for consistent testing
+// Must export createHmac directly (not via default) due to `import * as crypto from 'crypto'`
+vi.mock('crypto', () => ({
+  createHmac: vi.fn(() => ({
+    update: vi.fn(() => ({
+      digest: vi.fn(() => 'mockedhash'),
+    })),
+  })),
 }))
 
 describe('RedisRateLimiter', () => {
@@ -46,7 +57,8 @@ describe('RedisRateLimiter', () => {
     // Set up Redis environment
     process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io'
     process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
-    process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret-at-least-32-characters-long'
+    process.env.RATE_LIMIT_HMAC_SECRET =
+      'test-secret-at-least-32-characters-long'
     process.env.RATE_LIMIT_TRUST_PROXY = 'true'
 
     // Set up default mock behaviors for atomic operations

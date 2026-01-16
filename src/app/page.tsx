@@ -6,7 +6,12 @@ export const dynamic = 'force-static'
 
 export default function Home() {
   return (
-    <main id="main-content" className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900" itemScope itemType="https://schema.org/WebPage">
+    <main
+      id="main-content"
+      className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900"
+      itemScope
+      itemType="https://schema.org/WebPage"
+    >
       {/* Skip Link for Keyboard Navigation */}
       <a
         href="#main-content"
@@ -91,7 +96,10 @@ export default function Home() {
               key={feature.title}
               className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800"
             >
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white dark:bg-blue-700 dark:text-white" aria-hidden="true">
+              <span
+                className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white dark:bg-blue-700 dark:text-white"
+                aria-hidden="true"
+              >
                 ✓
               </span>
               <div>

@@ -11,7 +11,7 @@
  * Ported from saas-starter-kit for cross-project security standards.
  */
 
-import crypto from 'crypto'
+import * as crypto from 'crypto'
 
 export interface RateLimitConfig {
   requestsPerMinute?: number

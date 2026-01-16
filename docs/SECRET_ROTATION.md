@@ -8,12 +8,12 @@ Secret rotation is a critical security practice that limits the impact of potent
 
 ## Rotation Schedule
 
-| Secret | Recommended Rotation | Trigger Events |
-|--------|---------------------|----------------|
-| RATE_LIMIT_HMAC_SECRET | Every 90 days | Security incident, employee departure |
-| Stripe API Keys | Annually | Security incident, compliance audit |
-| Clerk API Keys | Annually | Security incident, compliance audit |
-| Redis Credentials | Every 180 days | Security incident, infrastructure change |
+| Secret                 | Recommended Rotation | Trigger Events                           |
+| ---------------------- | -------------------- | ---------------------------------------- |
+| RATE_LIMIT_HMAC_SECRET | Every 90 days        | Security incident, employee departure    |
+| Stripe API Keys        | Annually             | Security incident, compliance audit      |
+| Clerk API Keys         | Annually             | Security incident, compliance audit      |
+| Redis Credentials      | Every 180 days       | Security incident, infrastructure change |
 
 ## Prerequisites
 
@@ -69,6 +69,7 @@ curl -X POST https://keyflash.vibebuildlab.com/api/keywords \
 ### Rollback
 
 If issues occur:
+
 1. Revert to previous `RATE_LIMIT_HMAC_SECRET` value
 2. Remove `RATE_LIMIT_HMAC_SECRET_NEW`
 3. Deploy
@@ -115,6 +116,7 @@ vercel --prod
 ### Step 4: Verify
 
 1. **Test Checkout Flow**:
+
    ```bash
    # Create test checkout session
    curl -X POST https://keyflash.vibebuildlab.com/api/checkout \
@@ -132,6 +134,7 @@ vercel --prod
 ### Rollback
 
 If webhook validation fails:
+
 1. Revert `STRIPE_WEBHOOK_SECRET` to previous value
 2. Deploy immediately
 3. Contact Stripe support if issues persist
@@ -179,6 +182,7 @@ vercel --prod
    - Verify successful authentication
 
 2. **Test API Authentication**:
+
    ```bash
    # Test protected API endpoint
    curl -X GET https://keyflash.vibebuildlab.com/api/searches \
@@ -190,6 +194,7 @@ vercel --prod
 ### Rollback
 
 If authentication fails:
+
 1. Revert `CLERK_SECRET_KEY` to previous value
 2. Deploy immediately
 3. Monitor authentication recovery
@@ -232,6 +237,7 @@ vercel --prod
 ### Step 4: Verify
 
 1. **Test Cache Write/Read**:
+
    ```bash
    # Submit keyword search (should cache results)
    curl -X POST https://keyflash.vibebuildlab.com/api/keywords \
@@ -243,6 +249,7 @@ vercel --prod
    ```
 
 2. **Test Rate Limiting**:
+
    ```bash
    # Make 11 requests rapidly (exceeds 10/hour limit)
    for i in {1..11}; do
@@ -257,6 +264,7 @@ vercel --prod
 ### Rollback
 
 If Redis connection fails:
+
 1. Revert credentials to previous values
 2. Deploy
 3. Application will continue to function (Redis is optional)
@@ -366,6 +374,7 @@ Before rotating production secrets, test the procedure in staging:
 **Cause**: Clients using cached rate limit tokens signed with old secret
 
 **Solution**:
+
 - Wait 1 hour for client caches to expire
 - Or clear Redis cache: `redis-cli FLUSHDB` (staging only)
 
@@ -374,6 +383,7 @@ Before rotating production secrets, test the procedure in staging:
 **Cause**: Application using old webhook secret
 
 **Solution**:
+
 1. Verify `STRIPE_WEBHOOK_SECRET` environment variable is updated
 2. Check deployment succeeded (no rollback)
 3. Restart application to ensure new secret loaded
@@ -383,6 +393,7 @@ Before rotating production secrets, test the procedure in staging:
 **Cause**: Application using old secret key
 
 **Solution**:
+
 1. Verify `CLERK_SECRET_KEY` environment variable is updated
 2. Check deployment succeeded
 3. Clear browser cookies and retry authentication
@@ -392,6 +403,7 @@ Before rotating production secrets, test the procedure in staging:
 **Cause**: Invalid credentials or URL
 
 **Solution**:
+
 1. Verify credentials are correctly copied from Upstash dashboard
 2. Check URL format (should start with `https://`)
 3. Test credentials with `curl`:
@@ -418,6 +430,7 @@ Before rotating production secrets, test the procedure in staging:
 ## Questions?
 
 For questions about secret rotation procedures:
+
 - Security incidents: Contact security team immediately
 - Scheduled rotations: File ticket in project management system
 - Technical issues: Check application logs and contact DevOps team

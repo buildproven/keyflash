@@ -6,6 +6,7 @@
  */
 
 import { logger } from '@/lib/utils/logger'
+import { fetchWithTimeout, API_TIMEOUTS } from '@/lib/utils/fetch-with-timeout'
 import type {
   SerpResult,
   ContentBrief,
@@ -136,7 +137,7 @@ export class SerpService {
           ? LOCATION_CODES[location as keyof typeof LOCATION_CODES]
           : 2840
 
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         'https://api.dataforseo.com/v3/serp/google/organic/live/advanced',
         {
           method: 'POST',
@@ -153,7 +154,8 @@ export class SerpService {
               calculate_rectangles: false,
             },
           ]),
-        }
+        },
+        API_TIMEOUTS.DEFAULT
       )
 
       if (!response.ok) {

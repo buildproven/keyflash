@@ -498,7 +498,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     const languageCode = this.getLanguageCode(options.language)
 
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `${apiBaseUrl}/keywords_data/google_ads/keywords_for_keywords/live`,
         {
           method: 'POST',
@@ -515,7 +515,8 @@ export class DataForSEOProvider implements KeywordAPIProvider {
               sort_by: 'relevance',
             },
           ]),
-        }
+        },
+        API_TIMEOUTS.DEFAULT
       )
 
       if (!response.ok) {

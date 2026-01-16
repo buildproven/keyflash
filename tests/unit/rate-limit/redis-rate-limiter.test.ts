@@ -46,7 +46,7 @@ describe('RedisRateLimiter', () => {
     // Set up Redis environment
     process.env.UPSTASH_REDIS_REST_URL = 'https://test.upstash.io'
     process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
-    process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret'
+    process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret-at-least-32-characters-long'
     process.env.RATE_LIMIT_TRUST_PROXY = 'true'
 
     // Set up default mock behaviors for atomic operations

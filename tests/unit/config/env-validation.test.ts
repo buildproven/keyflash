@@ -68,7 +68,8 @@ describe('Environment Validation', () => {
     process.env.KEYWORD_API_PROVIDER = 'mock'
     ;(process.env as Record<string, string>).NODE_ENV = 'production'
     process.env.PRIVACY_MODE = 'false'
-    process.env.RATE_LIMIT_HMAC_SECRET = 'test-secret-at-least-32-characters-long'
+    process.env.RATE_LIMIT_HMAC_SECRET =
+      'test-secret-at-least-32-characters-long'
     process.env.RATE_LIMIT_TRUST_PROXY = 'true'
     delete process.env.UPSTASH_REDIS_REST_URL
 

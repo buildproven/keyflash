@@ -182,12 +182,16 @@ export function ContentBriefModal({
             role="status"
             aria-live="polite"
           >
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" aria-hidden="true"></div>
+            <div
+              className="h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"
+              aria-hidden="true"
+            ></div>
             <p className="mt-4 text-gray-600 dark:text-gray-300">
               Analyzing top search results...
             </p>
             <span className="sr-only">
-              Loading content brief. Please wait, this usually takes a few seconds.
+              Loading content brief. Please wait, this usually takes a few
+              seconds.
             </span>
           </div>
         )}

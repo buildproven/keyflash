@@ -170,11 +170,11 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
-          client_id: this.config.clientId,
-          client_secret: this.config.clientSecret,
-          refresh_token: this.config.refreshToken,
-          grant_type: 'refresh_token',
-        }),
+            client_id: this.config.clientId,
+            client_secret: this.config.clientSecret,
+            refresh_token: this.config.refreshToken,
+            grant_type: 'refresh_token',
+          }),
         },
         API_TIMEOUTS.AUTH
       )

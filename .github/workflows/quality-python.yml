@@ -18,7 +18,7 @@ on:
       - 'setup.py'
       - '.github/workflows/quality-python.yml'
   schedule:
-    - cron: '0 2 * * 0'  # Weekly full matrix test on Sunday
+    - cron: '0 2 * * 0' # Weekly full matrix test on Sunday
   workflow_dispatch:
 
 # Prevent duplicate runs

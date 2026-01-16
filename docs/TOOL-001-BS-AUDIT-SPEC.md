@@ -34,6 +34,7 @@ vbl adopt
 ```
 
 **Pain points:**
+
 - ❌ Manual context switching between tools
 - ❌ Reports don't feed into fixing agents
 - ❌ Risk of missing issues during translation
@@ -54,6 +55,7 @@ vbl adopt
 ```
 
 **Key improvements:**
+
 - ✅ One command from audit to ship-ready
 - ✅ Zero manual translation
 - ✅ VBL Adopt findings feed directly to agents
@@ -126,6 +128,7 @@ fi
 ```
 
 **New flags added:**
+
 ```bash
 /bs:quality --security-deep        # Enable OWASP + Gitleaks scans
 /bs:quality --auto-fix-security    # Auto-spawn security-auditor for findings
@@ -133,6 +136,7 @@ vbl adopt --update-backlog         # Auto-parse reports to BACKLOG.md
 ```
 
 **Testing:**
+
 ```bash
 # Test on KeyFlash
 cd ~/Projects/keyflash
@@ -146,6 +150,7 @@ vbl adopt --update-backlog
 ```
 
 **Deliverables:**
+
 - ✅ Modified `/bs:quality` command with Step 0.5
 - ✅ New `--security-deep` flag
 - ✅ VBL Adopt wrapper with `--update-backlog`
@@ -159,10 +164,10 @@ vbl adopt --update-backlog
 
 **Create new /bs:audit command:**
 
-```markdown
+````markdown
 ---
-description: "Comprehensive audit + automated fixing (VBL Adopt → /bs:quality)"
-argument-hint: "/bs:audit → scan + fix | --report-only → scan only"
+description: 'Comprehensive audit + automated fixing (VBL Adopt → /bs:quality)'
+argument-hint: '/bs:audit → scan + fix | --report-only → scan only'
 ---
 
 # /bs:audit - Integrated Audit Workflow
@@ -175,16 +180,19 @@ argument-hint: "/bs:audit → scan + fix | --report-only → scan only"
 /bs:audit --fix-critical     # Fix critical issues only (not all)
 /bs:audit --update-backlog   # Update backlog even in report-only mode
 ```
+````
 
 ## Implementation
 
 ### Step 1: Run VBL Adopt
+
 ```bash
 npx create-qa-architect@latest --comprehensive --json > .vbl-adopt-report.json
 npx create-qa-architect@latest --comprehensive  # Generate MD reports
 ```
 
 ### Step 2: Parse Findings
+
 ```bash
 SECURITY_SCORE=$(jq '.security.score' .vbl-adopt-report.json)
 ARCH_SCORE=$(jq '.architecture.score' .vbl-adopt-report.json)
@@ -193,6 +201,7 @@ CRITICAL_COUNT=$(jq '[.security.issues[], .architecture.issues[], .code.issues[]
 ```
 
 ### Step 3: Update Backlog (if enabled)
+
 ```bash
 if [ "$UPDATE_BACKLOG" = "true" ]; then
   # AI parses reports and updates BACKLOG.md
@@ -201,6 +210,7 @@ fi
 ```
 
 ### Step 4: Auto-Fix (if not --report-only)
+
 ```bash
 if [ "$REPORT_ONLY" != "true" ]; then
   if [ "$FIX_CRITICAL" = "true" ]; then
@@ -220,10 +230,12 @@ fi
 ```
 
 ### Step 5: Report Results
+
 ```markdown
 ✅ /bs:audit Complete
 
 **VBL Adopt Scores:**
+
 - Security: ${SECURITY_SCORE}/100
 - Architecture: ${ARCH_SCORE}/100
 - Code Quality: ${CODE_SCORE}/100
@@ -231,17 +243,20 @@ fi
 **Critical Issues:** ${CRITICAL_COUNT}
 
 **Actions Taken:**
+
 - Reports generated in docs/
 - BACKLOG.md updated with ${NEW_ITEMS_COUNT} items
 - Quality loop completed (${ISSUES_FIXED} issues fixed)
 - Committed as: ${COMMIT_HASH}
 
 **Next Steps:**
+
 - Review docs/SECURITY-AUDIT.md for remaining issues
 - Check BACKLOG.md for prioritization
 - Run /bs:quality --merge when ready to ship
 ```
-```
+
+````
 
 **New command file:** `~/.claude/commands/bs/audit.md`
 
@@ -263,9 +278,10 @@ fi
 /bs:audit --fix-critical
 # → Should fix only critical severity issues
 # → Faster than full quality loop
-```
+````
 
 **Deliverables:**
+
 - ✅ New `/bs:audit` command
 - ✅ Integration between VBL Adopt and /bs:quality
 - ✅ Handoff mechanism (VBL findings → agent context)
@@ -326,6 +342,7 @@ fi
 ```
 
 **Deliverables:**
+
 - ✅ Audit history in .qualityrc.json
 - ✅ Status dashboard command
 - ✅ Incremental scanning mode
@@ -339,6 +356,7 @@ fi
 ### Time Savings
 
 **Before (Manual):**
+
 - VBL Adopt scan: 10 min
 - Read 3 reports: 30 min
 - Update BACKLOG.md: 20 min
@@ -346,11 +364,13 @@ fi
 - **Total: 150 min** (2.5 hours)
 
 **After (Automated):**
+
 - `/bs:audit`: 102 min (1.7 hours)
 - Zero manual steps
 - **Savings: 48 min per run** (32% faster)
 
 **Annual impact** (2-3 runs per week):
+
 - 48 min × 2.5 runs/week × 52 weeks = **104 hours/year saved**
 - Equivalent to 2.6 weeks of full-time work
 
@@ -359,12 +379,14 @@ fi
 ### Quality Improvements
 
 **Before:**
+
 - ❌ /bs:quality agents may miss OWASP-specific scans
 - ❌ Secret scanning not integrated
 - ❌ Manual transcription errors (report → backlog → fixes)
 - ❌ Context lost between tools
 
 **After:**
+
 - ✅ 100% coverage (VBL Adopt OWASP + Gitleaks + /bs:quality agents)
 - ✅ Zero transcription errors (AI-powered parsing)
 - ✅ VBL findings feed directly to agents
@@ -375,6 +397,7 @@ fi
 ### Developer Experience
 
 **Before:**
+
 ```bash
 # Feels like homework
 vbl adopt                    # "Ugh, now I have to read 3 reports"
@@ -384,6 +407,7 @@ vbl adopt                    # "Ugh, now I have to read 3 reports"
 ```
 
 **After:**
+
 ```bash
 # Feels like magic
 /bs:audit                    # "One command, I'll check back in 90 min"
@@ -396,16 +420,19 @@ vbl adopt                    # "Ugh, now I have to read 3 reports"
 ## Success Metrics
 
 **Phase 1 (Quick Wins):**
+
 - ✅ /bs:quality catches SEC-021, SEC-022 (secrets previously missed)
 - ✅ BACKLOG.md auto-updated with 21 items in correct format
 - ✅ Zero manual BACKLOG.md edits needed
 
 **Phase 2 (Integration):**
+
 - ✅ /bs:audit runs end-to-end without errors
 - ✅ Time reduced from 150 min to 102 min (32% improvement)
 - ✅ Zero issues missed (100% coverage)
 
 **Phase 3 (Polish):**
+
 - ✅ Audit history tracked for trend analysis
 - ✅ Incremental mode reduces daily checks to < 10 min
 
@@ -413,24 +440,26 @@ vbl adopt                    # "Ugh, now I have to read 3 reports"
 
 ## Risks & Mitigations
 
-| Risk                                     | Likelihood | Impact | Mitigation                                    |
-| ---------------------------------------- | ---------- | ------ | --------------------------------------------- |
-| AI parsing of reports is inaccurate      | Medium     | High   | Validate output format, test with 10 samples |
-| Gitleaks/OWASP scans add significant time | Low        | Medium | Run in parallel, cache results                |
-| VBL Adopt + /bs:quality version conflicts | Low        | High   | Pin versions, test compatibility              |
-| Handoff loses context between tools      | Medium     | High   | JSON-based findings file, structured handoff  |
+| Risk                                      | Likelihood | Impact | Mitigation                                   |
+| ----------------------------------------- | ---------- | ------ | -------------------------------------------- |
+| AI parsing of reports is inaccurate       | Medium     | High   | Validate output format, test with 10 samples |
+| Gitleaks/OWASP scans add significant time | Low        | Medium | Run in parallel, cache results               |
+| VBL Adopt + /bs:quality version conflicts | Low        | High   | Pin versions, test compatibility             |
+| Handoff loses context between tools       | Medium     | High   | JSON-based findings file, structured handoff |
 
 ---
 
 ## Dependencies
 
 **Required:**
+
 - VBL Adopt (installed)
 - /bs:quality command (exists)
 - create-qa-architect@latest (npm package)
 - Gitleaks (optional but recommended)
 
 **Nice to have:**
+
 - jq (for JSON parsing)
 - Git (for commit automation)
 
@@ -439,38 +468,47 @@ vbl adopt                    # "Ugh, now I have to read 3 reports"
 ## Rollout Plan
 
 ### Week 1: Phase 1 Implementation
+
 **Day 1-2**: Add security pre-flight to /bs:quality
+
 - Implement Step 0.5 (Gitleaks + OWASP)
 - Add `--security-deep` flag
 - Test on KeyFlash
 
 **Day 3-4**: Add backlog auto-update
+
 - AI prompt for parsing reports
 - Test BACKLOG.md formatting
 - Validate 21 items correctly added
 
 **Day 5**: Integration testing
+
 - Run full flow: VBL Adopt → update backlog → /bs:quality
 - Fix any gaps
 - Document in CHANGELOG.md
 
 ### Week 2: Phase 2 Implementation
+
 **Day 1-2**: Create /bs:audit command structure
+
 - Scaffold command file
 - Implement Steps 1-5
 - Basic testing
 
 **Day 3**: Implement handoff mechanism
+
 - VBL findings → JSON
 - /bs:quality reads JSON as context
 - Agents receive findings
 
 **Day 4-5**: Testing & refinement
+
 - Test all modes (--report-only, --fix-critical, default)
 - Edge case handling
 - Documentation
 
 ### Week 3: Phase 3 (Optional)
+
 - Audit history tracking
 - Status dashboard
 - Incremental mode
@@ -480,21 +518,25 @@ vbl adopt                    # "Ugh, now I have to read 3 reports"
 ## Alternative Approaches Considered
 
 ### Alternative 1: Enhance VBL Adopt Only
+
 **Pros**: Single tool, simpler architecture
 **Cons**: VBL Adopt is discovery-focused, would need full agent framework
 **Decision**: Rejected - /bs:quality already has autonomous agents
 
 ### Alternative 2: Enhance /bs:quality Only
+
 **Pros**: Single command, no VBL Adopt dependency
 **Cons**: Would need to rebuild all VBL Adopt scanning capabilities
 **Decision**: Rejected - VBL Adopt's OWASP/Gitleaks scanners are proven
 
 ### Alternative 3: Build New Tool
+
 **Pros**: Clean slate, perfect integration
 **Cons**: Months of work, duplication of existing capabilities
 **Decision**: Rejected - Integration is faster and leverages existing tools
 
 ### Alternative 4: Keep Manual Workflow (Status Quo)
+
 **Pros**: Zero implementation effort
 **Cons**: Wastes 104 hours/year, error-prone, poor developer experience
 **Decision**: Rejected - ROI too compelling to ignore

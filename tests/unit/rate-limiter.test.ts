@@ -107,7 +107,8 @@ describe('Rate Limiter', () => {
       checkRateLimit(clientId, testConfig)
       expect.fail('Should have thrown rate limit error')
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       expect(errorMessage).toContain('Rate limit exceeded')
       expect(errorMessage).toContain('Try again')
       expect(errorMessage).toContain(`${testConfig.requestsPerHour}`)

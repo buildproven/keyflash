@@ -32,6 +32,7 @@ KeyFlash demonstrates **excellent security posture** with comprehensive OWASP To
 **Status:** Excellent
 
 **Implemented Controls:**
+
 - All API routes check Clerk authentication via `await auth()`
 - User tier-based authorization (Trial vs Pro)
 - Rate limiting prevents API abuse (10 req/hour anonymous, tier-based for users)
@@ -39,6 +40,7 @@ KeyFlash demonstrates **excellent security posture** with comprehensive OWASP To
 - Stripe webhooks use signature validation (no auth bypass)
 
 **Evidence:**
+
 ```typescript
 // src/app/api/keywords/route.ts
 const authResult = await auth()
@@ -56,6 +58,7 @@ if (!userId) {
 ```
 
 **Verified Endpoints:**
+
 - ✅ `/api/keywords` - Rate limited, user tier checks
 - ✅ `/api/keywords/related` - Rate limited (30/hour)
 - ✅ `/api/content-brief` - Rate limited (20/hour)
@@ -74,6 +77,7 @@ if (!userId) {
 **Status:** Excellent
 
 **Implemented Controls:**
+
 - All traffic over HTTPS (enforced by Vercel + HSTS header)
 - CSRF tokens generated with `crypto.getRandomValues()` (cryptographically secure)
 - Rate limiter uses HMAC-SHA256 for client ID generation
@@ -81,6 +85,7 @@ if (!userId) {
 - Redis connections over TLS (Upstash default)
 
 **Evidence:**
+
 ```typescript
 // src/middleware.ts
 function generateCsrfToken(): string {
@@ -101,6 +106,7 @@ const userAgentHash = crypto
 ```
 
 **Security Headers:**
+
 ```javascript
 // next.config.js
 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
@@ -109,6 +115,7 @@ const userAgentHash = crypto
 ```
 
 **Secrets Management:**
+
 - ✅ All secrets in `.env.local` (gitignored)
 - ✅ `.env.example` has no real values
 - ✅ No secrets found in git history
@@ -125,6 +132,7 @@ const userAgentHash = crypto
 **Implemented Controls:**
 
 #### SQL/NoSQL Injection Protection
+
 - Redis uses Upstash client with parameterized operations (no raw queries)
 - No SQL databases in use
 - Lua script in rate limiter uses parameterized ARGV (not string interpolation)
@@ -140,16 +148,21 @@ const result = await this.redis.eval(luaScript, [key], [windowSeconds])
 ```
 
 #### Input Validation (Zod Schemas)
+
 All user inputs validated with strict regex patterns:
 
 ```typescript
 // src/lib/validation/schemas.ts
-keywords: z
-  .array(z.string().regex(
-    /^[a-zA-Z0-9\s\-_]+$/,
-    'Keywords must contain only letters, numbers, spaces, hyphens, and underscores'
-  ))
-  .min(1).max(200)
+keywords: z.array(
+  z
+    .string()
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      'Keywords must contain only letters, numbers, spaces, hyphens, and underscores'
+    )
+)
+  .min(1)
+  .max(200)
 
 location: z.enum(['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IN', 'GL'])
 
@@ -157,6 +170,7 @@ language: z.string().regex(/^[a-z]{2}(-[A-Z]{2})?$/)
 ```
 
 #### XSS Protection
+
 - ✅ No `dangerouslySetInnerHTML` with user input (only static JSON-LD schema)
 - ✅ React escapes all user input by default
 - ✅ CSP header prevents inline script execution
@@ -171,7 +185,8 @@ language: z.string().regex(/^[a-z]{2}(-[A-Z]{2})?$/)
 ].join('; ')
 ```
 
-**Findings:** 
+**Findings:**
+
 - ⚠️ LOW: CSP allows `unsafe-inline` for scripts (required by Next.js, Clerk, Vercel Analytics)
 
 **Recommendation:**
@@ -184,6 +199,7 @@ Consider migrating to CSP nonces when Next.js/Clerk support improves.
 **Status:** Excellent
 
 **Security by Design:**
+
 - Fail-safe defaults (rate limiter fails closed in production)
 - Defense in depth (rate limiting + auth + validation)
 - Privacy by default (keyword caching optional via `PRIVACY_MODE`)
@@ -192,6 +208,7 @@ Consider migrating to CSP nonces when Next.js/Clerk support improves.
 
 **Threat Modeling:**
 Comprehensive threat model documented in `docs/SECURITY.md`:
+
 - API key theft (environment variables only)
 - Injection attacks (input validation)
 - DDoS (rate limiting + Cloudflare)
@@ -207,6 +224,7 @@ Comprehensive threat model documented in `docs/SECURITY.md`:
 **Status:** Excellent
 
 **Security Headers (next.config.js):**
+
 ```javascript
 ✅ X-Frame-Options: DENY
 ✅ X-Content-Type-Options: nosniff
@@ -223,21 +241,23 @@ Comprehensive threat model documented in `docs/SECURITY.md`:
 
 **Error Handling:**
 All API errors sanitized:
+
 ```typescript
 // src/lib/utils/error-handler.ts
 if (error instanceof Error) {
   const isServerError = status >= 500
   const message = isServerError
-    ? 'An unexpected error occurred'  // Generic error
-    : error.message                    // Safe client errors only
-  
+    ? 'An unexpected error occurred' // Generic error
+    : error.message // Safe client errors only
+
   if (isServerError) {
-    logger.error('API server error', error)  // Full details to logs only
+    logger.error('API server error', error) // Full details to logs only
   }
 }
 ```
 
 **Configuration Validation:**
+
 ```typescript
 // src/lib/rate-limit/redis-rate-limiter.ts
 if (this.isProduction) {
@@ -260,12 +280,14 @@ if (this.isProduction) {
 **Status:** Good
 
 **Dependency Security:**
+
 ```bash
 $ npm audit --audit-level=high --omit=dev
 found 0 vulnerabilities
 ```
 
 **Outdated Dependencies (non-critical):**
+
 - @clerk/nextjs: 6.36.5 → 6.36.7 (patch update)
 - @upstash/redis: 1.36.0 → 1.36.1 (patch update)
 - stripe: 20.1.0 → 20.1.2 (patch update)
@@ -273,13 +295,16 @@ found 0 vulnerabilities
 All outdated packages are **patch versions** with no known security issues.
 
 **Automated Scanning:**
+
 - Pre-commit hooks run `npm audit` (see `.husky/pre-commit`)
 - Package lock committed (reproducible builds)
 
-**Findings:** 
+**Findings:**
+
 - ⚠️ LOW: Minor version updates available for non-security patches
 
 **Recommendation:**
+
 ```bash
 npm update @clerk/nextjs @upstash/redis stripe
 ```
@@ -291,6 +316,7 @@ npm update @clerk/nextjs @upstash/redis stripe
 **Status:** Excellent
 
 **Authentication Provider:** Clerk (industry-standard SaaS auth)
+
 - ✅ Multi-factor authentication available
 - ✅ Session management handled by Clerk
 - ✅ Password requirements enforced by Clerk
@@ -298,18 +324,20 @@ npm update @clerk/nextjs @upstash/redis stripe
 - ✅ OAuth support (Google, GitHub, etc.)
 
 **Session Security:**
+
 ```typescript
 // src/middleware.ts
 response.cookies.set('csrf-token', token, {
-  httpOnly: true,                              // ✅ XSS protection
+  httpOnly: true, // ✅ XSS protection
   secure: process.env.NODE_ENV === 'production', // ✅ HTTPS only in prod
-  sameSite: 'strict',                          // ✅ CSRF protection
+  sameSite: 'strict', // ✅ CSRF protection
   path: '/',
-  maxAge: 60 * 60 * 24,                        // 24 hours
+  maxAge: 60 * 60 * 24, // 24 hours
 })
 ```
 
 **User Data Storage (Redis):**
+
 ```typescript
 // src/lib/user/user-service.ts
 await client.set(`${USER_KEY_PREFIX}${clerkUserId}`, userData, {
@@ -317,10 +345,11 @@ await client.set(`${USER_KEY_PREFIX}${clerkUserId}`, userData, {
 })
 
 // Distributed locking prevents race conditions
-await this.acquireLock(clerkUserId)  // SETNX with TTL
+await this.acquireLock(clerkUserId) // SETNX with TTL
 ```
 
 **Trial & Subscription Management:**
+
 - Trial: 7 days, 300 keywords (expires automatically via TTL)
 - Pro: $29/mo, 1,000 keywords/month (synced via Stripe webhooks)
 - Webhook idempotency prevents duplicate upgrades/downgrades
@@ -335,18 +364,32 @@ await this.acquireLock(clerkUserId)  // SETNX with TTL
 
 **Input Validation:**
 All API endpoints use Zod schemas with strict validation:
+
 ```typescript
 // src/lib/validation/schemas.ts
 export const KeywordSearchSchema = z.object({
-  keywords: z.array(z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9\s\-_]+$/))
-    .min(1).max(200),
+  keywords: z
+    .array(
+      z
+        .string()
+        .trim()
+        .min(1)
+        .max(100)
+        .regex(/^[a-zA-Z0-9\s\-_]+$/)
+    )
+    .min(1)
+    .max(200),
   matchType: z.enum(['phrase', 'exact']),
   location: z.enum(['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IN', 'GL']),
-  language: z.string().regex(/^[a-z]{2}(-[A-Z]{2})?$/).optional(),
+  language: z
+    .string()
+    .regex(/^[a-z]{2}(-[A-Z]{2})?$/)
+    .optional(),
 })
 ```
 
 **Request Size Limits:**
+
 ```typescript
 // src/lib/utils/request.ts
 export async function readJsonWithLimit(
@@ -359,23 +402,31 @@ export async function readJsonWithLimit(
 ```
 
 **CSRF Protection:**
+
 ```typescript
 // src/middleware.ts
 if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
   if (!isWebhookRoute(req)) {
     // Validate request origin
     if (!validateOrigin(req)) {
-      return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Invalid request origin' },
+        { status: 403 }
+      )
     }
     // Validate CSRF token
     if (!validateCsrfToken(req)) {
-      return NextResponse.json({ error: 'CSRF token validation failed' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'CSRF token validation failed' },
+        { status: 403 }
+      )
     }
   }
 }
 ```
 
 **Stripe Webhook Integrity:**
+
 ```typescript
 // src/app/api/webhooks/stripe/route.ts
 const stripe = getStripe()
@@ -398,6 +449,7 @@ await markEventProcessed(event.id)
 **Status:** Good
 
 **Logging Infrastructure:**
+
 - Pino structured logging (JSON format)
 - Sentry error tracking (configured via `SENTRY_DSN`)
 - Security-relevant events logged:
@@ -408,6 +460,7 @@ await markEventProcessed(event.id)
   - Infrastructure errors (Redis down)
 
 **Example:**
+
 ```typescript
 // src/lib/utils/logger.ts
 export const logger = {
@@ -426,11 +479,13 @@ export const logger = {
 ✅ No full credit card numbers
 ✅ User emails logged only for operational purposes (not PII in context)
 
-**Findings:** 
+**Findings:**
+
 - ⚠️ LOW: No automated alerting configured for security events (manual Sentry review required)
 
 **Recommendation:**
 Set up Sentry alerts for:
+
 - Rate limit exceeded > 100 times/minute (possible DDoS)
 - Validation errors > 10 from same IP (injection attempt)
 - Webhook signature failures (spoofing attempt)
@@ -444,6 +499,7 @@ Set up Sentry alerts for:
 **SSRF Protection:** `src/lib/ssrf-protection.ts`
 
 Comprehensive multi-layer protection:
+
 1. **Protocol validation** (HTTP/HTTPS only)
 2. **DNS resolution to IP** (prevents DNS rebinding)
 3. **Private IP blocking** (RFC1918, link-local, localhost)
@@ -452,6 +508,7 @@ Comprehensive multi-layer protection:
 6. **Rate limiting** (5 req/min per user, 10 req/min per IP)
 
 **Blocked Targets:**
+
 ```typescript
 DOMAIN_BLOCKLIST = [
   '169.254.169.254',                  // AWS metadata
@@ -467,6 +524,7 @@ DOMAIN_BLOCKLIST = [
 ```
 
 **Usage (Content Brief API):**
+
 ```typescript
 // src/lib/api/serp-service.ts
 const validation = await ssrfProtection.validateUrl(url)
@@ -484,12 +542,14 @@ if (!validation.allowed) {
 ### Authentication Flow Security ✅
 
 **Clerk Integration:**
+
 - ✅ `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (public, safe)
 - ✅ `CLERK_SECRET_KEY` (server-side only, in .env.local)
 - ✅ Middleware protects routes (see `src/middleware.ts`)
 - ✅ API routes use `await auth()` for session verification
 
 **Lazy Loading (Performance + Security):**
+
 ```typescript
 // src/components/layout/auth-header-wrapper.tsx
 const AuthHeader = dynamic(() => import('./auth-header').then(mod => ({
@@ -503,6 +563,7 @@ const AuthHeader = dynamic(() => import('./auth-header').then(mod => ({
 ### Payment Flow Security ✅
 
 **Stripe Checkout:**
+
 - ✅ Server-side session creation (no client-side key exposure)
 - ✅ Origin validation (prevents redirect hijacking)
 - ✅ Rate limited (10 checkout attempts/hour)
@@ -517,6 +578,7 @@ export function resolveCheckoutOrigin(request: NextRequest): string {
 ```
 
 **Stripe Webhooks:**
+
 - ✅ Signature verification (prevents spoofing)
 - ✅ Idempotency (Redis-backed, 72-hour TTL)
 - ✅ Zod validation of webhook payloads
@@ -526,24 +588,26 @@ export function resolveCheckoutOrigin(request: NextRequest): string {
 ### Rate Limiting Security ✅
 
 **Spoof-Resistant Client Identification:**
+
 ```typescript
 // src/lib/rate-limit/redis-rate-limiter.ts
 private generateClientId(request: Request): string {
   const clientIp = this.getTrustedClientIp(request) || 'unknown'
   const userAgent = request.headers.get('user-agent') || ''
-  
+
   // HMAC prevents pre-computed bypass
   const userAgentHash = crypto
     .createHmac('sha256', process.env.RATE_LIMIT_HMAC_SECRET!)
     .update(userAgent)
     .digest('hex')
     .substring(0, 8)
-  
+
   return `${clientIp}:${userAgentHash}`
 }
 ```
 
 **Atomic Operations (No Race Conditions):**
+
 ```typescript
 // Lua script executes atomically in Redis
 const luaScript = `
@@ -562,6 +626,7 @@ const luaScript = `
 ### Saved Searches Security ✅
 
 **Authorization:**
+
 ```typescript
 // src/lib/saved-searches/saved-searches-service.ts
 async getSavedSearch(userId: string, searchId: string) {
@@ -573,24 +638,28 @@ async getSavedSearch(userId: string, searchId: string) {
 ```
 
 **Limits:**
+
 - 50 saved searches per user (prevents storage abuse)
 - 1-year TTL (auto-expire inactive data)
 
 ### Secrets Management ✅
 
 **Git History Scan:**
+
 ```bash
 $ git log --all --full-history -- '*.env' '*.pem' '*.key'
 # No results - no secrets committed
 ```
 
 **Codebase Scan:**
+
 ```bash
 $ grep -rE "(api_key|apikey|secret|password|token).*['\"][a-zA-Z0-9]{16,}" src/
 # No results - no hardcoded secrets
 ```
 
 **Environment Variables:**
+
 - ✅ `.env` and `.env*.local` in `.gitignore`
 - ✅ `.env.example` has placeholders only
 - ✅ Production secrets in Vercel environment variables (encrypted at rest)
@@ -602,18 +671,21 @@ $ grep -rE "(api_key|apikey|secret|password|token).*['\"][a-zA-Z0-9]{16,}" src/
 ### GDPR Compliance ✅
 
 **Data Minimization:**
+
 - ✅ No keyword searches stored (unless user explicitly saves them)
 - ✅ IP addresses used only for rate limiting (1-hour TTL)
 - ✅ User data: clerkUserId, email, tier, subscription status (minimal PII)
 - ✅ No browser fingerprinting beyond user-agent (for rate limiting)
 
 **Privacy Mode:**
+
 ```typescript
 // .env.example
 PRIVACY_MODE=false  # Set to true to disable all keyword caching
 ```
 
 **User Rights:**
+
 - Right to access: User can view saved searches via API
 - Right to deletion: Delete account in Clerk → auto-expires from Redis (1-year TTL)
 - Right to rectification: Email update in Clerk syncs to Redis
@@ -631,6 +703,7 @@ PRIVACY_MODE=false  # Set to true to disable all keyword caching
 ### Pre-Launch Checklist ✅
 
 **🔴 CRITICAL - All Complete:**
+
 - ✅ All API keys in environment variables (never committed)
 - ✅ .env files in .gitignore
 - ✅ Input validation on all API endpoints
@@ -642,6 +715,7 @@ PRIVACY_MODE=false  # Set to true to disable all keyword caching
 - ✅ No sensitive data logged
 
 **🟡 HIGH - All Complete:**
+
 - ✅ CSP header configured
 - ✅ CORS policy restricted (same-origin only)
 - ✅ Sentry error tracking configured
@@ -650,6 +724,7 @@ PRIVACY_MODE=false  # Set to true to disable all keyword caching
 - ✅ Retry logic with exponential backoff (in providers)
 
 **🟢 RECOMMENDED:**
+
 - ⚠️ Automated security alerts (manual Sentry review currently)
 - ⚠️ Penetration testing (recommended before public launch)
 - ⚠️ Bug bounty program (consider via HackerOne post-launch)
@@ -661,28 +736,34 @@ PRIVACY_MODE=false  # Set to true to disable all keyword caching
 ### LOW Priority Fixes
 
 #### 1. Update Dependencies (LOW)
+
 **Issue:** Minor patch updates available for 3 packages
 **Impact:** Low (no known vulnerabilities)
 **Fix:**
+
 ```bash
 npm update @clerk/nextjs @upstash/redis stripe
 npm audit --audit-level=high
 npm test  # Verify no breaking changes
 ```
+
 **Time:** 10 minutes
 
 #### 2. Set Up Security Alerts (LOW)
+
 **Issue:** No automated alerting for security events
 **Impact:** Low (manual monitoring via Sentry currently)
 **Fix:**
+
 1. Configure Sentry alerts:
    - Rate limit exceeded > 100/min → Email + Slack
    - Validation errors > 10 from same IP → Email
    - Webhook signature failures → Email
 2. Add Vercel log drains for anomaly detection
-**Time:** 30 minutes
+   **Time:** 30 minutes
 
 #### 3. Reduce CSP unsafe-inline (LOW)
+
 **Issue:** CSP allows `unsafe-inline` for scripts (required by Next.js/Clerk)
 **Impact:** Very Low (mitigated by React's XSS protection + input validation)
 **Fix:** Monitor Next.js 17 and Clerk updates for CSP nonce support
@@ -713,23 +794,23 @@ npm test  # Verify no breaking changes
 
 ## Comparison to Industry Standards
 
-| Security Control | KeyFlash | Industry Standard | Status |
-|------------------|----------|-------------------|--------|
-| HTTPS Enforcement | ✅ | Required | ✅ Met |
-| HSTS Header | ✅ | Recommended | ✅ Met |
-| CSP Header | ✅ | Recommended | ✅ Met |
-| Input Validation | ✅ (Zod) | Required | ✅ Met |
-| Rate Limiting | ✅ (Redis) | Required | ✅ Met |
-| CSRF Protection | ✅ | Required | ✅ Met |
-| XSS Protection | ✅ | Required | ✅ Met |
-| Auth Provider | ✅ (Clerk) | Required | ✅ Met |
-| Webhook Validation | ✅ (Stripe) | Required | ✅ Met |
-| Secrets Management | ✅ (.env) | Required | ✅ Met |
-| Dependency Scanning | ✅ (npm audit) | Recommended | ✅ Met |
-| Error Sanitization | ✅ | Required | ✅ Met |
-| SSRF Protection | ✅ | Recommended | ✅ Exceeded |
-| Idempotent Webhooks | ✅ | Recommended | ✅ Exceeded |
-| Automated Alerts | ⚠️ | Recommended | ⚠️ Partial |
+| Security Control    | KeyFlash       | Industry Standard | Status      |
+| ------------------- | -------------- | ----------------- | ----------- |
+| HTTPS Enforcement   | ✅             | Required          | ✅ Met      |
+| HSTS Header         | ✅             | Recommended       | ✅ Met      |
+| CSP Header          | ✅             | Recommended       | ✅ Met      |
+| Input Validation    | ✅ (Zod)       | Required          | ✅ Met      |
+| Rate Limiting       | ✅ (Redis)     | Required          | ✅ Met      |
+| CSRF Protection     | ✅             | Required          | ✅ Met      |
+| XSS Protection      | ✅             | Required          | ✅ Met      |
+| Auth Provider       | ✅ (Clerk)     | Required          | ✅ Met      |
+| Webhook Validation  | ✅ (Stripe)    | Required          | ✅ Met      |
+| Secrets Management  | ✅ (.env)      | Required          | ✅ Met      |
+| Dependency Scanning | ✅ (npm audit) | Recommended       | ✅ Met      |
+| Error Sanitization  | ✅             | Required          | ✅ Met      |
+| SSRF Protection     | ✅             | Recommended       | ✅ Exceeded |
+| Idempotent Webhooks | ✅             | Recommended       | ✅ Exceeded |
+| Automated Alerts    | ⚠️             | Recommended       | ⚠️ Partial  |
 
 **Overall:** KeyFlash **meets or exceeds** industry security standards for SaaS applications.
 
@@ -749,6 +830,7 @@ KeyFlash demonstrates **exceptional security practices** for a Next.js SaaS appl
 **Recommendation:** Safe for production deployment with minor non-critical improvements.
 
 **Next Steps:**
+
 1. Apply LOW priority fixes (1 hour total)
 2. Schedule quarterly security audits
 3. Monitor Dependabot alerts

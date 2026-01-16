@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis'
-import crypto from 'crypto'
+import * as https from 'https'
+import * as crypto from 'crypto'
 import { logger } from '@/lib/utils/logger'
 import { SavedSearchSchema } from '@/lib/validation/domain-schemas'
 import type {
@@ -48,7 +49,15 @@ class SavedSearchesService {
 
     if (url && token) {
       try {
-        this.client = new Redis({ url, token })
+        // CODE-001: Enable HTTP keepAlive for connection pooling
+        this.client = new Redis({
+          url,
+          token,
+          agent: new https.Agent({
+            keepAlive: true,
+            maxSockets: 50,
+          }),
+        })
         this.isConfigured = true
       } catch (error) {
         logger.error(

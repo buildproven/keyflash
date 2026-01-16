@@ -35,8 +35,8 @@ vi.mock('@/lib/utils/logger', () => ({
 describe('Checkout API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env.STRIPE_SECRET_KEY = 'sk_test_123'
-    process.env.STRIPE_PRICE_PRO = 'price_keyflash_pro_123'
+    // Environment variables loaded from .env.test
+    // Override test-specific values only
     process.env.NEXT_PUBLIC_APP_URL = 'https://keyflash.vibebuildlab.com'
     delete process.env.VERCEL_URL
   })
@@ -48,7 +48,7 @@ describe('Checkout API Route', () => {
     it('should require STRIPE_PRICE_PRO environment variable', () => {
       const priceId = process.env.STRIPE_PRICE_PRO
       expect(priceId).toBeDefined()
-      expect(priceId).toBe('price_keyflash_pro_123')
+      expect(priceId).toBe('price_test_keyflash_pro') // From .env.test
     })
 
     it('should fail gracefully without price ID', () => {

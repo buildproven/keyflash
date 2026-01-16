@@ -4,6 +4,7 @@ import { KeywordSearchSchema } from '@/lib/validation/schemas'
 import {
   handleAPIError,
   createSuccessResponse,
+  type HttpError,
 } from '@/lib/utils/error-handler'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { getProvider, getMockProvider } from '@/lib/api/factory'
@@ -13,11 +14,6 @@ import { userService } from '@/lib/user/user-service'
 import { isBillingEnabled } from '@/lib/billing'
 import type { KeywordSearchResponse } from '@/types/keyword'
 import { readJsonWithLimit } from '@/lib/utils/request'
-
-type HttpError = Error & {
-  status?: number
-  headers?: Record<string, string>
-}
 
 // Route segment config for security and performance
 export const runtime = 'nodejs'

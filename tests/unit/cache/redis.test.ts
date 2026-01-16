@@ -15,6 +15,7 @@ vi.mock('@upstash/redis', () => {
     Redis: vi.fn().mockImplementation(function MockRedis(config: {
       url: string
       token: string
+      agent?: unknown // CODE-001: Support agent parameter for connection pooling
     }) {
       if (!config.url || !config.url.startsWith('https://')) {
         throw new Error(

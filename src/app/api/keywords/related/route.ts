@@ -3,6 +3,7 @@ import { RelatedKeywordsSchema } from '@/lib/validation/schemas'
 import {
   handleAPIError,
   createSuccessResponse,
+  type HttpError,
 } from '@/lib/utils/error-handler'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { getProvider } from '@/lib/api/factory'
@@ -21,11 +22,6 @@ interface CachedRelatedKeywords {
     cachedAt: string
     provider: string
   }
-}
-
-type HttpError = Error & {
-  status?: number
-  headers?: Record<string, string>
 }
 
 export const runtime = 'nodejs'

@@ -9,6 +9,7 @@ import {
   rateLimiter,
   type RateLimitConfig,
 } from '@/lib/rate-limit/redis-rate-limiter'
+import { handleAPIError, type HttpError } from '@/lib/utils/error-handler'
 
 const CHECKOUT_RATE_LIMIT: RateLimitConfig = {
   requestsPerHour: 10,
@@ -70,23 +71,19 @@ export async function POST(request: NextRequest) {
   try {
     // Check if billing is enabled
     if (!isBillingEnabled()) {
-      return NextResponse.json(
-        {
-          error: 'Billing Disabled',
-          message:
-            'This is an open source instance with billing disabled. All features are free.',
-        },
-        { status: 503 }
+      const error: HttpError = new Error(
+        'This is an open source instance with billing disabled. All features are free.'
       )
+      error.status = 503
+      return handleAPIError(error)
     }
 
     // FIX-004: Require authentication
     const authResult = await auth()
     if (!authResult.userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      const error: HttpError = new Error('Authentication required')
+      error.status = 401
+      return handleAPIError(error)
     }
 
     // FIX-010: Rate limit checkout requests
@@ -100,24 +97,22 @@ export async function POST(request: NextRequest) {
         userId: authResult.userId,
         retryAfter: rateLimitResult.retryAfter,
       })
-      return NextResponse.json(
-        { error: 'Too many checkout attempts. Please try again later.' },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(rateLimitResult.retryAfter || 3600),
-          },
-        }
+      const error: HttpError = new Error(
+        'Too many checkout attempts. Please try again later.'
       )
+      error.status = 429
+      error.headers = {
+        'Retry-After': String(rateLimitResult.retryAfter || 3600),
+      }
+      return handleAPIError(error)
     }
 
     const priceId = process.env.STRIPE_PRICE_PRO
     if (!priceId) {
       logger.error('Checkout: STRIPE_PRICE_PRO not configured')
-      return NextResponse.json(
-        { error: 'Checkout not configured' },
-        { status: 500 }
-      )
+      const error: HttpError = new Error('Checkout not configured')
+      error.status = 500
+      return handleAPIError(error)
     }
 
     // Ensure user exists so webhook can link subscription
@@ -169,11 +164,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error('Checkout session creation failed', { error: message })
-    return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
-    )
+    logger.error('Checkout session creation failed', { error: err })
+    return handleAPIError(err)
   }
 }

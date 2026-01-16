@@ -4,6 +4,7 @@ import { z } from 'zod'
 import {
   handleAPIError,
   createSuccessResponse,
+  type HttpError,
 } from '@/lib/utils/error-handler'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { serpService } from '@/lib/api/serp-service'
@@ -11,11 +12,6 @@ import { cache } from '@/lib/cache/redis'
 import { logger } from '@/lib/utils/logger'
 import type { ContentBriefResponse } from '@/types/content-brief'
 import { readJsonWithLimit } from '@/lib/utils/request'
-
-type HttpError = Error & {
-  status?: number
-  headers?: Record<string, string>
-}
 
 // Route segment config
 export const runtime = 'nodejs'

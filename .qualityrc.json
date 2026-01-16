@@ -10,15 +10,6 @@
     "hasCiConfig": true,
     "detectedAt": "2025-12-27T22:05:01.946Z"
   },
-  "history": {
-    "lastPerfect": {
-      "timestamp": "2026-01-08T18:32:00.000Z",
-      "commit": "a743e9e",
-      "passed": true,
-      "coverage": 70,
-      "issuesFixed": 58
-    }
-  },
   "checks": {
     "prettier": {
       "enabled": true,

@@ -44,5 +44,14 @@
       "enabled": false,
       "required": false
     }
+  },
+  "history": {
+    "lastReady": {
+      "timestamp": "2026-01-16T21:52:00.000Z",
+      "commit": "313ec16",
+      "passed": true,
+      "coverage": 0,
+      "issuesFixed": 0
+    }
   }
 }

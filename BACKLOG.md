@@ -129,10 +129,10 @@
 | **ARCH-001** | Add API versioning strategy (/api/v1/)         | Architecture  | M      | 🟠 High |
 | **ARCH-002** | DataForSEO failover/circuit breaker strategy   | Reliability   | L      | 🟠 High |
 | **ARCH-003** | Database layer for persistence (Postgres/Neon) | Architecture  | XL     | 🟠 High |
-| **ARCH-004** | CORS policies explicit configuration           | Security      | S      | 🟠 High |
+| **ARCH-004** | CORS policies explicit configuration           | Security      | S      | ✅ Done |
 | **ARCH-005** | Enhanced logging/observability (OpenTelemetry) | Observability | M      | 🟠 High |
 | **CODE-001** | Redis connection pooling                       | Performance   | M      | 🟠 High |
-| **CODE-002** | Fetch timeout for external APIs                | Reliability   | S      | 🟠 High |
+| **CODE-002** | Fetch timeout for external APIs                | Reliability   | S      | ✅ Done |
 | **CODE-003** | Standardize error response formats             | Reliability   | M      | 🟠 High |
 
 **ARCH-001 Details**: No API versioning strategy (breaking changes risk)
@@ -253,10 +253,10 @@
 | **CODE-004** | Mock data decision logic in route handler   | Architecture | M      | 🟡 Medium |
 | **CODE-005** | Redis rate limiter race condition           | Security     | M      | 🟡 Medium |
 | **CODE-006** | Simple hash collision risk in cache keys    | Security     | S      | 🟡 Medium |
-| **CODE-007** | Hardcoded API rate limits in providers      | Config       | S      | 🟡 Medium |
+| **CODE-007** | Hardcoded API rate limits in providers      | Config       | S      | ✅ Done   |
 | **CODE-008** | Add virtualization for large result sets    | Performance  | M      | 🟡 Medium |
-| **CODE-009** | Add error boundary for client crashes       | Reliability  | S      | 🟡 Medium |
-| **CODE-010** | Health check endpoint validation at startup | Reliability  | S      | 🟡 Medium |
+| **CODE-009** | Add error boundary for client crashes       | Reliability  | S      | ✅ Done   |
+| **CODE-010** | Health check endpoint validation at startup | Reliability  | S      | ✅ Done   |
 
 **CODE-004 Details**: Mock data logic in route handler bypasses preferences (src/app/api/keywords/route.ts:149)
 
@@ -585,6 +585,11 @@
 | ------------------------- | ---------------------------------------------------------------- | ---------- | --------- |
 | Feature                   | Completed                                                        |
 | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| **ARCH-004**              | CORS policies explicit configuration (middleware.ts allowlist)   | 2026-01-16 |
+| **CODE-002**              | Fetch timeout for external APIs (fetchWithTimeout utility)       | 2026-01-16 |
+| **CODE-007**              | Hardcoded API rate limits → configurable via env vars            | 2026-01-16 |
+| **CODE-009**              | Error boundary for React crashes (prevents white screen)         | 2026-01-16 |
+| **CODE-010**              | Health check validation at startup (fail-fast on broken deps)    | 2026-01-16 |
 | **SEC-021**               | Hardcoded Stripe test keys → .env.test (git-ignored)             | 2026-01-15 |
 | **SEC-022**               | Base64 string investigation (false positive, added comment)      | 2026-01-15 |
 | **TYPE-002**              | Non-null assertions → getClient() helper (133→3 instances)       | 2026-01-03 |

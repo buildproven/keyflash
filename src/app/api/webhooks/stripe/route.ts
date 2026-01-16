@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { Redis } from '@upstash/redis'
+import https from 'https'
 import { logger } from '@/lib/utils/logger'
 import {
   userService,
@@ -27,7 +28,8 @@ class InfrastructureError extends Error {
 const WEBHOOK_EVENT_TTL_SECONDS = 72 * 60 * 60 // 72 hours
 const WEBHOOK_EVENT_PREFIX = 'stripe-webhook:'
 
-// Lazy Redis initialization
+// CODE-001: Redis connection pooling for webhook handler
+// Lazy Redis initialization with keepAlive agent to reuse HTTP connections
 let webhookRedis: Redis | null = null
 function getWebhookRedis(): Redis | null {
   if (webhookRedis) return webhookRedis
@@ -35,7 +37,17 @@ function getWebhookRedis(): Redis | null {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
   if (!url || !token) return null
   try {
-    webhookRedis = new Redis({ url, token })
+    webhookRedis = new Redis({
+      url,
+      token,
+      // CODE-001: Configure HTTPS agent with connection pooling
+      // - keepAlive: reuse TCP connections across requests
+      // - maxSockets: allow up to 50 concurrent connections
+      agent: new https.Agent({
+        keepAlive: true,
+        maxSockets: 50,
+      }),
+    })
     return webhookRedis
   } catch (error) {
     logger.error('Failed to initialize webhook Redis client', error, {

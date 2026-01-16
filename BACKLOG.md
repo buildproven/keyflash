@@ -129,10 +129,10 @@
 | **ARCH-001** | Add API versioning strategy (/api/v1/)         | Architecture  | M      | 🟠 High |
 | **ARCH-002** | DataForSEO failover/circuit breaker strategy   | Reliability   | L      | 🟠 High |
 | **ARCH-003** | Database layer for persistence (Postgres/Neon) | Architecture  | XL     | 🟠 High |
-| **ARCH-004** | CORS policies explicit configuration           | Security      | S      | 🟠 High |
+| **ARCH-004** | CORS policies explicit configuration           | Security      | S      | ✅ Done |
 | **ARCH-005** | Enhanced logging/observability (OpenTelemetry) | Observability | M      | 🟠 High |
-| **CODE-001** | Redis connection pooling                       | Performance   | M      | 🟠 High |
-| **CODE-002** | Fetch timeout for external APIs                | Reliability   | S      | 🟠 High |
+| **CODE-001** | Redis connection pooling                       | Performance   | M      | ✅ Done |
+| **CODE-002** | Fetch timeout for external APIs                | Reliability   | S      | ✅ Done |
 | **CODE-003** | Standardize error response formats             | Reliability   | M      | 🟠 High |
 
 **ARCH-001 Details**: No API versioning strategy (breaking changes risk)
@@ -253,10 +253,10 @@
 | **CODE-004** | Mock data decision logic in route handler   | Architecture | M      | 🟡 Medium |
 | **CODE-005** | Redis rate limiter race condition           | Security     | M      | 🟡 Medium |
 | **CODE-006** | Simple hash collision risk in cache keys    | Security     | S      | 🟡 Medium |
-| **CODE-007** | Hardcoded API rate limits in providers      | Config       | S      | 🟡 Medium |
+| **CODE-007** | Hardcoded API rate limits in providers      | Config       | S      | ✅ Done   |
 | **CODE-008** | Add virtualization for large result sets    | Performance  | M      | 🟡 Medium |
-| **CODE-009** | Add error boundary for client crashes       | Reliability  | S      | 🟡 Medium |
-| **CODE-010** | Health check endpoint validation at startup | Reliability  | S      | 🟡 Medium |
+| **CODE-009** | Add error boundary for client crashes       | Reliability  | S      | ✅ Done   |
+| **CODE-010** | Health check endpoint validation at startup | Reliability  | S      | ✅ Done   |
 
 **CODE-004 Details**: Mock data logic in route handler bypasses preferences (src/app/api/keywords/route.ts:149)
 
@@ -581,101 +581,107 @@
 
 ## Completed ✅
 
-| ID                        | Item                                                             | Type       | Completed |
-| ------------------------- | ---------------------------------------------------------------- | ---------- | --------- |
-| Feature                   | Completed                                                        |
-| ------------------------- | ---------------------------------------------------------------- | ---------- |
-| **SEC-021**               | Hardcoded Stripe test keys → .env.test (git-ignored)             | 2026-01-15 |
-| **SEC-022**               | Base64 string investigation (false positive, added comment)      | 2026-01-15 |
-| **TYPE-002**              | Non-null assertions → getClient() helper (133→3 instances)       | 2026-01-03 |
-| **A11Y-013**              | Focus indicators for saved search buttons                        | 2026-01-03 |
-| **PERF-011**              | Cache write fire-and-forget (removed Promise.race timeout)       | 2026-01-03 |
-| **PERF-012**              | Eliminated redundant Redis GET in checkKeywordLimit              | 2026-01-03 |
-| **PERF-013**              | Atomic rate limiting via Lua script (no race conditions)         | 2026-01-03 |
-| **PERF-014**              | Dynamic imports + bundle analyzer for code splitting             | 2026-01-03 |
-| **SEC-016**               | Streaming cache purge (prevents OOM with millions of keys)       | 2026-01-03 |
-| **TYPE-003**              | Optional validation for Redis get<T> generic                     | 2026-01-03 |
-| **TYPE-005**              | Removed redundant SavedSearch type assertion                     | 2026-01-03 |
-| **ERR-002**               | Dynamic import error handling (.catch with fallback)             | 2026-01-03 |
-| **A11Y-014**              | Table scope="col" attributes (related keywords modal)            | 2026-01-03 |
-| **A11Y-015**              | Modal loading states role="status" aria-live="polite"            | 2026-01-03 |
-| **SEC-015**               | CSRF protection (token generation, validation, origin checking)  | 2026-01-03 |
-| **TYPE-004**              | z.array(z.any()) → KeywordDataSchema (proper type safety)        | 2026-01-03 |
-| **ERR-001**               | Status-code-specific error messages (400-504 user-friendly)      | 2026-01-03 |
-| **A11Y-011**              | Color contrast fixes (9 additional components, WCAG 2.1 AA)      | 2026-01-03 |
-| **A11Y-012**              | Form labels and ARIA attributes (match type legend)              | 2026-01-03 |
-| **SEC-010**               | Trial period bypass race condition (distributed lock with SETNX) | 2026-01-02 |
-| **SEC-011**               | Webhook replay attack idempotency (optimistic locking)           | 2026-01-02 |
-| **TYPE-001**              | Stripe webhook Zod validation (CheckoutSession, Subscription)    | 2026-01-02 |
-| **PERF-010**              | Usage tracking fire-and-forget (non-blocking)                    | 2026-01-02 |
-| **SEC-012**               | Saved search quota TOCTOU fix (atomic SADD with rollback)        | 2026-01-02 |
-| **SEC-013**               | Rate limit HMAC fallback removal (enforce in all environments)   | 2026-01-02 |
-| **SEC-014**               | Cache key SHA-256 upgrade (64-bit entropy vs 25-bit)             | 2026-01-02 |
-| **A11Y-006**              | Dark mode color contrast fixes (7 components, WCAG 2.1 AA)       | 2026-01-02 |
-| **A11Y-007**              | ARIA labels for icon buttons (related, content brief)            | 2026-01-02 |
-| **A11Y-008**              | Modal focus restoration (3 modals: content brief, related, save) | 2026-01-02 |
-| **A11Y-009**              | Table caption for screen readers (keyword results)               | 2026-01-02 |
-| **A11Y-010**              | Aria-live regions for modal error announcements                  | 2026-01-02 |
-| **FIX-029**               | Content brief error handling (cache write timeout race)          | 2026-01-02 |
-| **FIX-030**               | Redis KEYS to SCAN migration (purgeKeywordCache, non-blocking)   | 2026-01-02 |
-| **FIX-031**               | Structured Redis error classes (CacheError hierarchy)            | 2026-01-02 |
-| **FIX-032**               | Rate limiter fail-fast validation (production HMAC + Redis)      | 2026-01-02 |
-| **FIX-033**               | Enhanced getAppUrl() production validation (URL format, HTTPS)   | 2026-01-02 |
-| **FIX-034**               | Remove redundant isAvailable() checks in searches API            | 2026-01-02 |
-| **FIX-021**               | Webhook idempotency fail closed (prevent duplicate billing)      | 2026-01-01 |
-| **FIX-022**               | Cache health tracking (cacheHealthy field in API responses)      | 2026-01-01 |
-| **FIX-023**               | Saved search race condition (SCARD before SADD atomic check)     | 2026-01-01 |
-| **A11Y-004**              | WCAG 2.1 AA color contrast (text-gray-400 → text-gray-600)       | 2026-01-01 |
-| **A11Y-005**              | Screen reader accessibility (aria-label, sr-only text)           | 2026-01-01 |
-| **FIX-024**               | Replace hardcoded domains with getAppUrl() env-based helper      | 2026-01-01 |
-| **FIX-025**               | Remove redundant isAvailable() checks (services throw errors)    | 2026-01-01 |
-| **FIX-026**               | Monthly reset race condition (Redis TTL atomic operations)       | 2026-01-01 |
-| **FIX-027**               | DRY violation eliminated (monthly reset via TTL refactor)        | 2026-01-01 |
-| **FIX-028**               | Runtime validation with Zod schemas (UserData, SavedSearch)      | 2026-01-01 |
-| **FIX-008**               | Services throw errors instead of null (proper 503 responses)     | 2025-12-31 |
-| **FIX-020**               | Webhook idempotency (track event IDs to prevent duplicates)      | 2025-12-31 |
-| **FIX-004**               | Add authentication to checkout endpoint                          | 2025-12-31 |
-| **FIX-005**               | Webhook returns 503 on Redis errors (enables Stripe retry)       | 2025-12-31 |
-| **FIX-006**               | Fix race condition in saved searches limit (atomic ops)          | 2025-12-31 |
-| **FIX-007**               | Fix Stripe type assertions (type-safe customer extraction)       | 2025-12-31 |
-| **FIX-009**               | Fix N+1 query in listSavedSearches (Redis MGET)                  | 2025-12-31 |
-| **FIX-010**               | Add rate limiting to checkout endpoint                           | 2025-12-31 |
-| **FIX-011**               | Add search ID parameter validation (UUID + legacy format)        | 2025-12-31 |
-| **FIX-012**               | Fix rate limiter memory leak (remove setTimeout accumulation)    | 2025-12-31 |
-| **FIX-013**               | Fix memory leak in rate limit fallback (cap at 10K entries)      | 2025-12-31 |
-| **FIX-014**               | Use logger instead of console.warn (edge rate limit)             | 2025-12-31 |
-| **FIX-015**               | Add provider name type guard (factory pattern)                   | 2025-12-31 |
-| **FIX-017**               | Throw on invalid provider in production (not mock fallback)      | 2025-12-31 |
-| **FIX-018**               | Add error logging to handleAPIError (operational visibility)     | 2025-12-31 |
-| **FIX-019**               | Fix deleteSavedSearch to check SREM return value (proper 404)    | 2025-12-31 |
-| **PERF-001**              | Lazy load Clerk authentication                                   | 2025-12-30 |
-| **SEC-001**               | Security hardening (origin allowlist, 5xx redaction, validation) | 2025-12-30 |
-| **FIX-003**               | Monthly keyword reset bug fix                                    | 2025-12-30 |
-| **FEAT-001**              | Saved searches (Redis storage, list, load, delete)               | 2025-12-30 |
-| **AUTH-001**              | User authentication (Clerk) + tier tracking                      | 2025-12-22 |
-| **PAY-001**               | Stripe checkout + subscriptions ($29/mo Pro)                     | 2025-12-22 |
-| **FEAT-008**              | Content Brief Generator with SERP analysis                       | 2025-12-13 |
-| **FEAT-006**              | Related keywords suggestions with relevance scoring              | 2025-12-14 |
-| **FEAT-007**              | Historical trend data visualization (sparklines)                 | 2025-12-14 |
-| **FEAT-002**              | DataForSEO API integration for scaling                           | 2025-11-28 |
-| **MONITOR-001**           | Sentry error tracking                                            | 2025-12-05 |
-| **STYLE-001**             | Tailwind CSS v4 migration                                        | 2025-12-05 |
-| **CI-001**                | Dependabot auto-merge workflow                                   | 2025-12-13 |
-| **CI-002**                | Weekly audit and daily deploy check workflows                    | 2025-12-05 |
-| **DEPLOY-001**            | Vercel deployment configuration                                  | 2025-11-22 |
-| **TEST-001/002/003**      | Unit, integration, and E2E tests                                 | 2025-11-21 |
-| **EXPORT-001**            | CSV export functionality                                         | 2025-11-20 |
-| **VALID-001**             | Input validation with Zod schemas                                | 2025-11-20 |
-| **RATE-001**              | Rate limiting middleware                                         | 2025-11-20 |
-| **CACHE-001**             | Redis caching strategy                                           | 2025-11-20 |
-| **UI-001/002/003**        | Landing page, search form, results table                         | 2025-11-20 |
-| **API-001/002**           | API abstraction layer, Google Ads integration                    | 2025-11-20 |
-| **INFRA-001/002/003**     | Next.js 16, Google Ads credentials, Upstash Redis                | 2025-11-20 |
-| **SETUP-001/002/003/004** | Documentation, GitHub repo, quality automation                   | 2025-11-19 |
-| **UI-004**                | Standard VibeBuildLab footer with legal links                    | 2025-12-17 |
-| **COPY-001**              | Landing page copy improvements (accurate messaging)              | 2025-12-17 |
-| **FIX-001**               | Tailwind CSS v4 import syntax fix                                | 2025-12-17 |
-| **FIX-002**               | DataForSEO response parsing fix                                  | 2025-12-17 |
+| ID                        | Item                                                                    | Type       | Completed |
+| ------------------------- | ----------------------------------------------------------------------- | ---------- | --------- |
+| Feature                   | Completed                                                               |
+| ------------------------- | ----------------------------------------------------------------        | ---------- |
+| **CODE-001**              | Redis connection pooling (https.Agent keepAlive across all 6 instances) | 2026-01-16 |
+| **ARCH-004**              | CORS policies explicit configuration (middleware.ts allowlist)          | 2026-01-16 |
+| **CODE-002**              | Fetch timeout for external APIs (fetchWithTimeout utility)              | 2026-01-16 |
+| **CODE-007**              | Hardcoded API rate limits → configurable via env vars                   | 2026-01-16 |
+| **CODE-009**              | Error boundary for React crashes (prevents white screen)                | 2026-01-16 |
+| **CODE-010**              | Health check validation at startup (fail-fast on broken deps)           | 2026-01-16 |
+| **SEC-021**               | Hardcoded Stripe test keys → .env.test (git-ignored)                    | 2026-01-15 |
+| **SEC-022**               | Base64 string investigation (false positive, added comment)             | 2026-01-15 |
+| **TYPE-002**              | Non-null assertions → getClient() helper (133→3 instances)              | 2026-01-03 |
+| **A11Y-013**              | Focus indicators for saved search buttons                               | 2026-01-03 |
+| **PERF-011**              | Cache write fire-and-forget (removed Promise.race timeout)              | 2026-01-03 |
+| **PERF-012**              | Eliminated redundant Redis GET in checkKeywordLimit                     | 2026-01-03 |
+| **PERF-013**              | Atomic rate limiting via Lua script (no race conditions)                | 2026-01-03 |
+| **PERF-014**              | Dynamic imports + bundle analyzer for code splitting                    | 2026-01-03 |
+| **SEC-016**               | Streaming cache purge (prevents OOM with millions of keys)              | 2026-01-03 |
+| **TYPE-003**              | Optional validation for Redis get<T> generic                            | 2026-01-03 |
+| **TYPE-005**              | Removed redundant SavedSearch type assertion                            | 2026-01-03 |
+| **ERR-002**               | Dynamic import error handling (.catch with fallback)                    | 2026-01-03 |
+| **A11Y-014**              | Table scope="col" attributes (related keywords modal)                   | 2026-01-03 |
+| **A11Y-015**              | Modal loading states role="status" aria-live="polite"                   | 2026-01-03 |
+| **SEC-015**               | CSRF protection (token generation, validation, origin checking)         | 2026-01-03 |
+| **TYPE-004**              | z.array(z.any()) → KeywordDataSchema (proper type safety)               | 2026-01-03 |
+| **ERR-001**               | Status-code-specific error messages (400-504 user-friendly)             | 2026-01-03 |
+| **A11Y-011**              | Color contrast fixes (9 additional components, WCAG 2.1 AA)             | 2026-01-03 |
+| **A11Y-012**              | Form labels and ARIA attributes (match type legend)                     | 2026-01-03 |
+| **SEC-010**               | Trial period bypass race condition (distributed lock with SETNX)        | 2026-01-02 |
+| **SEC-011**               | Webhook replay attack idempotency (optimistic locking)                  | 2026-01-02 |
+| **TYPE-001**              | Stripe webhook Zod validation (CheckoutSession, Subscription)           | 2026-01-02 |
+| **PERF-010**              | Usage tracking fire-and-forget (non-blocking)                           | 2026-01-02 |
+| **SEC-012**               | Saved search quota TOCTOU fix (atomic SADD with rollback)               | 2026-01-02 |
+| **SEC-013**               | Rate limit HMAC fallback removal (enforce in all environments)          | 2026-01-02 |
+| **SEC-014**               | Cache key SHA-256 upgrade (64-bit entropy vs 25-bit)                    | 2026-01-02 |
+| **A11Y-006**              | Dark mode color contrast fixes (7 components, WCAG 2.1 AA)              | 2026-01-02 |
+| **A11Y-007**              | ARIA labels for icon buttons (related, content brief)                   | 2026-01-02 |
+| **A11Y-008**              | Modal focus restoration (3 modals: content brief, related, save)        | 2026-01-02 |
+| **A11Y-009**              | Table caption for screen readers (keyword results)                      | 2026-01-02 |
+| **A11Y-010**              | Aria-live regions for modal error announcements                         | 2026-01-02 |
+| **FIX-029**               | Content brief error handling (cache write timeout race)                 | 2026-01-02 |
+| **FIX-030**               | Redis KEYS to SCAN migration (purgeKeywordCache, non-blocking)          | 2026-01-02 |
+| **FIX-031**               | Structured Redis error classes (CacheError hierarchy)                   | 2026-01-02 |
+| **FIX-032**               | Rate limiter fail-fast validation (production HMAC + Redis)             | 2026-01-02 |
+| **FIX-033**               | Enhanced getAppUrl() production validation (URL format, HTTPS)          | 2026-01-02 |
+| **FIX-034**               | Remove redundant isAvailable() checks in searches API                   | 2026-01-02 |
+| **FIX-021**               | Webhook idempotency fail closed (prevent duplicate billing)             | 2026-01-01 |
+| **FIX-022**               | Cache health tracking (cacheHealthy field in API responses)             | 2026-01-01 |
+| **FIX-023**               | Saved search race condition (SCARD before SADD atomic check)            | 2026-01-01 |
+| **A11Y-004**              | WCAG 2.1 AA color contrast (text-gray-400 → text-gray-600)              | 2026-01-01 |
+| **A11Y-005**              | Screen reader accessibility (aria-label, sr-only text)                  | 2026-01-01 |
+| **FIX-024**               | Replace hardcoded domains with getAppUrl() env-based helper             | 2026-01-01 |
+| **FIX-025**               | Remove redundant isAvailable() checks (services throw errors)           | 2026-01-01 |
+| **FIX-026**               | Monthly reset race condition (Redis TTL atomic operations)              | 2026-01-01 |
+| **FIX-027**               | DRY violation eliminated (monthly reset via TTL refactor)               | 2026-01-01 |
+| **FIX-028**               | Runtime validation with Zod schemas (UserData, SavedSearch)             | 2026-01-01 |
+| **FIX-008**               | Services throw errors instead of null (proper 503 responses)            | 2025-12-31 |
+| **FIX-020**               | Webhook idempotency (track event IDs to prevent duplicates)             | 2025-12-31 |
+| **FIX-004**               | Add authentication to checkout endpoint                                 | 2025-12-31 |
+| **FIX-005**               | Webhook returns 503 on Redis errors (enables Stripe retry)              | 2025-12-31 |
+| **FIX-006**               | Fix race condition in saved searches limit (atomic ops)                 | 2025-12-31 |
+| **FIX-007**               | Fix Stripe type assertions (type-safe customer extraction)              | 2025-12-31 |
+| **FIX-009**               | Fix N+1 query in listSavedSearches (Redis MGET)                         | 2025-12-31 |
+| **FIX-010**               | Add rate limiting to checkout endpoint                                  | 2025-12-31 |
+| **FIX-011**               | Add search ID parameter validation (UUID + legacy format)               | 2025-12-31 |
+| **FIX-012**               | Fix rate limiter memory leak (remove setTimeout accumulation)           | 2025-12-31 |
+| **FIX-013**               | Fix memory leak in rate limit fallback (cap at 10K entries)             | 2025-12-31 |
+| **FIX-014**               | Use logger instead of console.warn (edge rate limit)                    | 2025-12-31 |
+| **FIX-015**               | Add provider name type guard (factory pattern)                          | 2025-12-31 |
+| **FIX-017**               | Throw on invalid provider in production (not mock fallback)             | 2025-12-31 |
+| **FIX-018**               | Add error logging to handleAPIError (operational visibility)            | 2025-12-31 |
+| **FIX-019**               | Fix deleteSavedSearch to check SREM return value (proper 404)           | 2025-12-31 |
+| **PERF-001**              | Lazy load Clerk authentication                                          | 2025-12-30 |
+| **SEC-001**               | Security hardening (origin allowlist, 5xx redaction, validation)        | 2025-12-30 |
+| **FIX-003**               | Monthly keyword reset bug fix                                           | 2025-12-30 |
+| **FEAT-001**              | Saved searches (Redis storage, list, load, delete)                      | 2025-12-30 |
+| **AUTH-001**              | User authentication (Clerk) + tier tracking                             | 2025-12-22 |
+| **PAY-001**               | Stripe checkout + subscriptions ($29/mo Pro)                            | 2025-12-22 |
+| **FEAT-008**              | Content Brief Generator with SERP analysis                              | 2025-12-13 |
+| **FEAT-006**              | Related keywords suggestions with relevance scoring                     | 2025-12-14 |
+| **FEAT-007**              | Historical trend data visualization (sparklines)                        | 2025-12-14 |
+| **FEAT-002**              | DataForSEO API integration for scaling                                  | 2025-11-28 |
+| **MONITOR-001**           | Sentry error tracking                                                   | 2025-12-05 |
+| **STYLE-001**             | Tailwind CSS v4 migration                                               | 2025-12-05 |
+| **CI-001**                | Dependabot auto-merge workflow                                          | 2025-12-13 |
+| **CI-002**                | Weekly audit and daily deploy check workflows                           | 2025-12-05 |
+| **DEPLOY-001**            | Vercel deployment configuration                                         | 2025-11-22 |
+| **TEST-001/002/003**      | Unit, integration, and E2E tests                                        | 2025-11-21 |
+| **EXPORT-001**            | CSV export functionality                                                | 2025-11-20 |
+| **VALID-001**             | Input validation with Zod schemas                                       | 2025-11-20 |
+| **RATE-001**              | Rate limiting middleware                                                | 2025-11-20 |
+| **CACHE-001**             | Redis caching strategy                                                  | 2025-11-20 |
+| **UI-001/002/003**        | Landing page, search form, results table                                | 2025-11-20 |
+| **API-001/002**           | API abstraction layer, Google Ads integration                           | 2025-11-20 |
+| **INFRA-001/002/003**     | Next.js 16, Google Ads credentials, Upstash Redis                       | 2025-11-20 |
+| **SETUP-001/002/003/004** | Documentation, GitHub repo, quality automation                          | 2025-11-19 |
+| **UI-004**                | Standard VibeBuildLab footer with legal links                           | 2025-12-17 |
+| **COPY-001**              | Landing page copy improvements (accurate messaging)                     | 2025-12-17 |
+| **FIX-001**               | Tailwind CSS v4 import syntax fix                                       | 2025-12-17 |
+| **FIX-002**               | DataForSEO response parsing fix                                         | 2025-12-17 |
 
 ---
 

@@ -52,9 +52,12 @@ describe('Checkout API Route', () => {
     })
 
     it('should fail gracefully without price ID', () => {
+      const originalPrice = process.env.STRIPE_PRICE_PRO
       delete process.env.STRIPE_PRICE_PRO
       const priceId = process.env.STRIPE_PRICE_PRO
       expect(priceId).toBeUndefined()
+      // Restore for subsequent tests
+      process.env.STRIPE_PRICE_PRO = originalPrice
     })
   })
 

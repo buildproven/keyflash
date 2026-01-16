@@ -12,6 +12,7 @@ import {
   StripeSubscriptionSchema,
 } from '@/lib/validation/domain-schemas'
 import { isBillingEnabled } from '@/lib/billing'
+import { handleAPIError, type HttpError } from '@/lib/utils/error-handler'
 
 // FIX-005: Custom error for infrastructure failures that should trigger retry
 class InfrastructureError extends Error {
@@ -137,22 +138,19 @@ function getStripe() {
 export async function POST(request: NextRequest) {
   // Check if billing is enabled
   if (!isBillingEnabled()) {
-    return NextResponse.json(
-      {
-        error: 'Billing Disabled',
-        message: 'This is an open source instance with billing disabled.',
-      },
-      { status: 503 }
+    const error: HttpError = new Error(
+      'This is an open source instance with billing disabled.'
     )
+    error.status = 503
+    return handleAPIError(error)
   }
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   if (!webhookSecret) {
     logger.error('Stripe webhook: STRIPE_WEBHOOK_SECRET not configured')
-    return NextResponse.json(
-      { error: 'Webhook not configured' },
-      { status: 500 }
-    )
+    const error: HttpError = new Error('Webhook not configured')
+    error.status = 500
+    return handleAPIError(error)
   }
 
   const body = await request.text()
@@ -160,7 +158,9 @@ export async function POST(request: NextRequest) {
 
   if (!signature) {
     logger.warn('Stripe webhook: Missing signature')
-    return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+    const error: HttpError = new Error('Missing signature')
+    error.status = 400
+    return handleAPIError(error)
   }
 
   let event: Stripe.Event
@@ -169,11 +169,10 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe()
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error('Stripe webhook signature verification failed', {
-      error: message,
-    })
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    logger.error('Stripe webhook signature verification failed', { error: err })
+    const error: HttpError = new Error('Invalid signature')
+    error.status = 400
+    return handleAPIError(error)
   }
 
   logger.info('Stripe webhook received', { type: event.type, id: event.id })
@@ -235,8 +234,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-
     // FIX-005: Return 503 for infrastructure errors so Stripe retries
     if (
       err instanceof InfrastructureError ||
@@ -248,22 +245,20 @@ export async function POST(request: NextRequest) {
 
       logger.error('Stripe webhook infrastructure error (will retry)', {
         type: event.type,
-        error: message,
+        error: err,
       })
-      return NextResponse.json(
-        { error: 'Service temporarily unavailable' },
-        { status: 503 }
-      )
+      const error: HttpError = new Error('Service temporarily unavailable')
+      error.status = 503
+      return handleAPIError(error)
     }
 
     logger.error('Stripe webhook handler error', {
       type: event.type,
-      error: message,
+      error: err,
     })
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 500 }
-    )
+    const error: HttpError = new Error('Webhook handler failed')
+    error.status = 500
+    return handleAPIError(error)
   }
 }
 

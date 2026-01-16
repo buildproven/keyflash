@@ -69,6 +69,8 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
     error instanceof UserServiceUnavailableError
   ) {
     logger.error('Service unavailable', error, { module: 'APIErrorHandler' })
+    // CODE-003: Add Retry-After header for 503 responses (60 seconds)
+    headers.set('Retry-After', '60')
     return NextResponse.json(
       {
         error: 'Service Unavailable',
@@ -91,6 +93,8 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
       module: 'APIErrorHandler',
       operation,
     })
+    // CODE-003: Add Retry-After header for 503 responses (60 seconds)
+    headers.set('Retry-After', '60')
     return NextResponse.json(
       {
         error: 'Service Error',

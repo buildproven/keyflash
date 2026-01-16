@@ -19,7 +19,10 @@ export function Footer() {
           </div>
 
           {/* Legal Links */}
-          <nav className="flex items-center gap-6 text-sm" aria-label="Footer navigation">
+          <nav
+            className="flex items-center gap-6 text-sm"
+            aria-label="Footer navigation"
+          >
             <a
               href="https://vibebuildlab.com/privacy-policy"
               target="_blank"

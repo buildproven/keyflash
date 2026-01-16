@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis'
+import * as https from 'https'
 import { logger } from '@/lib/utils/logger'
 import { UserDataSchema } from '@/lib/validation/domain-schemas'
 
@@ -55,7 +56,15 @@ class UserService {
 
     if (url && token) {
       try {
-        this.client = new Redis({ url, token })
+        // CODE-001: Enable HTTP keepAlive for connection pooling
+        this.client = new Redis({
+          url,
+          token,
+          agent: new https.Agent({
+            keepAlive: true,
+            maxSockets: 50,
+          }),
+        })
         this.isConfigured = true
       } catch (error) {
         logger.error('Failed to initialize UserService Redis client', error, {

@@ -6,6 +6,7 @@
 ## Problem Statement
 
 Current tooling has complementary gaps:
+
 - **VBL Adopt**: Finds issues but doesn't fix them
 - **/bs:quality**: Fixes issues but may miss specialized scans (OWASP, secrets)
 
@@ -85,6 +86,7 @@ echo "✅ Security pre-flight passed"
 ```
 
 **New flags:**
+
 ```bash
 /bs:quality --level 98 --security-deep    # Enable OWASP + Gitleaks scans
 /bs:quality --auto-fix-security           # Auto-spawn security-auditor for findings
@@ -96,10 +98,10 @@ echo "✅ Security pre-flight passed"
 
 **New command: `/bs:audit`**
 
-```markdown
+````markdown
 ---
-description: "Comprehensive audit + automated fixing (VBL Adopt → /bs:quality)"
-argument-hint: "/bs:audit → full scan + auto-fix | --report-only → scan without fixing"
+description: 'Comprehensive audit + automated fixing (VBL Adopt → /bs:quality)'
+argument-hint: '/bs:audit → full scan + auto-fix | --report-only → scan without fixing'
 ---
 
 # /bs:audit - Comprehensive Audit with Auto-Fix
@@ -114,6 +116,7 @@ argument-hint: "/bs:audit → full scan + auto-fix | --report-only → scan with
 /bs:audit --fix-critical     # Auto-fix critical issues only
 /bs:audit --update-backlog   # Update BACKLOG.md with findings
 ```
+````
 
 ## Implementation
 
@@ -216,6 +219,7 @@ fi
 ✅ Audit Complete
 
 **VBL Adopt Scores:**
+
 - Security: ${SECURITY_SCORE}/100
 - Architecture: ${ARCHITECTURE_SCORE}/100
 - Code Quality: ${CODE_SCORE}/100
@@ -228,11 +232,13 @@ $(if --fix-critical: "$CRITICAL_ISSUES critical issues fixed")
 $(if auto-fix: "Quality loop completed at ${QUALITY_LEVEL}%")
 
 **Next Steps:**
+
 - Review reports in docs/
 - Check BACKLOG.md for remaining issues
 - Run /bs:quality --merge when ready to ship
 ```
-```
+
+````
 
 ---
 
@@ -249,9 +255,10 @@ if [ "$AUTO_FIX" = "true" ]; then
   # Hand off to /bs:quality with findings
   /bs:quality --level 98 --scope all --vbl-adopt-findings=.vbl-adopt-report.json
 fi
-```
+````
 
 **New VBL Adopt flags:**
+
 ```bash
 vbl adopt --auto-fix              # Run audit then spawn /bs:quality
 vbl adopt --update-backlog        # Auto-update BACKLOG.md
@@ -263,6 +270,7 @@ vbl adopt --incremental           # Only scan changed files since last run
 ## Recommended Workflow Changes
 
 ### Old Workflow (Manual)
+
 ```bash
 # 1. Run VBL Adopt
 vbl adopt
@@ -277,6 +285,7 @@ vbl adopt
 ```
 
 ### New Workflow (Automated)
+
 ```bash
 # Option 1: Full automation
 /bs:audit
@@ -302,16 +311,19 @@ vbl adopt
 ## Implementation Priority
 
 ### Phase 1: Quick Wins (< 4 hours)
+
 1. ✅ Add Gitleaks pre-flight to /bs:quality (Step 0.5)
 2. ✅ Add --security-deep flag to /bs:quality
 3. ✅ Add --update-backlog to VBL Adopt (AI parses reports → BACKLOG.md)
 
 ### Phase 2: Integration (1-2 days)
+
 4. ✅ Create /bs:audit command
 5. ✅ Test VBL Adopt → /bs:quality handoff
 6. ✅ Add incremental mode to VBL Adopt
 
 ### Phase 3: Polish (2-3 days)
+
 7. ✅ Add quality score tracking to .qualityrc.json (VBL Adopt scores)
 8. ✅ Create /bs:audit --status dashboard
 9. ✅ Document workflow in README
@@ -321,11 +333,13 @@ vbl adopt
 ## Expected Benefits
 
 ### Before
+
 - **Manual effort**: 2-3 hours (run adopt, read reports, update backlog, run quality)
 - **Coverage gaps**: /bs:quality may miss OWASP/secrets
 - **Context loss**: Manual translation from reports to fixes
 
 ### After
+
 - **One command**: `/bs:audit` (30-90 min autonomous)
 - **Zero gaps**: VBL Adopt discovery + /bs:quality fixing
 - **Auto-backlog**: Issues automatically tracked
@@ -336,11 +350,13 @@ vbl adopt
 ## Compatibility
 
 **Backward compatible:**
+
 - `/bs:quality` still works as before
 - `vbl adopt` still works as standalone
 - New flags are optional
 
 **Migration path:**
+
 ```bash
 # Old users can keep using:
 /bs:quality --level 98
@@ -359,6 +375,7 @@ vbl adopt
 ## Recommendation
 
 **Implement Phase 1 immediately** (< 4 hours):
+
 1. Add Gitleaks to /bs:quality Step 0.5
 2. Add --update-backlog to VBL Adopt
 3. Test on KeyFlash

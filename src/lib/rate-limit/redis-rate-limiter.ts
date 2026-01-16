@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis'
-import crypto from 'crypto'
+import * as https from 'https'
+import * as crypto from 'crypto'
 import { logger } from '@/lib/utils/logger'
 
 /**
@@ -70,9 +71,14 @@ export class RedisRateLimiter {
 
     if (redisUrl && redisToken) {
       try {
+        // CODE-001: Enable HTTP keepAlive for connection pooling
         this.redis = new Redis({
           url: redisUrl,
           token: redisToken,
+          agent: new https.Agent({
+            keepAlive: true,
+            maxSockets: 50,
+          }),
         })
         this.isRedisAvailable = true
         logger.info('Redis configured for rate limiting', {

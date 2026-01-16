@@ -6,6 +6,7 @@
  */
 
 import { validateEnvironment } from './env-validation'
+import { validateHealthChecks } from './health-checks'
 import { logger } from '@/lib/utils/logger'
 
 /**
@@ -17,7 +18,7 @@ import { logger } from '@/lib/utils/logger'
  * In development, only performs basic checks to avoid blocking dev workflow.
  * In production, performs full validation and fails fast on missing config.
  */
-export function initializeApp(): void {
+export async function initializeApp(): Promise<void> {
   const isDevelopment = process.env.NODE_ENV === 'development'
   const isTest = process.env.NODE_ENV === 'test'
 
@@ -43,6 +44,12 @@ export function initializeApp(): void {
       }
     )
     validateEnvironment() // This will exit on failure
+
+    // CODE-010: Validate critical services are available
+    logger.info('🔍 Validating service health...', {
+      module: 'Startup',
+    })
+    await validateHealthChecks() // This will throw on failure
   }
 
   // Mark initialization as complete
@@ -53,6 +60,17 @@ export function initializeApp(): void {
 
 // Auto-initialize when this module is imported
 // This ensures validation happens at startup time
+async function safeInit() {
+  try {
+    await initializeApp()
+  } catch (error) {
+    logger.error('Application initialization failed', error, {
+      module: 'Startup',
+    })
+    process.exit(1)
+  }
+}
+
 if (process.env.NODE_ENV !== 'test') {
-  initializeApp()
+  safeInit()
 }

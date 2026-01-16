@@ -225,12 +225,71 @@ describe('Security configuration smoke tests', () => {
 })
 
 describe('TypeScript configuration smoke tests', () => {
+  // Helper to strip JSON comments (tsconfig.json supports JSONC format)
+  // This handles comments correctly by skipping content inside strings
+  const stripJsonComments = (jsonString: string): string => {
+    let result = ''
+    let inString = false
+    let inComment = false
+    let commentType: 'single' | 'multi' | null = null
+
+    for (let i = 0; i < jsonString.length; i++) {
+      const char = jsonString[i]
+      const nextChar = jsonString[i + 1]
+
+      if (inComment) {
+        if (commentType === 'single' && char === '\n') {
+          inComment = false
+          commentType = null
+          result += char // Keep newline for line structure
+        } else if (
+          commentType === 'multi' &&
+          char === '*' &&
+          nextChar === '/'
+        ) {
+          inComment = false
+          commentType = null
+          i++ // Skip the closing /
+        }
+        continue
+      }
+
+      if (inString) {
+        result += char
+        if (char === '\\') {
+          // Skip escaped character
+          result += jsonString[++i]
+        } else if (char === '"') {
+          inString = false
+        }
+        continue
+      }
+
+      // Not in string or comment
+      if (char === '"') {
+        inString = true
+        result += char
+      } else if (char === '/' && nextChar === '/') {
+        inComment = true
+        commentType = 'single'
+        i++ // Skip the second /
+      } else if (char === '/' && nextChar === '*') {
+        inComment = true
+        commentType = 'multi'
+        i++ // Skip the *
+      } else {
+        result += char
+      }
+    }
+    return result
+  }
+
   it('tsconfig.json exists and is valid', () => {
     const tsconfigPath = join(process.cwd(), 'tsconfig.json')
     expect(existsSync(tsconfigPath)).toBe(true)
 
     const content = readFileSync(tsconfigPath, 'utf-8')
-    const tsconfig = JSON.parse(content)
+    const tsconfig = JSON.parse(stripJsonComments(content))
 
     expect(tsconfig.compilerOptions).toBeDefined()
   })
@@ -238,7 +297,7 @@ describe('TypeScript configuration smoke tests', () => {
   it('TypeScript strict mode is enabled', () => {
     const tsconfigPath = join(process.cwd(), 'tsconfig.json')
     const content = readFileSync(tsconfigPath, 'utf-8')
-    const tsconfig = JSON.parse(content)
+    const tsconfig = JSON.parse(stripJsonComments(content))
 
     // Strict mode should be enabled for better type safety
     expect(tsconfig.compilerOptions.strict).toBe(true)

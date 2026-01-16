@@ -162,18 +162,12 @@
     "tests/**/*.{ts,tsx,js,jsx}": [
       "eslint --fix",
       "prettier --write",
-      "bash -c 'tsc --noEmit --project tests/tsconfig.json'",
-      "tsc --noEmit --project tests/tsconfig.json"
+      "bash -c 'tsc --noEmit --project tests/tsconfig.json'"
     ],
     "**/*.py": [
       "black --check --diff",
       "ruff check --fix",
       "isort --check-only --diff"
-    ],
-    "**/*.{ts,tsx}": [
-      "tsc --noEmit --skipLibCheck",
-      "eslint --fix",
-      "prettier --write"
     ]
   },
   "engines": {

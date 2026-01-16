@@ -9,6 +9,29 @@ const mockDel = vi.fn()
 const mockFlushdb = vi.fn()
 const mockPing = vi.fn()
 
+// Mock https module to prevent real Agent creation in tests
+// Use a class to satisfy 'new' invocation
+vi.mock('https', () => ({
+  default: {
+    Agent: class MockAgent {
+      keepAlive: boolean
+      maxSockets: number
+      constructor() {
+        this.keepAlive = true
+        this.maxSockets = 50
+      }
+    },
+  },
+  Agent: class MockAgent {
+    keepAlive: boolean
+    maxSockets: number
+    constructor() {
+      this.keepAlive = true
+      this.maxSockets = 50
+    }
+  },
+}))
+
 // Mock @upstash/redis
 vi.mock('@upstash/redis', () => {
   return {
@@ -268,6 +291,7 @@ describe('RedisCache', () => {
 
   describe('with configured Redis client', () => {
     let cache: RedisCache
+    let originalPrivacyMode: string | undefined
     const testData: KeywordData[] = [
       {
         keyword: 'test keyword',
@@ -281,6 +305,9 @@ describe('RedisCache', () => {
 
     beforeEach(() => {
       vi.clearAllMocks()
+      // Disable privacy mode for these tests so cache is available
+      originalPrivacyMode = process.env.PRIVACY_MODE
+      delete process.env.PRIVACY_MODE
       cache = new RedisCache({
         url: 'https://test.upstash.io',
         token: 'test-token',
@@ -289,6 +316,12 @@ describe('RedisCache', () => {
 
     afterEach(() => {
       vi.clearAllMocks()
+      // Restore original privacy mode
+      if (originalPrivacyMode !== undefined) {
+        process.env.PRIVACY_MODE = originalPrivacyMode
+      } else {
+        delete process.env.PRIVACY_MODE
+      }
     })
 
     it('should be available when properly configured', () => {

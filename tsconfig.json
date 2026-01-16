@@ -1,4 +1,6 @@
 {
+  // TypeScript configuration for KeyFlash
+  // Security note: No secrets should ever be stored in this file
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,

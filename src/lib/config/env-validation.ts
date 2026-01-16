@@ -47,7 +47,7 @@ const envSchema = z.object({
     .max(10000)
     .default(10)
     .refine(val => !isNaN(val), 'Must be a valid number'),
-  RATE_LIMIT_HMAC_SECRET: z.string().min(16).optional(),
+  RATE_LIMIT_HMAC_SECRET: z.string().min(32).optional(),
   RATE_LIMIT_TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   RATE_LIMIT_FAIL_SAFE: z.enum(['open', 'closed']).default('closed'),
 
@@ -110,7 +110,7 @@ function validateRateLimitConfig(env: z.infer<typeof envSchema>): void {
     if (!env.RATE_LIMIT_HMAC_SECRET && env.NODE_ENV === 'production') {
       throw new Error(
         'RATE_LIMIT_HMAC_SECRET is required in production when rate limiting is enabled. ' +
-          'Generate a secure random string (minimum 16 characters) to prevent bypass attacks.'
+          'Generate a secure random string (minimum 32 characters) to prevent bypass attacks.'
       )
     }
 

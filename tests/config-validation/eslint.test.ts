@@ -80,7 +80,8 @@ describe('ESLint configuration', () => {
       expect(output).toBeDefined()
     } catch (error) {
       // If it fails, it should be due to linting errors, not config errors
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       expect(errorMessage).not.toContain('config')
       expect(errorMessage).not.toContain('Cannot read')
       expect(errorMessage).not.toContain('Invalid configuration')
@@ -110,8 +111,14 @@ describe('ESLint configuration', () => {
         })
       } catch (error) {
         // Should have detected the eval usage
-        const stdout = error && typeof error === 'object' && 'stdout' in error ? String(error.stdout) : ''
-        const stderr = error && typeof error === 'object' && 'stderr' in error ? String(error.stderr) : ''
+        const stdout =
+          error && typeof error === 'object' && 'stdout' in error
+            ? String(error.stdout)
+            : ''
+        const stderr =
+          error && typeof error === 'object' && 'stderr' in error
+            ? String(error.stderr)
+            : ''
         const output = stdout + stderr
         expect(output).toMatch(/eval|dangerous/)
       }
@@ -193,7 +200,8 @@ describe('ESLint execution', () => {
     } catch (error) {
       // May have lint warnings/errors - that's okay
       // Should not have config errors
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       expect(errorMessage).not.toContain('Cannot find module')
       expect(errorMessage).not.toContain('Invalid configuration')
       expect(errorMessage).not.toContain('config')

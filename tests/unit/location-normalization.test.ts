@@ -93,9 +93,8 @@ vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
 }))
 
 describe('Location Normalization', () => {
-   
   let mockCache: any
-   
+
   let mockProvider: any
 
   beforeEach(async () => {

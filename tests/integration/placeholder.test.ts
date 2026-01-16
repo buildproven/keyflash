@@ -132,41 +132,43 @@ describe('Keywords API Integration', () => {
       expect(data.data).toHaveLength(3)
 
       // Verify each keyword result has correct structure
-      data.data.forEach((result: {
-        keyword: string
-        searchVolume: number
-        difficulty: number
-        cpc: number
-        competition: string
-        intent: string
-      }) => {
-        expect(result).toHaveProperty('keyword')
-        expect(result).toHaveProperty('searchVolume')
-        expect(result).toHaveProperty('difficulty')
-        expect(result).toHaveProperty('cpc')
-        expect(result).toHaveProperty('competition')
-        expect(result).toHaveProperty('intent')
+      data.data.forEach(
+        (result: {
+          keyword: string
+          searchVolume: number
+          difficulty: number
+          cpc: number
+          competition: string
+          intent: string
+        }) => {
+          expect(result).toHaveProperty('keyword')
+          expect(result).toHaveProperty('searchVolume')
+          expect(result).toHaveProperty('difficulty')
+          expect(result).toHaveProperty('cpc')
+          expect(result).toHaveProperty('competition')
+          expect(result).toHaveProperty('intent')
 
-        // Verify data types
-        expect(typeof result.keyword).toBe('string')
-        expect(typeof result.searchVolume).toBe('number')
-        expect(typeof result.difficulty).toBe('number')
-        expect(typeof result.cpc).toBe('number')
-        expect(typeof result.competition).toBe('string')
-        expect(typeof result.intent).toBe('string')
+          // Verify data types
+          expect(typeof result.keyword).toBe('string')
+          expect(typeof result.searchVolume).toBe('number')
+          expect(typeof result.difficulty).toBe('number')
+          expect(typeof result.cpc).toBe('number')
+          expect(typeof result.competition).toBe('string')
+          expect(typeof result.intent).toBe('string')
 
-        // Verify value ranges
-        expect(result.difficulty).toBeGreaterThanOrEqual(0)
-        expect(result.difficulty).toBeLessThanOrEqual(100)
-        expect(result.cpc).toBeGreaterThanOrEqual(0)
-        expect(['low', 'medium', 'high']).toContain(result.competition)
-        expect([
-          'informational',
-          'commercial',
-          'transactional',
-          'navigational',
-        ]).toContain(result.intent)
-      })
+          // Verify value ranges
+          expect(result.difficulty).toBeGreaterThanOrEqual(0)
+          expect(result.difficulty).toBeLessThanOrEqual(100)
+          expect(result.cpc).toBeGreaterThanOrEqual(0)
+          expect(['low', 'medium', 'high']).toContain(result.competition)
+          expect([
+            'informational',
+            'commercial',
+            'transactional',
+            'navigational',
+          ]).toContain(result.intent)
+        }
+      )
 
       // Verify mock data detection
       expect(data.mockData).toBe(true)

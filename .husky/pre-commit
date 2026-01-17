@@ -2,5 +2,21 @@
 # Run lint-staged on staged files (uses local devDependency)
 npm run lint-staged
 
+# Secret scanning with gitleaks (blocks commit if secrets found)
+echo "🔍 Scanning for secrets with gitleaks..."
+if command -v gitleaks &> /dev/null; then
+  gitleaks detect --no-git --verbose --exit-code=1 || {
+    echo ""
+    echo "❌ Gitleaks detected secrets in your code!"
+    echo "   Please review the output above and remove any sensitive data."
+    echo "   If this is a false positive, add it to .gitleaks.toml allowlist."
+    echo ""
+    exit 1
+  }
+else
+  echo "⚠️  gitleaks not installed - install with: brew install gitleaks"
+  echo "   Skipping secret scan (install gitleaks for full security)"
+fi
+
 # Check test coverage for new files (warning only)
 ./scripts/check-test-coverage.sh

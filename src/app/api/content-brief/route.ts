@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { createHash } from 'crypto'
 import { z } from 'zod'
 import {
@@ -88,6 +89,18 @@ export async function POST(request: NextRequest) {
         'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
         'Retry-After': rateLimitResult.retryAfter?.toString() || '3600',
       }
+      return handleAPIError(error)
+    }
+
+    // Check user authentication
+    const authResult = await auth()
+    const userId = authResult.userId
+
+    if (!userId) {
+      const error: HttpError = new Error(
+        'Authentication required. Please sign in to use content brief generation.'
+      )
+      error.status = 401
       return handleAPIError(error)
     }
 

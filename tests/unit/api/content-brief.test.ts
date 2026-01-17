@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
+// Mock Clerk authentication
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: vi.fn().mockResolvedValue({
+    userId: 'test-user-id',
+    sessionClaims: { email: 'test@example.com' },
+  }),
+}))
+
 // Mock dependencies
 vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
   rateLimiter: {
@@ -58,6 +66,7 @@ vi.mock('@/lib/api/serp-service', () => ({
 }))
 
 import { POST, GET } from '@/app/api/content-brief/route'
+import { auth } from '@clerk/nextjs/server'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { cache } from '@/lib/cache/redis'
 
@@ -109,6 +118,24 @@ describe('/api/content-brief', () => {
       const response = await POST(request)
 
       expect(response.headers.get('X-RateLimit-Remaining')).toBeDefined()
+    })
+
+    it('returns 401 for unauthenticated requests', async () => {
+      // Mock unauthenticated user
+      vi.mocked(auth).mockResolvedValueOnce({
+        userId: null,
+      } as any)
+
+      const request = createMockRequest({
+        keyword: 'test keyword',
+      })
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(401)
+      const data = await response.json()
+      expect(data.error).toBeDefined()
+      expect(data.message || data.error).toMatch(/Authentication required/i)
     })
 
     it('returns 400 for missing keyword', async () => {

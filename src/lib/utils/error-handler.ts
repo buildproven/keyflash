@@ -9,6 +9,7 @@ import {
   UserServiceUnavailableError,
   UserServiceOperationError,
 } from '@/lib/user/user-service'
+import { CURRENT_API_VERSION } from '@/lib/utils/api-version'
 
 /**
  * Standard API error response format
@@ -39,6 +40,8 @@ export function handleAPIError(error: unknown): NextResponse<APIError> {
   const headers = new Headers()
   // Always prevent caching of error responses
   headers.set('Cache-Control', 'no-store, no-cache, must-revalidate')
+  // ARCH-001: Add API version header to all responses
+  headers.set('API-Version', CURRENT_API_VERSION)
   type ErrorWithMeta = Error & {
     status?: number
     headers?: Record<string, string>
@@ -205,6 +208,9 @@ export function createSuccessResponse<T>(
     // Default: prevent caching for API responses (most are user-specific)
     headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
   }
+
+  // ARCH-001: Add API version header to all responses
+  headers.set('API-Version', CURRENT_API_VERSION)
 
   return NextResponse.json(data, { status, headers })
 }

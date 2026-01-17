@@ -14,6 +14,7 @@ import {
 } from '@/lib/validation/domain-schemas'
 import { isBillingEnabled } from '@/lib/billing'
 import { handleAPIError, type HttpError } from '@/lib/utils/error-handler'
+import { CURRENT_API_VERSION } from '@/lib/utils/api-version'
 
 // FIX-005: Custom error for infrastructure failures that should trigger retry
 class InfrastructureError extends Error {
@@ -195,7 +196,11 @@ export async function POST(request: NextRequest) {
       type: event.type,
       id: event.id,
     })
-    return NextResponse.json({ received: true, duplicate: true })
+    // ARCH-001: Add API version header
+    return NextResponse.json(
+      { received: true, duplicate: true },
+      { headers: { 'API-Version': CURRENT_API_VERSION } }
+    )
   }
 
   // SEC-011 FIX: Mark event as processed BEFORE business logic (optimistic locking)
@@ -244,7 +249,11 @@ export async function POST(request: NextRequest) {
         logger.info('Unhandled webhook event type', { type: event.type })
     }
 
-    return NextResponse.json({ received: true })
+    // ARCH-001: Add API version header
+    return NextResponse.json(
+      { received: true },
+      { headers: { 'API-Version': CURRENT_API_VERSION } }
+    )
   } catch (err) {
     // FIX-005: Return 503 for infrastructure errors so Stripe retries
     if (

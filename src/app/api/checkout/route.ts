@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import Stripe from 'stripe'
 import { logger } from '@/lib/utils/logger'
@@ -9,7 +9,11 @@ import {
   rateLimiter,
   type RateLimitConfig,
 } from '@/lib/rate-limit/redis-rate-limiter'
-import { handleAPIError, type HttpError } from '@/lib/utils/error-handler'
+import {
+  handleAPIError,
+  createSuccessResponse,
+  type HttpError,
+} from '@/lib/utils/error-handler'
 
 const CHECKOUT_RATE_LIMIT: RateLimitConfig = {
   requestsPerHour: 10,
@@ -162,7 +166,8 @@ export async function POST(request: NextRequest) {
       userId: authResult.userId,
     })
 
-    return NextResponse.json({ url: session.url })
+    // CODE-003: Use standardized success response
+    return createSuccessResponse({ url: session.url })
   } catch (err) {
     logger.error('Checkout session creation failed', { error: err })
     return handleAPIError(err)

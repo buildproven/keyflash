@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { savedSearchesService } from '@/lib/saved-searches/saved-searches-service'
 import { CreateSavedSearchSchema } from '@/lib/validation/schemas'
-import { handleAPIError, HttpError } from '@/lib/utils/error-handler'
+import {
+  handleAPIError,
+  createSuccessResponse,
+  type HttpError,
+} from '@/lib/utils/error-handler'
 import { readJsonWithLimit } from '@/lib/utils/request'
 
 export async function GET() {
@@ -19,7 +23,8 @@ export async function GET() {
     // Service will throw ServiceUnavailableError if unavailable
     const searches = await savedSearchesService.listSavedSearches(userId)
 
-    return NextResponse.json({ searches })
+    // CODE-003: Use standardized success response
+    return createSuccessResponse({ searches })
   } catch (error) {
     return handleAPIError(error)
   }
@@ -53,7 +58,8 @@ export async function POST(request: NextRequest) {
       return handleAPIError(error)
     }
 
-    return NextResponse.json({ search: savedSearch }, { status: 201 })
+    // CODE-003: Use standardized success response with 201 Created status
+    return createSuccessResponse({ search: savedSearch }, 201)
   } catch (error) {
     return handleAPIError(error)
   }

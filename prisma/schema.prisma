@@ -8,9 +8,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // Neon uses connection pooling via Prisma Data Proxy
-  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // User model - extends Clerk authentication with app-specific data

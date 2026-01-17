@@ -190,17 +190,20 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       // Transform response to KeywordData format
       return this.transformResponse(response, keywords)
     } catch (error) {
-      // ARCH-002: Handle circuit breaker failures with fallback
+      // ARCH-002: Handle circuit breaker failures
       if (error instanceof CircuitBreakerError) {
-        logger.error('DataForSEO circuit breaker open, returning fallback data', {
+        logger.error('DataForSEO circuit breaker open, service unavailable', {
           module: this.name,
           state: error.state,
           stats: error.stats,
         })
 
-        // ARCH-002: Fallback to default data when circuit is open
-        // This allows graceful degradation instead of complete failure
-        return this.getFallbackData(keywords)
+        // Throw a proper error instead of returning fake data
+        // The API route will catch this and return appropriate error response
+        throw new Error(
+          `DataForSEO service is temporarily unavailable (circuit breaker ${error.state}). ` +
+          'Please try again in a few minutes.'
+        )
       }
 
       logger.error('API error', error, { module: this.name })
@@ -224,20 +227,6 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       requests: Number(process.env.DATAFORSEO_RATE_LIMIT_REQUESTS) || 2000,
       period: 'day',
     }
-  }
-
-  /**
-   * ARCH-002: Get fallback data when circuit breaker is open
-   * Returns basic keyword data structure to allow graceful degradation
-   * @private
-   */
-  private getFallbackData(keywords: string[]): KeywordData[] {
-    logger.warn('Using fallback data due to circuit breaker', {
-      module: this.name,
-      keywordCount: keywords.length,
-    })
-
-    return keywords.map((keyword) => getDefaultKeywordData(keyword))
   }
 
   /**

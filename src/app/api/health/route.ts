@@ -153,7 +153,7 @@ async function checkProvider(): Promise<HealthCheckResult> {
           const cbStats = dataForSEO.getCircuitBreakerStats()
           details.circuitBreaker = {
             healthy: cbHealthy,
-            ...cbStats,
+            ...(typeof cbStats === 'object' && cbStats !== null ? cbStats : {}),
           }
           // Override configured status if circuit breaker is open
           if (!cbHealthy) {

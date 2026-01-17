@@ -20,21 +20,22 @@ function createPrismaClient() {
       process.env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']
         : ['error'],
-    // Neon connection pooling configuration
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
   })
 
   // Log connection events
   client.$on('query' as never, (e: { query: string; duration: number }) => {
-    if (e.duration > 500) {
-      logger.warn('Slow database query', {
+    try {
+      if (e.duration > 500) {
+        logger.warn('Slow database query', {
+          module: 'Prisma',
+          duration: e.duration,
+          query: e.query?.substring(0, 200) || 'Query unavailable', // Safe access
+        })
+      }
+    } catch (error) {
+      // Don't let logging errors break Prisma client
+      logger.error('Failed to log slow query event', error, {
         module: 'Prisma',
-        duration: e.duration,
-        query: e.query.substring(0, 200), // Truncate for logs
       })
     }
   })
@@ -55,8 +56,16 @@ if (process.env.NODE_ENV !== 'production') {
  * Disconnect Prisma client (for graceful shutdown)
  */
 export async function disconnectDatabase(): Promise<void> {
-  await prisma.$disconnect()
-  logger.info('Database disconnected', { module: 'Prisma' })
+  try {
+    await prisma.$disconnect()
+    logger.info('Database disconnected', { module: 'Prisma' })
+  } catch (error) {
+    logger.error('Failed to disconnect database', error, {
+      module: 'Prisma',
+    })
+    // Re-throw to signal shutdown failure
+    throw error
+  }
 }
 
 /**

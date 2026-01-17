@@ -12,12 +12,13 @@ id = "jwt-token"
 regex = '''eyJ[A-Za-z0-9_/+-]{10,}={0,2}'''
 tags = ["key", "JWT"]
 
-[[rules]]
-description = "Base64 encoded secrets (long)"
-id = "base64-secret"
-regex = '''[A-Za-z0-9+/]{40,}={0,2}'''
-tags = ["secret", "base64"]
-keywords = ["secret", "key", "token", "password"]
+# Disabled - too many false positives in URLs, commit SHAs, etc.
+# [[rules]]
+# description = "Base64 encoded secrets (long)"
+# id = "base64-secret"
+# regex = '''[A-Za-z0-9+/]{40,}={0,2}'''
+# tags = ["secret", "base64"]
+# keywords = ["secret", "key", "token", "password"]
 
 [[rules]]
 description = "Environment variable secrets"
@@ -46,5 +47,24 @@ paths = [
   '''docs/''',
   '''.md$''',
   '''\.env\.example$''',
-  '''\.env\.test$'''
+  '''\.env\.test$''',
+  '''node_modules/''',
+  '''\.next/''',
+  '''\.git/''',
+  '''\.husky/''',
+  '''\.clerk/''',
+  '''\.qa-architect/''',
+  '''\.npm-cache/''',
+  '''\.cache/''',
+  '''playwright-report/''',
+  '''test-results/''',
+  '''coverage/''',
+  '''dist/''',
+  '''build/''',
+  '''package-lock\.json$''',
+  '''\.tsbuildinfo$''',
+  '''yarn\.lock$''',
+  '''pnpm-lock\.yaml$''',
+  '''\.map$''',
+  '''\.html$'''
 ]

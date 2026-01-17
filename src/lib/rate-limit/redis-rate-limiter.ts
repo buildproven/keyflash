@@ -35,6 +35,7 @@ export class RedisRateLimiter {
   private trustProxy =
     process.env.RATE_LIMIT_TRUST_PROXY === 'true' ||
     (process.env.RATE_LIMIT_TRUST_PROXY !== 'false' && this.isProduction)
+  private runtimeValidationDone = false // Track if we've validated Redis at runtime
   // Keep a typed error helper for attaching HTTP-friendly metadata
   private createConfigError(
     message: string,
@@ -105,14 +106,9 @@ export class RedisRateLimiter {
 
       logger.warn(message, { module: 'RedisRateLimiter' })
 
-      // In production, require Redis for distributed rate limiting
-      if (this.isProduction) {
-        throw this.createConfigError(
-          'Redis configuration required in production for distributed rate limiting. ' +
-            'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
-          500
-        )
-      }
+      // NOTE: In production, we defer Redis validation to runtime (first checkRateLimit call)
+      // This allows the build process to succeed without Redis configuration
+      this.isRedisAvailable = false
     }
   }
 
@@ -229,6 +225,21 @@ export class RedisRateLimiter {
         remaining: config.requestsPerHour,
         resetAt: new Date(Date.now() + 60 * 60 * 1000),
       }
+    }
+
+    // Runtime validation: In production, require Redis for distributed rate limiting
+    // This is deferred from constructor to allow build-time module loading without Redis
+    if (
+      this.isProduction &&
+      !this.isRedisAvailable &&
+      !this.runtimeValidationDone
+    ) {
+      this.runtimeValidationDone = true // Only throw once
+      throw this.createConfigError(
+        'Redis configuration required in production for distributed rate limiting. ' +
+          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
+        500
+      )
     }
 
     const clientId = this.generateClientId(request)

@@ -32,7 +32,7 @@ const ALLOWED_ORIGINS = [
 function generateSecureToken(): string {
   const array = new Uint8Array(32)
   crypto.getRandomValues(array)
-  return btoa(String.fromCharCode(...array))
+  return btoa(String.fromCharCode(...Array.from(array)))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '')
@@ -99,7 +99,12 @@ function validateOrigin(req: NextRequest): boolean {
       }
       // Check against CORS allowlist
       return ALLOWED_ORIGINS.includes(refererOrigin)
-    } catch {
+    } catch (error) {
+      // Log parsing failures for debugging (malformed referer headers)
+      console.error('Failed to parse Referer header for origin validation:', {
+        referer: referer.substring(0, 100), // Truncate for safety
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
       return false
     }
   }

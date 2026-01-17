@@ -1,0 +1,187 @@
+// ARCH-003: Database schema for persistence layer
+// Provider: Neon Serverless Postgres
+// ORM: Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model - extends Clerk authentication with app-specific data
+model User {
+  id        String   @id // Clerk user ID
+  email     String   @unique
+  tier      UserTier @default(FREE)
+
+  // Usage tracking
+  keywordSearchesThisMonth Int      @default(0)
+  keywordSearchesTotal     Int      @default(0)
+  monthlyResetAt           DateTime @default(now())
+
+  // Subscription (when billing enabled)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  subscriptionStatus   String?   // active, canceled, past_due, etc.
+  subscriptionPlan     String?   // pro, enterprise, etc.
+  subscriptionEndsAt   DateTime?
+  trialEndsAt          DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  savedSearches SavedSearch[]
+  searchHistory SearchHistory[]
+
+  @@index([email])
+  @@index([stripeCustomerId])
+  @@index([createdAt])
+  @@map("users")
+}
+
+enum UserTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// Saved searches - user's saved keyword research
+model SavedSearch {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  keywords    String[] // Array of keywords searched
+  location    String   @default("US")
+  language    String   @default("en")
+  matchType   String   @default("broad")
+
+  // Metadata
+  keywordCount Int     @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastAccessedAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, lastAccessedAt])
+  @@map("saved_searches")
+}
+
+// Search history - analytics and trends
+model SearchHistory {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  keywords  String[] // Keywords searched
+  location  String
+  language  String
+  matchType String
+
+  // Provider & performance
+  provider     String  // dataforseo, google-ads, mock
+  cacheHit     Boolean @default(false)
+  responseTime Int     // milliseconds
+
+  // Results summary
+  keywordCount  Int @default(0)
+  avgVolume     Int @default(0)
+  totalVolume   Int @default(0)
+
+  // Metadata
+  searchedAt DateTime @default(now())
+  userAgent  String?
+  ipAddress  String?
+
+  @@index([userId, searchedAt])
+  @@index([searchedAt])
+  @@index([provider])
+  @@map("search_history")
+}
+
+// API usage tracking for rate limiting and analytics
+model APIUsage {
+  id         String   @id @default(cuid())
+  userId     String?
+
+  endpoint   String   // /api/keywords, /api/content-brief, etc.
+  method     String   // GET, POST, etc.
+  statusCode Int      // 200, 400, 500, etc.
+  duration   Int      // milliseconds
+
+  // Rate limiting context
+  ipAddress String?
+  userAgent String?
+
+  // Timestamps
+  timestamp DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([endpoint, timestamp])
+  @@index([ipAddress, timestamp])
+  @@map("api_usage")
+}
+
+// Webhook events for idempotency and audit trail
+model WebhookEvent {
+  id           String   @id // Stripe event ID
+  type         String   // checkout.session.completed, etc.
+  provider     String   @default("stripe")
+
+  // Processing status
+  processed    Boolean  @default(false)
+  processedAt  DateTime?
+
+  // Retry tracking
+  attempts     Int      @default(1)
+  lastAttemptAt DateTime @default(now())
+
+  // Error tracking
+  error        String?  // Error message if processing failed
+
+  // Metadata
+  payload      Json?    // Full webhook payload for debugging
+  createdAt    DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([processed, createdAt])
+  @@map("webhook_events")
+}
+
+// Feature flags for gradual rollouts
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique // feature_name
+  enabled     Boolean  @default(false)
+
+  // Rollout configuration
+  rolloutPercent Int    @default(0) // 0-100
+  allowedUsers   String[] // Specific user IDs to enable for
+
+  // Metadata
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?  // Admin user ID
+
+  @@map("feature_flags")
+}
+
+// System metrics for monitoring
+model SystemMetric {
+  id        String   @id @default(cuid())
+
+  metric    String   // cpu_usage, memory_usage, request_count, etc.
+  value     Float
+  tags      Json?    // Additional context
+
+  timestamp DateTime @default(now())
+
+  @@index([metric, timestamp])
+  @@map("system_metrics")
+}

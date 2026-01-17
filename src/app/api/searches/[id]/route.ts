@@ -1,11 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { savedSearchesService } from '@/lib/saved-searches/saved-searches-service'
 import {
   UpdateSavedSearchSchema,
   SearchIdSchema,
 } from '@/lib/validation/schemas'
-import { handleAPIError, HttpError } from '@/lib/utils/error-handler'
+import {
+  handleAPIError,
+  createSuccessResponse,
+  type HttpError,
+} from '@/lib/utils/error-handler'
 import { readJsonWithLimit } from '@/lib/utils/request'
 
 // FIX-011: Helper to validate search ID parameter
@@ -48,7 +52,8 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       return handleAPIError(error)
     }
 
-    return NextResponse.json({ search })
+    // CODE-003: Use standardized success response
+    return createSuccessResponse({ search })
   } catch (error) {
     return handleAPIError(error)
   }
@@ -83,7 +88,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return handleAPIError(error)
     }
 
-    return NextResponse.json({ search: updated })
+    // CODE-003: Use standardized success response
+    return createSuccessResponse({ search: updated })
   } catch (error) {
     return handleAPIError(error)
   }
@@ -114,7 +120,8 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       return handleAPIError(error)
     }
 
-    return NextResponse.json({ success: true })
+    // CODE-003: Use standardized success response
+    return createSuccessResponse({ success: true })
   } catch (error) {
     return handleAPIError(error)
   }

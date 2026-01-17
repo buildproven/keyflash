@@ -127,7 +127,8 @@
     "vitest": "^4.0.10"
   },
   "overrides": {
-    "tmp": "0.2.4"
+    "tmp": "0.2.4",
+    "hono": ">=4.11.4"
   },
   "lint-staged": {
     "package.json": [

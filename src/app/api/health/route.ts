@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cache } from '@/lib/cache/redis'
 import { createProvider, type ProviderName } from '@/lib/api/factory'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
+import {
+  handleAPIError,
+  createSuccessResponse,
+  type HttpError,
+} from '@/lib/utils/error-handler'
 
 // Route segment config for security
 export const runtime = 'nodejs'
@@ -136,6 +141,28 @@ async function checkProvider(): Promise<HealthCheckResult> {
       if (providerName === 'mock') {
         details.note = 'Mock provider active - for development/testing only'
       }
+
+      // ARCH-002: Include circuit breaker health for DataForSEO
+      if (providerName === 'dataforseo') {
+        const dataForSEO = provider as unknown as {
+          isHealthy?: () => boolean
+          getCircuitBreakerStats?: () => unknown
+        }
+        if (dataForSEO.isHealthy && dataForSEO.getCircuitBreakerStats) {
+          const cbHealthy = dataForSEO.isHealthy()
+          const cbStats = dataForSEO.getCircuitBreakerStats()
+          details.circuitBreaker = {
+            healthy: cbHealthy,
+            ...cbStats,
+          }
+          // Override configured status if circuit breaker is open
+          if (!cbHealthy) {
+            configured = false
+            details.circuitBreakerError =
+              'Circuit breaker is OPEN - service temporarily unavailable'
+          }
+        }
+      }
     } catch (error) {
       configured = false
       details.configError =
@@ -165,26 +192,24 @@ async function checkProvider(): Promise<HealthCheckResult> {
  * GET /api/health
  * Enhanced health check endpoint for monitoring system dependencies
  */
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse<HealthStatus | { error: string }>> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   // Rate limit health checks to prevent DoS
   const rateLimitResult = await rateLimiter.checkRateLimit(
     request,
     HEALTH_RATE_LIMIT_CONFIG
   )
   if (!rateLimitResult.allowed) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded' },
-      {
-        status: 429,
-        headers: {
-          'Retry-After': String(rateLimitResult.retryAfter || 60),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
-        },
-      }
-    ) as NextResponse<{ error: string }>
+    // CODE-003: Use standardized error format
+    const error: HttpError = new Error(
+      `Rate limit exceeded. Try again in ${rateLimitResult.retryAfter || 60} seconds.`
+    )
+    error.status = 429
+    error.headers = {
+      'Retry-After': String(rateLimitResult.retryAfter || 60),
+      'X-RateLimit-Remaining': '0',
+      'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+    }
+    return handleAPIError(error)
   }
 
   const start = Date.now()
@@ -232,5 +257,6 @@ export async function GET(
     responseTime: Date.now() - start,
   }
 
-  return NextResponse.json(response, { status: httpStatus })
+  // CODE-003: Use standardized success response with no-cache headers
+  return createSuccessResponse(response, httpStatus, 'no-store, no-cache')
 }

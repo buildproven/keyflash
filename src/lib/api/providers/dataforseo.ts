@@ -8,6 +8,11 @@ import type { KeywordData, Competition, MonthlyTrend } from '@/types/keyword'
 import type { RelatedKeyword } from '@/types/related-keywords'
 import { logger } from '@/lib/utils/logger'
 import { fetchWithTimeout, API_TIMEOUTS } from '@/lib/utils/fetch-with-timeout'
+import {
+  createAPICircuitBreaker,
+  CircuitBreakerError,
+  type CircuitBreaker,
+} from '@/lib/circuit-breaker/circuit-breaker'
 
 /**
  * DataForSEO API Response Types
@@ -144,12 +149,16 @@ export class DataForSEOProvider implements KeywordAPIProvider {
   readonly name = 'DataForSEO'
 
   private config: Required<Pick<ProviderConfig, 'login' | 'password'>>
+  // ARCH-002: Circuit breaker for failover/reliability
+  private circuitBreaker: CircuitBreaker
 
   constructor() {
     this.config = {
       login: process.env.DATAFORSEO_API_LOGIN || '',
       password: process.env.DATAFORSEO_API_PASSWORD || '',
     }
+    // ARCH-002: Initialize circuit breaker for this provider
+    this.circuitBreaker = createAPICircuitBreaker('DataForSEO')
   }
 
   validateConfiguration(): void {
@@ -173,12 +182,27 @@ export class DataForSEOProvider implements KeywordAPIProvider {
     this.validateConfiguration()
 
     try {
-      // Call DataForSEO Keywords Data API
-      const response = await this.callKeywordsAPI(keywords, options)
+      // ARCH-002: Wrap API call with circuit breaker for reliability
+      const response = await this.circuitBreaker.execute(async () => {
+        return await this.callKeywordsAPI(keywords, options)
+      })
 
       // Transform response to KeywordData format
       return this.transformResponse(response, keywords)
     } catch (error) {
+      // ARCH-002: Handle circuit breaker failures with fallback
+      if (error instanceof CircuitBreakerError) {
+        logger.error('DataForSEO circuit breaker open, returning fallback data', {
+          module: this.name,
+          state: error.state,
+          stats: error.stats,
+        })
+
+        // ARCH-002: Fallback to default data when circuit is open
+        // This allows graceful degradation instead of complete failure
+        return this.getFallbackData(keywords)
+      }
+
       logger.error('API error', error, { module: this.name })
 
       // Re-throw with more context
@@ -200,6 +224,35 @@ export class DataForSEOProvider implements KeywordAPIProvider {
       requests: Number(process.env.DATAFORSEO_RATE_LIMIT_REQUESTS) || 2000,
       period: 'day',
     }
+  }
+
+  /**
+   * ARCH-002: Get fallback data when circuit breaker is open
+   * Returns basic keyword data structure to allow graceful degradation
+   * @private
+   */
+  private getFallbackData(keywords: string[]): KeywordData[] {
+    logger.warn('Using fallback data due to circuit breaker', {
+      module: this.name,
+      keywordCount: keywords.length,
+    })
+
+    return keywords.map((keyword) => getDefaultKeywordData(keyword))
+  }
+
+  /**
+   * Get circuit breaker health status
+   * Useful for monitoring and health checks
+   */
+  getCircuitBreakerStats() {
+    return this.circuitBreaker.getStats()
+  }
+
+  /**
+   * Check if provider is healthy (circuit breaker closed/half-open)
+   */
+  isHealthy(): boolean {
+    return this.circuitBreaker.isHealthy()
   }
 
   /**

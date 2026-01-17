@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { ClerkProvider } from '@clerk/nextjs'
 import { AuthHeaderWrapper } from '@/components/layout/auth-header-wrapper'
 import { ErrorBoundary } from '@/components/error-boundary'
@@ -65,11 +66,15 @@ const jsonLd = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Get CSP nonce from middleware (production only)
+  const headersList = await headers()
+  const nonce = headersList.get('x-nonce') || undefined
+
   return (
     <ClerkProvider>
       <html lang="en">
@@ -83,9 +88,11 @@ export default function RootLayout({
           {/* DNS prefetch for non-critical origins */}
           <link rel="dns-prefetch" href="https://api.stripe.com" />
           <link rel="dns-prefetch" href="https://api.dataforseo.com" />
+          {/* SAFE: jsonLd is static configuration (no user input), nonce applied in production */}
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            nonce={nonce}
           />
         </head>
         <body className="font-sans antialiased">

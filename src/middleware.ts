@@ -25,16 +25,32 @@ const ALLOWED_ORIGINS = [
 ].filter(Boolean)
 
 /**
- * Generate a cryptographically secure CSRF token using Web Crypto API
+ * Generate a cryptographically secure token using Web Crypto API
  * (Edge Runtime compatible)
+ * Shared utility for CSRF tokens and CSP nonces
  */
-function generateCsrfToken(): string {
+function generateSecureToken(): string {
   const array = new Uint8Array(32)
   crypto.getRandomValues(array)
   return btoa(String.fromCharCode(...array))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '')
+}
+
+/**
+ * Generate a cryptographically secure CSRF token
+ */
+function generateCsrfToken(): string {
+  return generateSecureToken()
+}
+
+/**
+ * Generate a cryptographically secure CSP nonce for script execution
+ * (Production only - development uses permissive CSP)
+ */
+function generateCspNonce(): string {
+  return generateSecureToken()
 }
 
 /**
@@ -185,6 +201,21 @@ export default clerkMiddleware(async (auth, req) => {
       'Strict-Transport-Security',
       'max-age=31536000; includeSubDomains; preload'
     )
+
+    // CSP Nonce: Generate and inject for production
+    const cspNonce = generateCspNonce()
+
+    // Store nonce in custom header for layout access
+    response.headers.set('x-nonce', cspNonce)
+
+    // Inject nonce into CSP header (replace placeholder)
+    const cspHeader = response.headers.get('Content-Security-Policy')
+    if (cspHeader && cspHeader.includes('{CSP_NONCE}')) {
+      response.headers.set(
+        'Content-Security-Policy',
+        cspHeader.replace(/\{CSP_NONCE\}/g, cspNonce)
+      )
+    }
   }
 
   return response

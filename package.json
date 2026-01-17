@@ -90,6 +90,7 @@
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.1.1",
     "@playwright/test": "^1.56.1",
+    "@prisma/client": "^7.2.0",
     "@size-limit/file": "^11.0.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -115,6 +116,7 @@
     "next": "^16.0.10",
     "postcss": "^8.5.6",
     "prettier": "^3.3.3",
+    "prisma": "^7.2.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "size-limit": "^11.0.0",
@@ -162,12 +164,18 @@
     "tests/**/*.{ts,tsx,js,jsx}": [
       "eslint --fix",
       "prettier --write",
-      "bash -c 'tsc --noEmit --project tests/tsconfig.json'"
+      "bash -c 'tsc --noEmit --project tests/tsconfig.json'",
+      "tsc --noEmit --project tests/tsconfig.json"
     ],
     "**/*.py": [
       "black --check --diff",
       "ruff check --fix",
       "isort --check-only --diff"
+    ],
+    "**/*.{ts,tsx}": [
+      "tsc --noEmit --skipLibCheck",
+      "eslint --fix",
+      "prettier --write"
     ]
   },
   "engines": {

@@ -52,8 +52,9 @@
 
 7. **CSRF (Cross-Site Request Forgery)**
    - Attacker tricks user into unwanted actions
-   - Impact: Unwanted API calls (future with auth)
-   - Likelihood: Low in MVP (no auth state)
+   - Impact: Unwanted API calls, unauthorized state changes
+   - Likelihood: Low (Clerk session-based protection)
+   - Mitigation: See [CSRF Protection Strategy](#csrf-protection-strategy)
 
 8. **Privacy Violations**
    - Keyword searches logged and exposed
@@ -632,7 +633,424 @@ async function retryWithBackoff<T>(
 }
 ```
 
-### 10. Monitoring & Alerting
+### 10. CSRF Protection Strategy
+
+**🟡 HIGH PRIORITY**
+
+#### Overview: What is CSRF?
+
+Cross-Site Request Forgery (CSRF) is an attack where a malicious website tricks a user's browser into making unwanted requests to a legitimate application where the user is authenticated. The attack exploits the fact that browsers automatically include credentials (cookies, HTTP auth) with every request.
+
+**Example Attack Scenario**:
+
+```html
+<!-- Malicious site: evil.com -->
+<form action="https://keyflash.com/api/searches" method="POST">
+  <input type="hidden" name="name" value="Hacked Search" />
+</form>
+<script>
+  document.forms[0].submit() // Auto-submit when user visits evil.com
+</script>
+```
+
+If the user is logged into KeyFlash, their session cookie would be automatically sent with this request, potentially creating an unwanted saved search.
+
+#### Current Protection: Clerk Session-Based CSRF
+
+KeyFlash currently relies on **Clerk's built-in CSRF protection** via secure session cookies:
+
+**How Clerk Protects Against CSRF**:
+
+1. **SameSite Cookie Attribute**: Clerk session cookies are set with `SameSite=Lax` or `SameSite=Strict`, preventing them from being sent with cross-site POST requests
+2. **Secure Cookie Flag**: Cookies marked as `Secure`, only transmitted over HTTPS
+3. **HttpOnly Flag**: Session cookies are `HttpOnly`, preventing JavaScript access
+4. **Session Token Validation**: Clerk validates session tokens server-side on every authenticated request
+
+**Current Implementation**:
+
+```typescript
+// API route with Clerk authentication (automatic CSRF protection)
+import { auth } from '@clerk/nextjs/server'
+
+export async function POST(request: Request) {
+  const { userId } = auth()
+
+  if (!userId) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Session cookie SameSite attribute prevents CSRF
+  // No explicit token needed for most cases
+  const body = await request.json()
+  return processSavedSearch(userId, body)
+}
+```
+
+#### Why Clerk's Approach is Sufficient
+
+For KeyFlash's current architecture, Clerk's session-based CSRF protection is **acceptable because**:
+
+1. **SameSite Cookies**: Modern browsers (95%+ market share) respect `SameSite` attributes, blocking cross-site request forgery
+2. **No Sensitive State-Changing Operations**: Current API operations (keyword searches, saved searches) have limited financial impact
+3. **No Financial Transactions Initiated from Client**: Payment flows handled by Stripe-hosted checkout (CSRF-protected)
+4. **User Authentication Required**: All state-changing operations require Clerk authentication
+
+**When This is NOT Sufficient**:
+
+- Supporting older browsers that don't respect `SameSite` cookies (IE11, old Android WebView)
+- High-value operations (large financial transactions, admin actions, account deletion)
+- APIs consumed by third-party clients (mobile apps, desktop apps)
+- Regulatory compliance requirements (PCI-DSS Level 1, HIPAA)
+
+#### When Explicit CSRF Tokens Are Needed
+
+You should implement **explicit CSRF token validation** when:
+
+1. **High-Value Operations**:
+   - Account deletion
+   - Payment method changes
+   - Subscription cancellations
+   - Admin privilege escalation
+
+2. **Broader Browser Support**:
+   - Supporting IE11 or older browsers
+   - Embedded WebViews without SameSite support
+
+3. **API Endpoints Without Session Cookies**:
+   - Stateless JWT authentication
+   - API keys for third-party integrations
+   - Webhook endpoints
+
+4. **Compliance Requirements**:
+   - PCI-DSS for payment processing
+   - HIPAA for health data
+   - SOC 2 certification
+
+#### How to Implement Explicit CSRF Tokens
+
+KeyFlash includes a CSRF utility (`src/lib/utils/csrf.ts`) ready for use when explicit tokens are needed.
+
+**Step 1: Generate and Set CSRF Token (Server-Side)**
+
+```typescript
+// middleware.ts (Next.js middleware)
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import crypto from 'crypto'
+
+export function middleware(request: NextRequest) {
+  const response = NextResponse.next()
+
+  // Generate CSRF token on GET requests (safe operations)
+  if (request.method === 'GET') {
+    const csrfToken = crypto.randomBytes(32).toString('hex')
+
+    // Set token as HttpOnly cookie
+    response.cookies.set('csrf-token', csrfToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24, // 24 hours
+    })
+
+    // Also set as readable cookie for client-side (not HttpOnly)
+    response.cookies.set('csrf-token-client', csrfToken, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24,
+    })
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+}
+```
+
+**Step 2: Validate CSRF Token on State-Changing Requests**
+
+```typescript
+// src/lib/utils/csrf-validation.ts
+import { cookies } from 'next/headers'
+
+export function validateCsrfToken(request: Request): boolean {
+  // Only validate on state-changing methods
+  const method = request.method
+  if (!['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    return true // No validation needed for safe methods
+  }
+
+  // Get token from cookie (server-side)
+  const cookieStore = cookies()
+  const cookieToken = cookieStore.get('csrf-token')?.value
+
+  // Get token from header (client-sent)
+  const headerToken = request.headers.get('X-CSRF-Token')
+
+  // Both must exist and match
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    return false
+  }
+
+  return true
+}
+
+// API route with CSRF validation
+export async function POST(request: Request) {
+  // Validate CSRF token
+  if (!validateCsrfToken(request)) {
+    return Response.json({ error: 'Invalid CSRF token' }, { status: 403 })
+  }
+
+  // Proceed with request
+  const body = await request.json()
+  return processRequest(body)
+}
+```
+
+**Step 3: Include CSRF Token in Client Requests**
+
+```typescript
+// Client-side component
+import { getCsrfHeaders, fetchWithCsrf } from '@/lib/utils/csrf'
+
+// Option 1: Manual header inclusion
+async function deleteSavedSearch(searchId: string) {
+  const response = await fetch(`/api/searches/${searchId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getCsrfHeaders(), // Automatically adds X-CSRF-Token header
+    },
+  })
+
+  return response.json()
+}
+
+// Option 2: Using fetchWithCsrf wrapper (recommended)
+async function deleteSavedSearch(searchId: string) {
+  const response = await fetchWithCsrf(`/api/searches/${searchId}`, {
+    method: 'DELETE',
+  })
+
+  return response.json()
+}
+```
+
+**Step 4: Form Submission with CSRF Token**
+
+```typescript
+// Server component that renders form
+import { cookies } from 'next/headers'
+
+export default function DeleteAccountForm() {
+  const cookieStore = cookies()
+  const csrfToken = cookieStore.get('csrf-token-client')?.value
+
+  return (
+    <form action="/api/account/delete" method="POST">
+      <input type="hidden" name="csrf-token" value={csrfToken} />
+      <button type="submit">Delete Account</button>
+    </form>
+  )
+}
+
+// API route handler
+export async function POST(request: Request) {
+  const formData = await request.formData()
+  const formToken = formData.get('csrf-token')
+
+  const cookieStore = cookies()
+  const cookieToken = cookieStore.get('csrf-token')?.value
+
+  if (!formToken || !cookieToken || formToken !== cookieToken) {
+    return Response.json({ error: 'Invalid CSRF token' }, { status: 403 })
+  }
+
+  // Proceed with account deletion
+  return deleteAccount()
+}
+```
+
+#### Code Examples from csrf.ts
+
+The existing CSRF utility provides three main functions:
+
+**1. Get CSRF Token from Cookie**
+
+```typescript
+import { getCsrfToken } from '@/lib/utils/csrf'
+
+const token = getCsrfToken() // Returns token or null
+```
+
+**2. Get CSRF Headers for Fetch**
+
+```typescript
+import { getCsrfHeaders } from '@/lib/utils/csrf'
+
+const headers = getCsrfHeaders() // Returns { 'X-CSRF-Token': 'token' } or {}
+```
+
+**3. Fetch Wrapper with Automatic CSRF and Timeout**
+
+```typescript
+import { fetchWithCsrf } from '@/lib/utils/csrf'
+
+// Automatically includes CSRF token for POST/PUT/DELETE/PATCH
+// Includes 30-second timeout protection
+const response = await fetchWithCsrf('/api/endpoint', {
+  method: 'POST',
+  body: JSON.stringify(data),
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// Custom timeout (60 seconds)
+const response = await fetchWithCsrf(
+  '/api/slow-endpoint',
+  {
+    method: 'POST',
+  },
+  60000
+)
+```
+
+#### Best Practices
+
+**✅ DO**:
+
+- Rely on Clerk's session-based protection for standard operations
+- Use explicit CSRF tokens for high-value operations (account deletion, payment changes)
+- Generate new CSRF token on each session (every 24 hours or on login)
+- Use `fetchWithCsrf()` wrapper for consistent timeout and CSRF protection
+- Validate CSRF tokens server-side (never trust client-only validation)
+- Use `SameSite=Strict` for high-security operations, `Lax` for general use
+
+**❌ DON'T**:
+
+- Store CSRF tokens in localStorage (vulnerable to XSS)
+- Use the same CSRF token across multiple users
+- Implement CSRF protection on GET requests (not necessary, adds overhead)
+- Disable CSRF protection "temporarily" and forget to re-enable
+- Validate CSRF tokens in client-side code only
+
+#### Testing CSRF Protection
+
+**Manual Test**:
+
+```html
+<!-- Create test.html file outside your app -->
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>CSRF Test</h1>
+    <form action="http://localhost:3000/api/searches" method="POST">
+      <input type="hidden" name="name" value="CSRF Test Search" />
+      <button type="submit">Submit Cross-Site Request</button>
+    </form>
+  </body>
+</html>
+```
+
+**Expected Result**: Request should fail (403 Forbidden) due to Clerk's SameSite cookie protection.
+
+**Automated Test**:
+
+```typescript
+// tests/security/csrf.test.ts
+import { describe, it, expect } from 'vitest'
+
+describe('CSRF Protection', () => {
+  it('should reject POST request without CSRF token', async () => {
+    const response = await fetch('/api/searches', {
+      method: 'POST',
+      credentials: 'include', // Include cookies
+      headers: {
+        'Content-Type': 'application/json',
+        // Omit X-CSRF-Token header
+      },
+      body: JSON.stringify({ name: 'Test Search' }),
+    })
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toEqual({ error: 'Invalid CSRF token' })
+  })
+
+  it('should accept POST request with valid CSRF token', async () => {
+    const token = getCsrfToken()
+
+    const response = await fetch('/api/searches', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': token,
+      },
+      body: JSON.stringify({ name: 'Test Search' }),
+    })
+
+    expect(response.status).toBe(200)
+  })
+})
+```
+
+#### Migration Path
+
+If KeyFlash needs to add explicit CSRF token validation:
+
+1. **Phase 1 - Monitoring** (Week 1):
+   - Add CSRF token generation to middleware
+   - Log CSRF validation failures (don't block yet)
+   - Monitor for false positives
+
+2. **Phase 2 - Gradual Rollout** (Week 2):
+   - Enable CSRF validation for high-value operations only (account deletion, payment changes)
+   - Use `fetchWithCsrf()` wrapper in client code
+   - Monitor error rates
+
+3. **Phase 3 - Full Enforcement** (Week 3):
+   - Enable CSRF validation for all state-changing operations
+   - Remove legacy fetch calls without CSRF headers
+   - Update documentation
+
+#### Security Considerations
+
+**Token Storage**:
+
+- ✅ Store CSRF token in HttpOnly cookie (server-side validation)
+- ✅ Duplicate in non-HttpOnly cookie for client-side access (read-only)
+- ❌ Never store in localStorage (vulnerable to XSS)
+
+**Token Lifetime**:
+
+- Rotate CSRF token on session change (login/logout)
+- Maximum lifetime: 24 hours
+- Generate new token on privilege escalation
+
+**Token Entropy**:
+
+- Use cryptographically secure random bytes (`crypto.randomBytes(32)`)
+- Minimum 32 bytes (256 bits) of entropy
+- Encode as hex or base64
+
+**Defense in Depth**:
+
+- CSRF protection is **one layer** of security
+- Always combine with:
+  - Input validation (Zod schemas)
+  - Rate limiting (prevent brute force)
+  - Authentication (Clerk sessions)
+  - Authorization (user permissions)
+  - XSS protection (CSP headers)
+
+### 11. Monitoring & Alerting
 
 **🟢 RECOMMENDED**
 
@@ -704,6 +1122,8 @@ if (apiKeyMissing) {
 - [ ] Rate limit alerts configured
 - [ ] API timeout handling implemented
 - [ ] Retry logic with exponential backoff
+- [ ] CSRF protection documented and relying on Clerk session cookies
+- [ ] CSRF utility available for high-value operations
 
 **🟢 RECOMMENDED - Post-Launch**
 
@@ -792,7 +1212,7 @@ P1_Incidents:
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-11-19
+**Document Version**: 1.1
+**Last Updated**: 2026-01-17
 **Next Security Review**: Before MVP launch
 **Owner**: Technical Lead

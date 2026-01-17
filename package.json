@@ -43,7 +43,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "security:audit": "npm audit --audit-level high --omit=dev",
-    "security:secrets": "node -e \"const fs=require('fs');const content=fs.readFileSync('package.json','utf8');if(/[\\\"\\'][a-zA-Z0-9+/]{20,}[\\\"\\']/.test(content)){console.error('❌ Potential hardcoded secrets in package.json');process.exit(1)}else{console.log('✅ No secrets detected in package.json')}\"",
+    "security:secrets": "gitleaks detect --no-git --verbose --exit-code=1 2>&1 || (echo '❌ Secrets detected! Review output above' && exit 1)",
     "security:config": "npx create-qa-architect@latest --security-config",
     "lighthouse:ci": "lhci autorun",
     "lighthouse:upload": "lhci upload",
@@ -127,7 +127,8 @@
     "vitest": "^4.0.10"
   },
   "overrides": {
-    "tmp": "0.2.4"
+    "tmp": "0.2.4",
+    "hono": ">=4.11.4"
   },
   "lint-staged": {
     "package.json": [

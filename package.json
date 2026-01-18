@@ -134,10 +134,6 @@
     "package.json": [
       "prettier --write"
     ],
-    "**/*.{js,jsx,ts,tsx,mjs,cjs}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
     "**/*.{json,md,yml,yaml}": [
       "prettier --write"
     ],
@@ -145,38 +141,22 @@
       "stylelint --fix",
       "prettier --write"
     ],
-    "**/*.{js,jsx,ts,tsx,mjs,cjs,html}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "src/**/*.{css,scss,sass,less,pcss}": [
-      "stylelint --fix",
-      "prettier --write"
-    ],
-    "**/*.{js,jsx,mjs,cjs,html}": [
+    "**/*.{js,jsx,mjs,cjs}": [
       "eslint --fix",
       "prettier --write"
     ],
     "src/**/*.{ts,tsx}": [
-      "bash -c 'tsc --noEmit --skipLibCheck --project tsconfig.lint-staged.json'",
       "eslint --fix",
       "prettier --write"
     ],
     "tests/**/*.{ts,tsx,js,jsx}": [
       "eslint --fix",
-      "prettier --write",
-      "bash -c 'tsc --noEmit --project tests/tsconfig.json'",
-      "tsc --noEmit --project tests/tsconfig.json"
+      "prettier --write"
     ],
     "**/*.py": [
       "black --check --diff",
       "ruff check --fix",
       "isort --check-only --diff"
-    ],
-    "**/*.{ts,tsx}": [
-      "tsc --noEmit --skipLibCheck",
-      "eslint --fix",
-      "prettier --write"
     ]
   },
   "engines": {

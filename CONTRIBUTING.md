@@ -282,3 +282,7 @@ By contributing to KeyFlash, you agree that your contributions will be licensed 
 ---
 
 Thank you for contributing to KeyFlash! 🚀
+
+---
+
+> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)

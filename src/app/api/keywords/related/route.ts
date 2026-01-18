@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { RelatedKeywordsSchema } from '@/lib/validation/schemas'
 import {
   handleAPIError,
@@ -53,6 +54,14 @@ const RATE_LIMIT_CONFIG = (() => {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const authResult = await auth()
+    if (!authResult.userId) {
+      const error: HttpError = new Error('Authentication required')
+      error.status = 401
+      return handleAPIError(error)
+    }
+
     // Check rate limit
     const rateLimitResult = await rateLimiter.checkRateLimit(
       request,

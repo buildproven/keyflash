@@ -11,6 +11,7 @@ KeyFlash implements URL-based API versioning to ensure backwards compatibility a
 ## Versioning Format
 
 ### URL Structure
+
 ```
 /api/v1/keywords
 /api/v1/searches
@@ -18,12 +19,15 @@ KeyFlash implements URL-based API versioning to ensure backwards compatibility a
 ```
 
 ### Version Headers
+
 All API responses include an `API-Version` header:
+
 ```http
 API-Version: v1
 ```
 
 Clients can optionally send an `API-Version` header in requests for explicit version selection:
+
 ```http
 GET /api/keywords
 API-Version: v1
@@ -32,7 +36,9 @@ API-Version: v1
 ## Backwards Compatibility
 
 ### Implicit v1
+
 For backwards compatibility, unversioned paths `/api/*` automatically map to `/api/v1/*`:
+
 - `/api/keywords` → treated as `/api/v1/keywords`
 - `/api/health` → treated as `/api/v1/health`
 
@@ -41,9 +47,11 @@ This ensures existing clients continue working without changes.
 ## Version Support Policy
 
 ### Current Versions
+
 - **v1**: Current stable version (introduced 2026-01-16)
 
 ### Deprecation Policy
+
 When introducing breaking changes:
 
 1. **New version created** (e.g., v2)
@@ -63,6 +71,7 @@ Minimum support window: **12 months** from deprecation notice.
 ## Breaking vs Non-Breaking Changes
 
 ### Non-Breaking Changes (no new version needed)
+
 - Adding new endpoints
 - Adding optional request parameters
 - Adding new response fields
@@ -70,6 +79,7 @@ Minimum support window: **12 months** from deprecation notice.
 - Performance improvements
 
 ### Breaking Changes (new version required)
+
 - Removing endpoints
 - Removing request parameters
 - Removing response fields
@@ -80,6 +90,7 @@ Minimum support window: **12 months** from deprecation notice.
 ## Implementation Details
 
 ### File Structure
+
 ```
 src/app/api/
 ├── v1/                    # Version 1 routes
@@ -92,7 +103,9 @@ src/app/api/
 ```
 
 ### Version Detection
+
 Version is detected from:
+
 1. URL path: `/api/v1/keywords` → v1
 2. API-Version header (fallback)
 3. Unversioned paths → v1 (implicit)
@@ -100,7 +113,9 @@ Version is detected from:
 See `src/lib/utils/api-version.ts` for implementation.
 
 ### Response Headers
+
 All responses automatically include version metadata via:
+
 - `handleAPIError()` for error responses
 - `createSuccessResponse()` for success responses
 
@@ -109,37 +124,43 @@ All responses automatically include version metadata via:
 ### For API Clients
 
 #### Current (v1 implicit)
+
 ```typescript
 // Works, but considered legacy
 fetch('/api/keywords', {
   method: 'POST',
-  body: JSON.stringify({ keywords: ['seo tools'] })
+  body: JSON.stringify({ keywords: ['seo tools'] }),
 })
 ```
 
 #### Recommended (explicit v1)
+
 ```typescript
 // Explicit version - recommended
 fetch('/api/v1/keywords', {
   method: 'POST',
   headers: { 'API-Version': 'v1' },
-  body: JSON.stringify({ keywords: ['seo tools'] })
+  body: JSON.stringify({ keywords: ['seo tools'] }),
 })
 ```
 
 #### Future (v2 example)
+
 ```typescript
 // When v2 is released
 fetch('/api/v2/keywords', {
   method: 'POST',
   headers: { 'API-Version': 'v2' },
-  body: JSON.stringify({ queries: ['seo tools'] }) // new format
+  body: JSON.stringify({ queries: ['seo tools'] }), // new format
 })
 ```
 
 ### Version Detection in Client Code
+
 ```typescript
-const response = await fetch('/api/v1/keywords', { /* ... */ })
+const response = await fetch('/api/v1/keywords', {
+  /* ... */
+})
 const apiVersion = response.headers.get('API-Version')
 const deprecated = response.headers.get('Deprecation') === 'true'
 
@@ -152,6 +173,7 @@ if (deprecated) {
 ## Testing
 
 ### Version Header Validation
+
 ```bash
 # Check response includes version header
 curl -i https://keyflash.vibebuildlab.com/api/v1/health
@@ -163,6 +185,7 @@ curl -i https://keyflash.vibebuildlab.com/api/v1/health
 ```
 
 ### Backwards Compatibility
+
 ```bash
 # Verify unversioned paths work
 curl -i https://keyflash.vibebuildlab.com/api/health

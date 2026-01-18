@@ -21,16 +21,19 @@ CLOSED → OPEN → HALF_OPEN → CLOSED
 ```
 
 #### CLOSED (Normal Operation)
+
 - All requests pass through to the external service
 - Failures are counted within a sliding time window
 - Transitions to OPEN after threshold failures
 
 #### OPEN (Service Down)
+
 - All requests fail immediately without calling the service
 - Returns fallback data for graceful degradation
 - After timeout period, transitions to HALF_OPEN
 
 #### HALF_OPEN (Testing Recovery)
+
 - Limited requests allowed to test if service recovered
 - Success → increment success counter
 - Failure → return to OPEN
@@ -39,6 +42,7 @@ CLOSED → OPEN → HALF_OPEN → CLOSED
 ### Configuration
 
 Default settings for DataForSEO:
+
 ```typescript
 {
   failureThreshold: 5,      // Open after 5 failures
@@ -58,7 +62,7 @@ The DataForSEO provider automatically uses circuit breaker protection:
 // Circuit breaker wraps all API calls
 const keywords = await provider.getKeywordData(['seo tools'], {
   location: 'US',
-  language: 'en'
+  language: 'en',
 })
 
 // If circuit is OPEN, returns fallback data instead of throwing
@@ -73,6 +77,7 @@ curl https://keyflash.vibebuildlab.com/api/health
 ```
 
 Response includes circuit breaker stats:
+
 ```json
 {
   "status": "healthy",
@@ -121,7 +126,9 @@ if ('getCircuitBreakerStats' in provider) {
 When circuit breaker is OPEN, the system gracefully degrades:
 
 ### Fallback Data
+
 Returns basic keyword structure with:
+
 - Keyword string
 - Empty search volume (0)
 - Unknown competition level
@@ -131,6 +138,7 @@ Returns basic keyword structure with:
 This allows the UI to continue functioning without displaying real data.
 
 ### User Experience
+
 - API returns 200 OK (not 503)
 - Response includes fallback data
 - Client can detect fallback via missing/zero values
@@ -175,28 +183,28 @@ logger.warn('Circuit breaker recorded failure', {
   name: 'DataForSEO',
   state: 'CLOSED',
   failures: 3,
-  threshold: 5
+  threshold: 5,
 })
 
 // Circuit opened
 logger.error('Circuit breaker opened (service unhealthy)', {
   name: 'DataForSEO',
   failures: 5,
-  nextAttemptTime: '2026-01-16T12:34:56Z'
+  nextAttemptTime: '2026-01-16T12:34:56Z',
 })
 
 // Recovery attempt
 logger.info('Circuit breaker attempting recovery', {
   name: 'DataForSEO',
   previousState: 'OPEN',
-  newState: 'HALF_OPEN'
+  newState: 'HALF_OPEN',
 })
 
 // Circuit closed
 logger.info('Circuit breaker closing (service recovered)', {
   name: 'DataForSEO',
   previousState: 'HALF_OPEN',
-  newState: 'CLOSED'
+  newState: 'CLOSED',
 })
 ```
 
@@ -222,7 +230,7 @@ for (let i = 0; i < 5; i++) {
   try {
     await provider.getKeywordData(['invalid-keyword!!!'], {
       location: 'INVALID',
-      language: 'xx'
+      language: 'xx',
     })
   } catch (error) {
     console.log(`Failure ${i + 1}`)
@@ -236,7 +244,7 @@ console.assert(stats.state === 'OPEN')
 // Next request fails fast with fallback
 const result = await provider.getKeywordData(['seo tools'], {
   location: 'US',
-  language: 'en'
+  language: 'en',
 })
 console.log('Got fallback data:', result)
 ```
@@ -250,7 +258,7 @@ await new Promise(resolve => setTimeout(resolve, 61_000))
 // Make successful request
 const result = await provider.getKeywordData(['seo tools'], {
   location: 'US',
-  language: 'en'
+  language: 'en',
 })
 
 // Circuit transitions to HALF_OPEN, then CLOSED after 2 successes

@@ -22,7 +22,7 @@ logger.info('Request completed', {
   duration: 245,
   statusCode: 200,
   userId: 'user_abc123',
-  cacheHit: true
+  cacheHit: true,
 })
 ```
 
@@ -34,7 +34,7 @@ Automatic logging for all API requests:
 import { withRequestLogging } from '@/lib/observability/request-logger'
 
 export async function POST(request: NextRequest) {
-  return withRequestLogging(request, async (context) => {
+  return withRequestLogging(request, async context => {
     // Request automatically logged with:
     // - Request ID
     // - Method, pathname
@@ -63,12 +63,12 @@ Tracks and alerts on slow operations:
 logger.warn('Slow request detected', {
   module: 'PerformanceMonitor',
   duration: 2345,
-  threshold: '2000ms'
+  threshold: '2000ms',
 })
 
 // Slow database operations (> 500ms)
 logDatabaseOperation('getUserData', 650, true, {
-  userId: 'user_123'
+  userId: 'user_123',
 })
 
 // Slow external API calls (> 3s)
@@ -87,7 +87,7 @@ logBusinessMetrics('hourly', {
   savedSearches: 234,
   checkoutAttempts: 12,
   subscriptions: 8,
-  cacheHitRate: 0.87
+  cacheHitRate: 0.87,
 })
 ```
 
@@ -99,7 +99,7 @@ Track service health via circuit breaker events:
 logCircuitBreakerEvent('DataForSEO', 'opened', {
   failures: 5,
   threshold: 5,
-  window: '60s'
+  window: '60s',
 })
 ```
 
@@ -126,16 +126,17 @@ All logs for that request include the same `requestId` for correlation.
 
 ## Performance Thresholds
 
-| Operation | Threshold | Alert Level |
-|-----------|-----------|-------------|
-| API Request | 2000ms | WARN |
-| Database Query | 500ms | WARN |
-| External API | 3000ms | WARN |
-| Cache Read | 100ms | WARN |
+| Operation      | Threshold | Alert Level |
+| -------------- | --------- | ----------- |
+| API Request    | 2000ms    | WARN        |
+| Database Query | 500ms     | WARN        |
+| External API   | 3000ms    | WARN        |
+| Cache Read     | 100ms     | WARN        |
 
 ## Metrics Collected
 
 ### Request Metrics
+
 - Duration (ms)
 - Status code
 - Endpoint
@@ -146,12 +147,14 @@ All logs for that request include the same `requestId` for correlation.
 - Keyword count
 
 ### System Health
+
 - Redis connectivity
 - Provider health
 - Circuit breaker state
 - Response times
 
 ### Business Metrics
+
 - Keyword searches per hour/day
 - Content briefs generated
 - Related keywords requests
@@ -175,7 +178,7 @@ try {
   return result
 } catch (error) {
   logExternalAPICall('ProviderName', 'operation', Date.now() - start, false, {
-    error: error.message
+    error: error.message,
   })
   throw error
 }
@@ -190,7 +193,7 @@ const start = Date.now()
 const cached = await cache.get(key)
 logCacheOperation('get', !!cached, Date.now() - start, {
   key,
-  hit: !!cached
+  hit: !!cached,
 })
 ```
 
@@ -207,7 +210,7 @@ try {
 } catch (error) {
   logDatabaseOperation('findUser', Date.now() - start, false, {
     userId: id,
-    error: error.message
+    error: error.message,
   })
   throw error
 }
@@ -216,21 +219,25 @@ try {
 ## Future Enhancements
 
 ### Phase 1: Export to Observability Platforms
+
 - **Sentry**: Error tracking and performance monitoring
 - **LogDNA/Datadog**: Log aggregation and analysis
 - **Prometheus**: Metrics collection and alerting
 
 ### Phase 2: Full OpenTelemetry Integration
+
 - **Traces**: Distributed tracing across services
 - **Metrics**: Counter, gauge, histogram instruments
 - **Exporters**: Jaeger, Prometheus, CloudWatch
 
 ### Phase 3: Dashboards & Alerts
+
 - **Grafana**: Real-time monitoring dashboards
 - **PagerDuty**: On-call alerting
 - **Custom dashboards**: Business metrics visualization
 
 ### Phase 4: Advanced Features
+
 - **Distributed tracing**: End-to-end request flows
 - **APM**: Application performance monitoring
 - **RUM**: Real user monitoring (frontend)

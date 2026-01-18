@@ -89,36 +89,35 @@ const nextConfig = {
           // Content Security Policy (environment-specific)
           {
             key: 'Content-Security-Policy',
-            value:
-              isDev
-                ? // Development: Permissive CSP (required for Next.js dev mode)
-                  [
-                    "default-src 'self'",
-                    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://va.vercel-scripts.com", // Next.js + Clerk + Vercel Analytics
-                    "style-src 'self' 'unsafe-inline'", // Tailwind CSS requires unsafe-inline (framework constraint)
-                    "img-src 'self' data: https: https://img.clerk.com",
-                    "font-src 'self' data:",
-                    "connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev https://vitals.vercel-insights.com", // Added Vercel Analytics
-                    "frame-src 'self' https://*.clerk.accounts.dev", // Clerk auth modals
-                    "worker-src 'self' blob:", // Clerk service workers
-                    "frame-ancestors 'none'",
-                    "base-uri 'self'",
-                    "form-action 'self' https://*.clerk.accounts.dev",
-                  ].join('; ')
-                : // Production: Stricter CSP with nonce support (middleware injects nonce)
-                  [
-                    "default-src 'self'",
-                    "script-src 'self' 'nonce-{CSP_NONCE}' 'strict-dynamic' https://*.clerk.accounts.dev https://va.vercel-scripts.com",
-                    "style-src 'self' 'unsafe-inline'", // Tailwind CSS still requires unsafe-inline (framework constraint)
-                    "img-src 'self' data: https: https://img.clerk.com",
-                    "font-src 'self' data:",
-                    "connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev https://vitals.vercel-insights.com",
-                    "frame-src 'self' https://*.clerk.accounts.dev",
-                    "worker-src 'self' blob:",
-                    "frame-ancestors 'none'",
-                    "base-uri 'self'",
-                    "form-action 'self' https://*.clerk.accounts.dev",
-                  ].join('; '),
+            value: isDev
+              ? // Development: Permissive CSP (required for Next.js dev mode)
+                [
+                  "default-src 'self'",
+                  "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://va.vercel-scripts.com", // Next.js + Clerk + Vercel Analytics
+                  "style-src 'self' 'unsafe-inline'", // Tailwind CSS requires unsafe-inline (framework constraint)
+                  "img-src 'self' data: https: https://img.clerk.com",
+                  "font-src 'self' data:",
+                  "connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev https://vitals.vercel-insights.com", // Added Vercel Analytics
+                  "frame-src 'self' https://*.clerk.accounts.dev", // Clerk auth modals
+                  "worker-src 'self' blob:", // Clerk service workers
+                  "frame-ancestors 'none'",
+                  "base-uri 'self'",
+                  "form-action 'self' https://*.clerk.accounts.dev",
+                ].join('; ')
+              : // Production: Stricter CSP with nonce support (middleware injects nonce)
+                [
+                  "default-src 'self'",
+                  "script-src 'self' 'nonce-{CSP_NONCE}' 'strict-dynamic' https://*.clerk.accounts.dev https://va.vercel-scripts.com",
+                  "style-src 'self' 'unsafe-inline'", // Tailwind CSS still requires unsafe-inline (framework constraint)
+                  "img-src 'self' data: https: https://img.clerk.com",
+                  "font-src 'self' data:",
+                  "connect-src 'self' https://upstash.io https://*.upstash.io https://*.clerk.accounts.dev https://api.clerk.dev https://vitals.vercel-insights.com",
+                  "frame-src 'self' https://*.clerk.accounts.dev",
+                  "worker-src 'self' blob:",
+                  "frame-ancestors 'none'",
+                  "base-uri 'self'",
+                  "form-action 'self' https://*.clerk.accounts.dev",
+                ].join('; '),
           },
         ],
       },

@@ -246,8 +246,14 @@ export function logCircuitBreakerEvent(
   event: 'opened' | 'closed' | 'half_open' | 'attempt',
   metadata?: Record<string, unknown>
 ): void {
-  const severity = event === 'opened' ? 'error' : event === 'closed' ? 'info' : 'warn'
-  const logFn = severity === 'error' ? logger.error : severity === 'warn' ? logger.warn : logger.info
+  const severity =
+    event === 'opened' ? 'error' : event === 'closed' ? 'info' : 'warn'
+  const logFn =
+    severity === 'error'
+      ? logger.error
+      : severity === 'warn'
+        ? logger.warn
+        : logger.info
 
   logFn(`Circuit breaker ${event}`, undefined, {
     module: 'CircuitBreakerMonitor',

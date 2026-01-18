@@ -202,7 +202,7 @@ export class DataForSEOProvider implements KeywordAPIProvider {
         // The API route will catch this and return appropriate error response
         throw new Error(
           `DataForSEO service is temporarily unavailable (circuit breaker ${error.state}). ` +
-          'Please try again in a few minutes.'
+            'Please try again in a few minutes.'
         )
       }
 

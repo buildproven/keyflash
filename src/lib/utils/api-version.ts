@@ -50,9 +50,7 @@ export function getAPIVersion(
     const headerVersion = normalized.startsWith('v')
       ? normalized
       : `v${normalized}`
-    if (
-      SUPPORTED_API_VERSIONS.includes(headerVersion as APIVersion)
-    ) {
+    if (SUPPORTED_API_VERSIONS.includes(headerVersion as APIVersion)) {
       return headerVersion as APIVersion
     }
   }

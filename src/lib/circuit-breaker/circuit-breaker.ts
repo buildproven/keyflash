@@ -82,10 +82,7 @@ export class CircuitBreaker {
     // Check if circuit is open
     if (this.state === 'OPEN') {
       // Check if we should attempt recovery
-      if (
-        this.nextAttemptTime &&
-        Date.now() >= this.nextAttemptTime
-      ) {
+      if (this.nextAttemptTime && Date.now() >= this.nextAttemptTime) {
         logger.info('Circuit breaker attempting recovery', {
           module: 'CircuitBreaker',
           name: this.config.name,
@@ -181,7 +178,7 @@ export class CircuitBreaker {
 
     // Remove old failures outside the window
     const cutoff = now - this.config.failureWindow
-    this.failureTimestamps = this.failureTimestamps.filter((t) => t > cutoff)
+    this.failureTimestamps = this.failureTimestamps.filter(t => t > cutoff)
 
     // Count recent failures
     this.failures = this.failureTimestamps.length

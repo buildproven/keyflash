@@ -32,33 +32,40 @@ KeyFlash uses Neon Serverless Postgres with Prisma ORM for persistent data stora
 ## Data Models
 
 ### User
+
 - **Purpose**: Extends Clerk authentication with app-specific data
 - **Key Fields**: tier, usage tracking, subscription details
 - **Relations**: SavedSearch, SearchHistory
 
 ### SavedSearch
+
 - **Purpose**: User's saved keyword research (migrating from Redis)
 - **Key Fields**: keywords array, location, language, metadata
 - **Relations**: User
 
 ### SearchHistory
+
 - **Purpose**: Analytics, trends, usage patterns
 - **Key Fields**: keywords, provider, performance metrics
 - **Relations**: User (optional for anonymous searches)
 
 ### APIUsage
+
 - **Purpose**: Rate limiting analytics, billing data
 - **Key Fields**: endpoint, duration, status code
 
 ### WebhookEvent
+
 - **Purpose**: Stripe webhook idempotency and audit trail
 - **Key Fields**: event ID, type, processing status
 
 ### FeatureFlag
+
 - **Purpose**: Gradual rollouts, A/B testing
 - **Key Fields**: key, enabled, rollout percentage
 
 ### SystemMetric
+
 - **Purpose**: Infrastructure monitoring
 - **Key Fields**: metric name, value, timestamp
 
@@ -116,7 +123,7 @@ import { userRepository } from '@/lib/database/user-repository'
 const user = await userRepository.create({
   id: 'clerk_user_123',
   email: 'user@example.com',
-  tier: 'FREE'
+  tier: 'FREE',
 })
 
 // Find user
@@ -125,7 +132,7 @@ const user = await userRepository.findById('clerk_user_123')
 // Update user
 await userRepository.update('clerk_user_123', {
   tier: 'PRO',
-  stripeCustomerId: 'cus_123'
+  stripeCustomerId: 'cus_123',
 })
 
 // Increment usage
@@ -145,26 +152,26 @@ const searches = await prisma.savedSearch.findMany({
   where: {
     userId: 'clerk_user_123',
     createdAt: {
-      gte: new Date('2026-01-01')
-    }
+      gte: new Date('2026-01-01'),
+    },
   },
   orderBy: {
-    lastAccessedAt: 'desc'
+    lastAccessedAt: 'desc',
   },
-  take: 10
+  take: 10,
 })
 
 // Aggregations
 const stats = await prisma.searchHistory.aggregate({
   _count: true,
   _avg: {
-    responseTime: true
+    responseTime: true,
   },
   where: {
     searchedAt: {
-      gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
-    }
-  }
+      gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    },
+  },
 })
 ```
 
@@ -173,18 +180,18 @@ const stats = await prisma.searchHistory.aggregate({
 ```typescript
 import { prisma } from '@/lib/database/prisma'
 
-await prisma.$transaction(async (tx) => {
+await prisma.$transaction(async tx => {
   // Decrement saved search count
   await tx.user.update({
     where: { id: userId },
     data: {
       // ... updates
-    }
+    },
   })
 
   // Delete saved search
   await tx.savedSearch.delete({
-    where: { id: searchId }
+    where: { id: searchId },
   })
 })
 ```
@@ -192,16 +199,19 @@ await prisma.$transaction(async (tx) => {
 ## Migration from Redis
 
 ### Phase 1: Dual Write (Current)
+
 - Keep Redis for backward compatibility
 - Write to both Redis and Postgres
 - Read from Redis (fast)
 
 ### Phase 2: Read from Database
+
 - Implement fallback: Try Redis → Database
 - Monitor performance
 - Add database caching layer if needed
 
 ### Phase 3: Redis for Cache Only
+
 - Move primary storage to Postgres
 - Use Redis only for:
   - Rate limiting
@@ -231,8 +241,8 @@ const user = await prisma.user.findUnique({
   select: {
     id: true,
     tier: true,
-    keywordSearchesThisMonth: true
-  }
+    keywordSearchesThisMonth: true,
+  },
 })
 
 // Use include for relations
@@ -241,22 +251,23 @@ const user = await prisma.user.findUnique({
   include: {
     savedSearches: {
       take: 5,
-      orderBy: { createdAt: 'desc' }
-    }
-  }
+      orderBy: { createdAt: 'desc' },
+    },
+  },
 })
 
 // Avoid N+1 queries
 const searches = await prisma.savedSearch.findMany({
   include: {
-    user: true // Single query with join
-  }
+    user: true, // Single query with join
+  },
 })
 ```
 
 ### Indexes
 
 Already defined in schema:
+
 - `users`: email, stripeCustomerId, createdAt
 - `saved_searches`: userId + createdAt, userId + lastAccessedAt
 - `search_history`: userId + searchedAt, searchedAt, provider
@@ -280,11 +291,11 @@ Automatically logs queries > 500ms:
 
 ```typescript
 // Configured in prisma.ts
-client.$on('query', (e) => {
+client.$on('query', e => {
   if (e.duration > 500) {
     logger.warn('Slow database query', {
       duration: e.duration,
-      query: e.query
+      query: e.query,
     })
   }
 })
@@ -303,6 +314,7 @@ logDatabaseOperation('findUser', Date.now() - start, true, { userId: id })
 ## Backup & Recovery
 
 ### Neon Automatic Backups
+
 - Point-in-time recovery
 - Daily snapshots
 - 7-day retention (Free tier)
@@ -355,8 +367,8 @@ async function main() {
     data: {
       id: 'test_user_1',
       email: 'test@example.com',
-      tier: 'FREE'
-    }
+      tier: 'FREE',
+    },
   })
 }
 
@@ -366,16 +378,19 @@ main()
 ## Security
 
 ### Connection Security
+
 - SSL required for all connections
 - Connection strings in environment variables
 - Never commit `.env` files
 
 ### Data Protection
+
 - User data encrypted at rest (Neon default)
 - PII fields: email, IP addresses
 - GDPR compliance: user deletion cascades
 
 ### Access Control
+
 - Database credentials in env vars only
 - Separate read-only user for analytics (future)
 - No direct database access from frontend
@@ -383,21 +398,25 @@ main()
 ## Future Enhancements
 
 ### Phase 1: Full Migration from Redis
+
 - Move SavedSearch to database
 - Move SearchHistory to database
 - Keep Redis for cache/rate limiting
 
 ### Phase 2: Advanced Analytics
+
 - Aggregate tables for dashboards
 - Materialized views for reports
 - Time-series data for trends
 
 ### Phase 3: Multi-tenancy
+
 - Organization model
 - Team collaboration
 - Role-based access control
 
 ### Phase 4: Performance
+
 - Read replicas for scaling
 - Caching layer (Redis/Memcached)
 - Query optimization and indexes

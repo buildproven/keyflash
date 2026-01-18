@@ -178,17 +178,27 @@ export class UserRepository {
         },
       })
 
-      logDatabaseOperation('incrementKeywordSearches', Date.now() - start, true, {
-        userId: id,
-        count,
-      })
+      logDatabaseOperation(
+        'incrementKeywordSearches',
+        Date.now() - start,
+        true,
+        {
+          userId: id,
+          count,
+        }
+      )
 
       return user
     } catch (error) {
-      logDatabaseOperation('incrementKeywordSearches', Date.now() - start, false, {
-        userId: id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
+      logDatabaseOperation(
+        'incrementKeywordSearches',
+        Date.now() - start,
+        false,
+        {
+          userId: id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }
+      )
 
       throw error
     }
@@ -301,14 +311,19 @@ export class UserRepository {
     const start = Date.now()
 
     try {
-      const [totalUsers, freeUsers, proUsers, enterpriseUsers, activeSubscriptions] =
-        await Promise.all([
-          prisma.user.count(),
-          prisma.user.count({ where: { tier: UserTier.FREE } }),
-          prisma.user.count({ where: { tier: UserTier.PRO } }),
-          prisma.user.count({ where: { tier: UserTier.ENTERPRISE } }),
-          prisma.user.count({ where: { subscriptionStatus: 'active' } }),
-        ])
+      const [
+        totalUsers,
+        freeUsers,
+        proUsers,
+        enterpriseUsers,
+        activeSubscriptions,
+      ] = await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { tier: UserTier.FREE } }),
+        prisma.user.count({ where: { tier: UserTier.PRO } }),
+        prisma.user.count({ where: { tier: UserTier.ENTERPRISE } }),
+        prisma.user.count({ where: { subscriptionStatus: 'active' } }),
+      ])
 
       logDatabaseOperation('getSubscriptionMetrics', Date.now() - start, true)
 
@@ -320,9 +335,14 @@ export class UserRepository {
         activeSubscriptions,
       }
     } catch (error) {
-      logDatabaseOperation('getSubscriptionMetrics', Date.now() - start, false, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
+      logDatabaseOperation(
+        'getSubscriptionMetrics',
+        Date.now() - start,
+        false,
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }
+      )
 
       throw error
     }

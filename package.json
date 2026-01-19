@@ -56,7 +56,7 @@
     "lint": "eslint --no-error-on-unmatched-pattern src tests && stylelint \"**/*.{css,scss,sass,less,pcss}\" --allow-empty-input",
     "lint:fix": "eslint --fix --no-error-on-unmatched-pattern src tests && stylelint \"**/*.{css,scss,sass,less,pcss}\" --fix --allow-empty-input",
     "lint-staged": "lint-staged",
-    "prepare": "husky",
+    "prepare": "[ \"$CI\" = \"true\" ] && echo 'Skipping Husky in CI' || husky",
     "redis:start": "bash scripts/dev-redis.sh",
     "redis:stop": "docker stop keyflash-redis || echo 'Redis container not running'",
     "redis:clean": "docker stop keyflash-redis && docker rm keyflash-redis || echo 'Redis container not found'",
@@ -151,12 +151,30 @@
     ],
     "tests/**/*.{ts,tsx,js,jsx}": [
       "eslint --fix",
-      "prettier --write"
+      "prettier --write",
+      "tsc --noEmit --project tests/tsconfig.json"
     ],
     "**/*.py": [
       "black --check --diff",
       "ruff check --fix",
       "isort --check-only --diff"
+    ],
+    "**/*.{js,jsx,ts,tsx,mjs,cjs,html}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "src/**/*.{css,scss,sass,less,pcss}": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "**/*.{js,jsx,mjs,cjs,html}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{ts,tsx}": [
+      "tsc --noEmit --skipLibCheck",
+      "eslint --fix",
+      "prettier --write"
     ]
   },
   "engines": {

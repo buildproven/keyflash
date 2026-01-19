@@ -280,16 +280,18 @@ describe('lint-staged configuration', () => {
     const pkgJson = JSON.parse(content)
 
     const lintStaged = pkgJson['lint-staged']
-    const jsPattern = Object.keys(lintStaged).find(p =>
-      p.match(/\*\*\/\*\.\{.*[jt]sx?.*\}/)
-    )
 
-    if (jsPattern) {
-      const commands = lintStaged[jsPattern]
-      const hasEslint = commands.some((cmd: string) => cmd.includes('eslint'))
+    // Check all patterns for ESLint (we have multiple patterns for JS/TS files)
+    const patterns = Object.keys(lintStaged)
+    const hasEslintInAnyPattern = patterns.some(pattern => {
+      const commands = lintStaged[pattern]
+      return (
+        Array.isArray(commands) &&
+        commands.some((cmd: string) => cmd.includes('eslint'))
+      )
+    })
 
-      expect(hasEslint).toBe(true)
-    }
+    expect(hasEslintInAnyPattern).toBe(true)
   })
 
   it('lint-staged runs Prettier on staged files', () => {

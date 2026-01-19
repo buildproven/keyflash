@@ -1,6 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
+// Mock Clerk auth
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: vi.fn(() => ({
+    userId: 'user_test123',
+    sessionId: 'session_test123',
+  })),
+}))
+
 // Mock the cache module BEFORE importing the route
 vi.mock('@/lib/cache/redis', () => ({
   cache: {
@@ -52,6 +60,7 @@ import { POST, GET } from '@/app/api/keywords/related/route'
 import { cache } from '@/lib/cache/redis'
 import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { getProvider } from '@/lib/api/factory'
+import { auth } from '@clerk/nextjs/server'
 
 describe('/api/keywords/related', () => {
   beforeEach(() => {
@@ -209,6 +218,26 @@ describe('/api/keywords/related', () => {
       const response = await POST(request)
 
       expect(response.status).toBe(429)
+    })
+
+    it('should return 401 when not authenticated', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ userId: null, sessionId: null })
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/keywords/related',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            keyword: 'test',
+          }),
+        }
+      )
+
+      const response = await POST(request)
+
+      expect(response.status).toBe(401)
+      const data = await response.json()
+      expect(data.message).toContain('Authentication required')
     })
 
     it('should validate keyword is required', async () => {

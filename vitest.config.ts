@@ -13,6 +13,7 @@ export default defineConfig({
       '**/dist/**',
       '**/tests/e2e/**',
       '**/tests/command-execution/**',
+      '**/tests/integration/example.test.js', // Template file with Playwright imports
     ],
     coverage: {
       provider: 'v8',

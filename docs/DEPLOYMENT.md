@@ -1,101 +1,180 @@
-# Deployment Guide
+# Self-Hosting Guide
 
-## Overview
+KeyFlash is designed to be self-hosted. You can run it locally for personal use or deploy it to your own infrastructure.
 
-KeyFlash is deployed on Vercel, a Next.js-optimized cloud platform. This document outlines deployment procedures, environment configuration, and production best practices.
+## Deployment Options
 
-## Deployment Platforms
+### 1. Local Development
 
-### Production (Vercel)
+The simplest way to run KeyFlash:
 
-- **URL**: https://keyflash.vibebuildlab.com
-- **Automatic deploys**: Triggered on `main` branch push
-- **Preview deploys**: Created for each pull request
-- **Rollback**: Available via Vercel dashboard
+```bash
+# Clone the repo
+git clone https://github.com/vibebuildlab/keyflash.git
+cd keyflash
 
-### Preview Deployments
+# Install dependencies
+npm install
 
-- **Staging**: Automatic on pull request creation
-- **Branch previews**: Each branch gets a unique preview URL
-- **Cleanup**: Deleted after PR merge
+# Copy environment variables
+cp .env.example .env.local
 
-## Environment Variables
-
-### Production Secrets
-
-The following environment variables must be configured in Vercel:
-
-```
-KEYWORD_API_PROVIDER
-GOOGLE_ADS_CLIENT_ID
-GOOGLE_ADS_CLIENT_SECRET
-GOOGLE_ADS_DEVELOPER_TOKEN
-GOOGLE_ADS_REFRESH_TOKEN
-GOOGLE_ADS_CUSTOMER_ID
-DATAFORSEO_API_LOGIN
-DATAFORSEO_API_PASSWORD
-UPSTASH_REDIS_REST_URL
-UPSTASH_REDIS_REST_TOKEN
-RATE_LIMIT_ENABLED
-RATE_LIMIT_REQUESTS_PER_HOUR
-RATE_LIMIT_HMAC_SECRET
-RATE_LIMIT_FAIL_SAFE
-RELATED_KEYWORDS_RATE_LIMIT_PER_HOUR
-PRIVACY_MODE
-SENTRY_DSN
+# Start development server
+npm run dev
 ```
 
-**Management**: Configure in Vercel dashboard → Settings → Environment Variables
+Open [http://localhost:3000](http://localhost:3000) to use the app.
 
-## Deployment Checklist
+### 2. Deploy to Vercel (Recommended)
 
-- [ ] All tests passing (`npm test`)
-- [ ] No ESLint errors (`npm run lint`)
-- [ ] Environment variables configured
-- [ ] Security audit passed (`npm run security:audit`)
-- [ ] Lighthouse CI score ≥90% (SEO)
-- [ ] PR approved and merged to `main`
+One-click deploy to Vercel:
 
-## Pre-deployment
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvibebuildlab%2Fkeyflash)
+
+Or deploy manually:
+
+1. Fork the repository to your GitHub account
+2. Sign up at [vercel.com](https://vercel.com)
+3. Click "New Project" → Import your fork
+4. Configure environment variables (see below)
+5. Deploy
+
+### 3. Deploy to Railway
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login and deploy
+railway login
+railway init
+railway up
+```
+
+Or use the Railway dashboard to import from GitHub.
+
+### 4. Deploy to Fly.io
+
+```bash
+# Install Fly CLI
+curl -L https://fly.io/install.sh | sh
+
+# Launch app
+fly launch
+
+# Set environment variables
+fly secrets set KEYWORD_API_PROVIDER=dataforseo
+fly secrets set DATAFORSEO_LOGIN=your_login
+fly secrets set DATAFORSEO_PASSWORD=your_password
+# ... add other secrets
+```
+
+### 5. Docker
+
+```bash
+# Build the image
+docker build -t keyflash .
+
+# Run with environment variables
+docker run -p 3000:3000 \
+  -e KEYWORD_API_PROVIDER=dataforseo \
+  -e DATAFORSEO_LOGIN=your_login \
+  -e DATAFORSEO_PASSWORD=your_password \
+  keyflash
+```
+
+## Required Environment Variables
+
+### Minimum Configuration (Mock Mode)
+
+No environment variables required. The app runs with sample data.
+
+### Production Configuration
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `KEYWORD_API_PROVIDER` | Yes | `mock`, `dataforseo`, or `google-ads` |
+| `DATAFORSEO_LOGIN` | For DataForSEO | Your DataForSEO username |
+| `DATAFORSEO_PASSWORD` | For DataForSEO | Your DataForSEO password |
+| `UPSTASH_REDIS_REST_URL` | Recommended | Redis URL for caching |
+| `UPSTASH_REDIS_REST_TOKEN` | Recommended | Redis auth token |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | For auth | Clerk public key |
+| `CLERK_SECRET_KEY` | For auth | Clerk secret key |
+
+### Optional Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RATE_LIMIT_ENABLED` | `true` | Enable rate limiting |
+| `RATE_LIMIT_REQUESTS_PER_HOUR` | `10` | Requests per IP per hour |
+| `RATE_LIMIT_FAIL_SAFE` | `closed` | `closed` (secure) or `open` (available when Redis fails) |
+| `PRIVACY_MODE` | `false` | Disable all caching when `true` |
+| `BILLING_ENABLED` | `false` | Enable Stripe payments |
+
+## External Services
+
+### DataForSEO (Keyword Data)
+
+1. Sign up at [dataforseo.com](https://dataforseo.com)
+2. Get your API credentials from the dashboard
+3. Add to environment variables
+
+Pricing: Pay-as-you-go, ~$0.01-0.05 per keyword lookup.
+
+### Upstash Redis (Caching)
+
+1. Sign up at [upstash.com](https://upstash.com)
+2. Create a Redis database
+3. Copy the REST URL and token
+
+Free tier: 10,000 requests/day.
+
+### Clerk (Authentication)
+
+1. Sign up at [clerk.com](https://clerk.com)
+2. Create an application
+3. Copy the publishable and secret keys
+
+Free tier: 10,000 monthly active users.
+
+## Pre-deployment Checklist
 
 ```bash
 # Run full validation
-npm run validate:all
+npm run quality:check
 
-# Build locally to verify
+# Build to verify
 npm run build
 
-# Test production build
+# Test production build locally
 npm start
 ```
 
+## Post-deployment
+
+1. Verify the app loads correctly
+2. Test keyword search functionality
+3. Check that caching works (if Redis configured)
+4. Test authentication (if Clerk configured)
+
 ## Monitoring
 
-- **Vercel Analytics**: https://vercel.com/dashboard
-- **Error tracking**: Configure Sentry (if needed)
-- **Performance**: Monitor Core Web Vitals via Vercel
+For production deployments, consider:
 
-## Rollback Procedure
+- **Error tracking**: [Sentry](https://sentry.io) (add `SENTRY_DSN`)
+- **Analytics**: Vercel Analytics, Plausible, or similar
+- **Uptime**: UptimeRobot, Better Uptime, or similar
 
-1. Go to Vercel dashboard
-2. Select KeyFlash project
-3. Navigate to "Deployments"
-4. Click previous stable deployment
-5. Click "Redeploy"
+## Updating
 
-## Domain Management
+Pull the latest changes and redeploy:
 
-- **Custom domain**: keyflash.vibebuildlab.com
-- **DNS**: Managed by vibebuildlab.com registrar
-- **SSL**: Automatic via Vercel
-
-## Post-Deployment
-
-1. Verify custom domain loads correctly
-2. Check canonical URLs in page source
-3. Verify Open Graph tags
-4. Test critical user flows
+```bash
+git pull origin main
+npm install
+npm run build
+```
 
 ---
 
-> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)
+> **Open source by [Vibe Build Lab](https://vibebuildlab.com)** - AI-assisted product development for solo founders and small teams.

@@ -64,8 +64,8 @@ fly launch
 
 # Set environment variables
 fly secrets set KEYWORD_API_PROVIDER=dataforseo
-fly secrets set DATAFORSEO_LOGIN=your_login
-fly secrets set DATAFORSEO_PASSWORD=your_password
+fly secrets set DATAFORSEO_API_LOGIN=your_login
+fly secrets set DATAFORSEO_API_PASSWORD=your_password
 # ... add other secrets
 ```
 
@@ -78,8 +78,8 @@ docker build -t keyflash .
 # Run with environment variables
 docker run -p 3000:3000 \
   -e KEYWORD_API_PROVIDER=dataforseo \
-  -e DATAFORSEO_LOGIN=your_login \
-  -e DATAFORSEO_PASSWORD=your_password \
+  -e DATAFORSEO_API_LOGIN=your_login \
+  -e DATAFORSEO_API_PASSWORD=your_password \
   keyflash
 ```
 
@@ -94,8 +94,8 @@ No environment variables required. The app runs with sample data.
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `KEYWORD_API_PROVIDER` | Yes | `mock`, `dataforseo`, or `google-ads` |
-| `DATAFORSEO_LOGIN` | For DataForSEO | Your DataForSEO username |
-| `DATAFORSEO_PASSWORD` | For DataForSEO | Your DataForSEO password |
+| `DATAFORSEO_API_LOGIN` | For DataForSEO | Your DataForSEO username |
+| `DATAFORSEO_API_PASSWORD` | For DataForSEO | Your DataForSEO password |
 | `UPSTASH_REDIS_REST_URL` | Recommended | Redis URL for caching |
 | `UPSTASH_REDIS_REST_TOKEN` | Recommended | Redis auth token |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | For auth | Clerk public key |

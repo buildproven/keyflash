@@ -57,8 +57,8 @@ npm run dev
    - Add credentials to `.env.local`:
      ```
      KEYWORD_API_PROVIDER=dataforseo
-     DATAFORSEO_LOGIN=your_login
-     DATAFORSEO_PASSWORD=your_password
+     DATAFORSEO_API_LOGIN=your_login
+     DATAFORSEO_API_PASSWORD=your_password
      ```
 
 2. **Redis** (for caching):
@@ -88,7 +88,7 @@ Without DataForSEO credentials, the app runs in mock mode with sample data.
 | **Styling**   | Tailwind CSS 4          |
 | **Caching**   | Upstash Redis           |
 | **APIs**      | DataForSEO              |
-| **Hosting**   | Vercel                  |
+| **Hosting**   | Self-hosted (Vercel, Railway, Docker, etc.) |
 | **Testing**   | Vitest + Playwright     |
 
 ## Documentation

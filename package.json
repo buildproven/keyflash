@@ -86,8 +86,8 @@
   },
   "devDependencies": {
     "@axe-core/cli": "^4.11.0",
-    "@commitlint/cli": "^19.0.0",
-    "@commitlint/config-conventional": "^19.0.0",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.1.1",
     "@playwright/test": "^1.56.1",
@@ -105,6 +105,7 @@
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.0.10",
     "axe-core": "^4.10.0",
+    "commitlint": "^20.4.1",
     "create-qa-architect": "^5.4.3",
     "dotenv": "^17.2.3",
     "eslint": "^9.16.0",

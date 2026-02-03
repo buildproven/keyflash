@@ -91,25 +91,25 @@ No environment variables required. The app runs with sample data.
 
 ### Production Configuration
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `KEYWORD_API_PROVIDER` | Yes | `mock`, `dataforseo`, or `google-ads` |
-| `DATAFORSEO_API_LOGIN` | For DataForSEO | Your DataForSEO username |
-| `DATAFORSEO_API_PASSWORD` | For DataForSEO | Your DataForSEO password |
-| `UPSTASH_REDIS_REST_URL` | Recommended | Redis URL for caching |
-| `UPSTASH_REDIS_REST_TOKEN` | Recommended | Redis auth token |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | For auth | Clerk public key |
-| `CLERK_SECRET_KEY` | For auth | Clerk secret key |
+| Variable                            | Required       | Description                           |
+| ----------------------------------- | -------------- | ------------------------------------- |
+| `KEYWORD_API_PROVIDER`              | Yes            | `mock`, `dataforseo`, or `google-ads` |
+| `DATAFORSEO_API_LOGIN`              | For DataForSEO | Your DataForSEO username              |
+| `DATAFORSEO_API_PASSWORD`           | For DataForSEO | Your DataForSEO password              |
+| `UPSTASH_REDIS_REST_URL`            | Recommended    | Redis URL for caching                 |
+| `UPSTASH_REDIS_REST_TOKEN`          | Recommended    | Redis auth token                      |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | For auth       | Clerk public key                      |
+| `CLERK_SECRET_KEY`                  | For auth       | Clerk secret key                      |
 
 ### Optional Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `RATE_LIMIT_ENABLED` | `true` | Enable rate limiting |
-| `RATE_LIMIT_REQUESTS_PER_HOUR` | `10` | Requests per IP per hour |
-| `RATE_LIMIT_FAIL_SAFE` | `closed` | `closed` (secure) or `open` (available when Redis fails) |
-| `PRIVACY_MODE` | `false` | Disable all caching when `true` |
-| `BILLING_ENABLED` | `false` | Enable Stripe payments |
+| Variable                       | Default  | Description                                              |
+| ------------------------------ | -------- | -------------------------------------------------------- |
+| `RATE_LIMIT_ENABLED`           | `true`   | Enable rate limiting                                     |
+| `RATE_LIMIT_REQUESTS_PER_HOUR` | `10`     | Requests per IP per hour                                 |
+| `RATE_LIMIT_FAIL_SAFE`         | `closed` | `closed` (secure) or `open` (available when Redis fails) |
+| `PRIVACY_MODE`                 | `false`  | Disable all caching when `true`                          |
+| `BILLING_ENABLED`              | `false`  | Enable Stripe payments                                   |
 
 ## External Services
 

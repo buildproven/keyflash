@@ -18,11 +18,19 @@ export function Footer() {
             </a>
           </div>
 
-          {/* Legal Links */}
+          {/* Links */}
           <nav
             className="flex items-center gap-6 text-sm"
             aria-label="Footer navigation"
           >
+            <a
+              href="https://github.com/vibebuildlab/keyflash"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              GitHub
+            </a>
             <a
               href="https://vibebuildlab.com/privacy-policy"
               target="_blank"

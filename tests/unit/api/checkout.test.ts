@@ -35,9 +35,12 @@ vi.mock('@/lib/utils/logger', () => ({
 describe('Checkout API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Environment variables loaded from .env.test
-    // Override test-specific values only
+    // Set test values for Stripe env vars (all calls are mocked)
     process.env.NEXT_PUBLIC_APP_URL = 'https://keyflash.vibebuildlab.com'
+    process.env.STRIPE_SECRET_KEY =
+      process.env.STRIPE_SECRET_KEY || 'sk_test_fake_key_for_testing'
+    process.env.STRIPE_PRICE_PRO =
+      process.env.STRIPE_PRICE_PRO || 'price_test_keyflash_pro'
     delete process.env.VERCEL_URL
   })
 

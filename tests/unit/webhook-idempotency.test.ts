@@ -4,13 +4,15 @@ import { POST } from '@/app/api/webhooks/stripe/route'
 import { userService } from '@/lib/user/user-service'
 import type { UserData } from '@/lib/user/user-service'
 
-// Environment variables are loaded from .env.test via Vitest config
-// Verify required environment variables are set
-if (!process.env.STRIPE_WEBHOOK_SECRET || !process.env.STRIPE_SECRET_KEY) {
-  throw new Error(
-    'Missing required environment variables. Ensure .env.test is loaded.'
-  )
-}
+// Set test values for env vars if not already set (all calls are mocked)
+process.env.STRIPE_SECRET_KEY =
+  process.env.STRIPE_SECRET_KEY || 'sk_test_fake_key_for_testing'
+process.env.STRIPE_WEBHOOK_SECRET =
+  process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_fake_secret_for_testing'
+process.env.UPSTASH_REDIS_REST_URL =
+  process.env.UPSTASH_REDIS_REST_URL || 'https://fake-redis.upstash.io'
+process.env.UPSTASH_REDIS_REST_TOKEN =
+  process.env.UPSTASH_REDIS_REST_TOKEN || 'fake_token_for_testing'
 
 // Mock Redis client
 const mockRedis = {

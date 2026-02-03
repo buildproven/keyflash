@@ -66,5 +66,7 @@ paths = [
   '''yarn\.lock$''',
   '''pnpm-lock\.yaml$''',
   '''\.map$''',
-  '''\.html$'''
+  '''\.html$''',
+  # Claude Code submodule
+  '''.claude-setup/.*'''
 ]

@@ -221,7 +221,10 @@ describe('/api/keywords/related', () => {
     })
 
     it('should return 401 when not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValueOnce({ userId: null, sessionId: null })
+      vi.mocked(auth).mockResolvedValueOnce({
+        userId: null,
+        sessionId: null,
+      } as unknown as Awaited<ReturnType<typeof auth>>)
 
       const request = new NextRequest(
         'http://localhost:3000/api/keywords/related',

@@ -51,14 +51,11 @@ vi.mock('@/lib/utils/logger', () => ({
 describe('Stripe Webhook API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Stripe keys loaded from .env.test (git-ignored)
-    // Verify they're set by test environment
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('STRIPE_SECRET_KEY must be set in .env.test')
-    }
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      throw new Error('STRIPE_WEBHOOK_SECRET must be set in .env.test')
-    }
+    // Set test values for Stripe env vars (all calls are mocked)
+    process.env.STRIPE_SECRET_KEY =
+      process.env.STRIPE_SECRET_KEY || 'sk_test_fake_key_for_testing'
+    process.env.STRIPE_WEBHOOK_SECRET =
+      process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_fake_secret_for_testing'
   })
 
   afterEach(() => {

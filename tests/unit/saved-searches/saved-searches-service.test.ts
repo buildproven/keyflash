@@ -400,8 +400,9 @@ describe('SavedSearchesService', () => {
 
   describe('Legacy ID Schema Validation', () => {
     it('should accept valid UUID format', async () => {
-      const { SavedSearchSchema } =
-        await import('@/lib/validation/domain-schemas')
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
 
       const validData = {
         id: '550e8400-e29b-41d4-a716-446655440000',
@@ -420,8 +421,9 @@ describe('SavedSearchesService', () => {
     })
 
     it('should accept legacy ID format (13-digit timestamp + 7-char hash)', async () => {
-      const { SavedSearchSchema } =
-        await import('@/lib/validation/domain-schemas')
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
 
       const validData = {
         id: '1735000000000-abc123d',
@@ -440,8 +442,9 @@ describe('SavedSearchesService', () => {
     })
 
     it('should reject invalid legacy ID format (wrong timestamp length)', async () => {
-      const { SavedSearchSchema } =
-        await import('@/lib/validation/domain-schemas')
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
 
       const invalidData = {
         id: '173500000-abc123d', // Only 9 digits instead of 13
@@ -460,8 +463,9 @@ describe('SavedSearchesService', () => {
     })
 
     it('should reject invalid legacy ID format (wrong hash length)', async () => {
-      const { SavedSearchSchema } =
-        await import('@/lib/validation/domain-schemas')
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
 
       const invalidData = {
         id: '1735000000000-abc12', // Only 5 chars instead of 7
@@ -480,8 +484,9 @@ describe('SavedSearchesService', () => {
     })
 
     it('should reject invalid legacy ID format (uppercase letters in hash)', async () => {
-      const { SavedSearchSchema } =
-        await import('@/lib/validation/domain-schemas')
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
 
       const invalidData = {
         id: '1735000000000-ABC123D', // Uppercase not allowed
@@ -500,8 +505,9 @@ describe('SavedSearchesService', () => {
     })
 
     it('should reject completely invalid ID format', async () => {
-      const { SavedSearchSchema } =
-        await import('@/lib/validation/domain-schemas')
+      const { SavedSearchSchema } = await import(
+        '@/lib/validation/domain-schemas'
+      )
 
       const invalidData = {
         id: 'invalid-id-format',
@@ -525,8 +531,9 @@ describe('SavedSearchesService', () => {
   // =========================================
   describe('Error Classes', () => {
     it('should create ServiceUnavailableError with correct properties', async () => {
-      const { ServiceUnavailableError } =
-        await import('@/lib/saved-searches/saved-searches-service')
+      const { ServiceUnavailableError } = await import(
+        '@/lib/saved-searches/saved-searches-service'
+      )
 
       const error = new ServiceUnavailableError('Custom message')
       expect(error.name).toBe('ServiceUnavailableError')
@@ -534,16 +541,18 @@ describe('SavedSearchesService', () => {
     })
 
     it('should create ServiceUnavailableError with default message', async () => {
-      const { ServiceUnavailableError } =
-        await import('@/lib/saved-searches/saved-searches-service')
+      const { ServiceUnavailableError } = await import(
+        '@/lib/saved-searches/saved-searches-service'
+      )
 
       const error = new ServiceUnavailableError()
       expect(error.message).toBe('Service temporarily unavailable')
     })
 
     it('should create ServiceOperationError with operation property', async () => {
-      const { ServiceOperationError } =
-        await import('@/lib/saved-searches/saved-searches-service')
+      const { ServiceOperationError } = await import(
+        '@/lib/saved-searches/saved-searches-service'
+      )
 
       const error = new ServiceOperationError('Failed to get', 'get')
       expect(error.name).toBe('ServiceOperationError')

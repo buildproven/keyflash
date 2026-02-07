@@ -157,8 +157,9 @@ describe('Location Normalization', () => {
   })
 
   it('should verify GL normalization works in isolation', async () => {
-    const { normalizeLocationForProvider } =
-      await import('../../src/app/api/keywords/route')
+    const { normalizeLocationForProvider } = await import(
+      '../../src/app/api/keywords/route'
+    )
 
     // Test all location mappings
     const testCases = [
@@ -205,8 +206,9 @@ describe('Location Normalization', () => {
 
   it('should generate consistent cache keys for same normalized location', async () => {
     // Test the normalization function directly
-    const { normalizeLocationForProvider } =
-      await import('../../src/app/api/keywords/route')
+    const { normalizeLocationForProvider } = await import(
+      '../../src/app/api/keywords/route'
+    )
 
     const normalized1 = normalizeLocationForProvider('GL')
     const normalized2 = normalizeLocationForProvider('GL')

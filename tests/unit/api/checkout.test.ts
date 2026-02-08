@@ -36,7 +36,7 @@ describe('Checkout API Route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Set test values for Stripe env vars (all calls are mocked)
-    process.env.NEXT_PUBLIC_APP_URL = 'https://keyflash.vibebuildlab.com'
+    process.env.NEXT_PUBLIC_APP_URL = 'https://keyflash.buildproven.ai'
     process.env.STRIPE_SECRET_KEY =
       process.env.STRIPE_SECRET_KEY || 'sk_test_fake_key_for_testing'
     process.env.STRIPE_PRICE_PRO =
@@ -77,8 +77,8 @@ describe('Checkout API Route', () => {
       const session = await mockCheckoutCreate({
         mode: 'subscription',
         line_items: [{ price: 'price_keyflash_pro_123', quantity: 1 }],
-        success_url: 'https://keyflash.vibebuildlab.com/search?upgraded=true',
-        cancel_url: 'https://keyflash.vibebuildlab.com/search?canceled=true',
+        success_url: 'https://keyflash.buildproven.ai/search?upgraded=true',
+        cancel_url: 'https://keyflash.buildproven.ai/search?canceled=true',
       })
 
       expect(mockCheckoutCreate).toHaveBeenCalledWith(
@@ -91,21 +91,21 @@ describe('Checkout API Route', () => {
     })
 
     it('should include correct success URL', async () => {
-      const origin = 'https://keyflash.vibebuildlab.com'
+      const origin = 'https://keyflash.buildproven.ai'
       const successUrl = `${origin}/search?upgraded=true`
 
       expect(successUrl).toBe(
-        'https://keyflash.vibebuildlab.com/search?upgraded=true'
+        'https://keyflash.buildproven.ai/search?upgraded=true'
       )
       expect(successUrl).toContain('upgraded=true')
     })
 
     it('should include correct cancel URL', async () => {
-      const origin = 'https://keyflash.vibebuildlab.com'
+      const origin = 'https://keyflash.buildproven.ai'
       const cancelUrl = `${origin}/search?canceled=true`
 
       expect(cancelUrl).toBe(
-        'https://keyflash.vibebuildlab.com/search?canceled=true'
+        'https://keyflash.buildproven.ai/search?canceled=true'
       )
       expect(cancelUrl).toContain('canceled=true')
     })
@@ -212,12 +212,12 @@ describe('Checkout API Route', () => {
     it('uses the allowed origin when it matches the allowlist', () => {
       const request = new NextRequest('https://example.com/api/checkout', {
         headers: {
-          origin: 'https://keyflash.vibebuildlab.com',
+          origin: 'https://keyflash.buildproven.ai',
         },
       })
 
       const origin = resolveCheckoutOrigin(request)
-      expect(origin).toBe('https://keyflash.vibebuildlab.com')
+      expect(origin).toBe('https://keyflash.buildproven.ai')
     })
 
     it('falls back to the configured app URL when origin is untrusted', () => {
@@ -228,7 +228,7 @@ describe('Checkout API Route', () => {
       })
 
       const origin = resolveCheckoutOrigin(request)
-      expect(origin).toBe('https://keyflash.vibebuildlab.com')
+      expect(origin).toBe('https://keyflash.buildproven.ai')
     })
   })
 
@@ -253,7 +253,7 @@ describe('Checkout API Route', () => {
 
     it('should redirect to search page after successful checkout', () => {
       const successUrl =
-        'https://keyflash.vibebuildlab.com/search?upgraded=true'
+        'https://keyflash.buildproven.ai/search?upgraded=true'
 
       expect(successUrl).toContain('/search')
       expect(successUrl).toContain('upgraded=true')

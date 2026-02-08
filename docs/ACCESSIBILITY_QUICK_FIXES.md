@@ -354,7 +354,7 @@ export function TrendSparkline({
 ```tsx
 <nav className="flex items-center gap-6 text-sm" aria-label="Legal">
   <a
-    href="https://vibebuildlab.com/privacy-policy"
+    href="https://buildproven.ai/privacy-policy"
     target="_blank"
     rel="noopener noreferrer"
     className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -363,7 +363,7 @@ export function TrendSparkline({
     Privacy
   </a>
   <a
-    href="https://vibebuildlab.com/terms"
+    href="https://buildproven.ai/terms"
     target="_blank"
     rel="noopener noreferrer"
     className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"

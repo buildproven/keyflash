@@ -678,7 +678,7 @@
 | **API-001/002**           | API abstraction layer, Google Ads integration                           | 2025-11-20 |
 | **INFRA-001/002/003**     | Next.js 16, Google Ads credentials, Upstash Redis                       | 2025-11-20 |
 | **SETUP-001/002/003/004** | Documentation, GitHub repo, quality automation                          | 2025-11-19 |
-| **UI-004**                | Standard VibeBuildLab footer with legal links                           | 2025-12-17 |
+| **UI-004**                | Standard BuildProven footer with legal links                           | 2025-12-17 |
 | **COPY-001**              | Landing page copy improvements (accurate messaging)                     | 2025-12-17 |
 | **FIX-001**               | Tailwind CSS v4 import syntax fix                                       | 2025-12-17 |
 | **FIX-002**               | DataForSEO response parsing fix                                         | 2025-12-17 |
@@ -726,6 +726,6 @@
 ## Stats
 
 - **MVP Status**: Complete
-- **Deployment**: https://keyflash.vibebuildlab.com (Live)
+- **Deployment**: https://keyflash.buildproven.ai (Live)
 - **Test Coverage**: 714 tests passing, ~84% line coverage (all tests passing after deep review fixes)
 - **Tech Stack**: Next.js 16, TypeScript 5+, Tailwind v4, Vitest + Playwright

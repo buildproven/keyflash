@@ -194,4 +194,4 @@ The codebase demonstrates exceptional security practices with:
 
 **Full Report:** See `SECURITY_AUDIT_REPORT.md` for detailed analysis.
 
-**Contact:** For security concerns, email security@vibebuildlab.com
+**Contact:** For security concerns, email security@buildproven.ai

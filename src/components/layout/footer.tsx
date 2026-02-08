@@ -9,12 +9,12 @@ export function Footer() {
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
             <span>Built by</span>
             <a
-              href="https://vibebuildlab.com"
+              href="https://buildproven.ai"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-slate-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
             >
-              Vibe Build Lab
+              BuildProven
             </a>
           </div>
 
@@ -24,7 +24,7 @@ export function Footer() {
             aria-label="Footer navigation"
           >
             <a
-              href="https://github.com/vibebuildlab/keyflash"
+              href="https://github.com/buildproven/keyflash"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -32,7 +32,7 @@ export function Footer() {
               GitHub
             </a>
             <a
-              href="https://vibebuildlab.com/privacy-policy"
+              href="https://buildproven.ai/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -40,7 +40,7 @@ export function Footer() {
               Privacy
             </a>
             <a
-              href="https://vibebuildlab.com/terms"
+              href="https://buildproven.ai/terms"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -51,7 +51,7 @@ export function Footer() {
 
           {/* Copyright */}
           <div className="text-sm text-slate-600 dark:text-slate-400">
-            © {currentYear} Vibe Build Lab LLC
+            © {currentYear} BuildProven LLC
           </div>
         </div>
       </div>

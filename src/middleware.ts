@@ -20,7 +20,7 @@ const isWebhookRoute = createRouteMatcher(['/api/webhooks/(.*)'])
  */
 const ALLOWED_ORIGINS = [
   process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  'https://keyflash.vibebuildlab.com',
+  'https://keyflash.buildproven.ai',
   ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
 ].filter(Boolean)
 

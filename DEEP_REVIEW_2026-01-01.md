@@ -402,7 +402,7 @@ export interface UserData {
 ### Status: PRODUCTION READY (with caveats)
 
 **Vercel Project:** keyflash-lac.vercel.app
-**Custom Domain:** keyflash.vibebuildlab.com
+**Custom Domain:** keyflash.buildproven.ai
 **Region:** iad1 (US East)
 
 ### Findings
@@ -417,7 +417,7 @@ export interface UserData {
 - `src/app/layout.tsx:6`
 - `src/app/api/checkout/route.ts:54`
 
-**Fix:** Use `process.env.NEXT_PUBLIC_APP_URL` instead of hardcoded `https://keyflash.vibebuildlab.com`
+**Fix:** Use `process.env.NEXT_PUBLIC_APP_URL` instead of hardcoded `https://keyflash.buildproven.ai`
 
 ---
 

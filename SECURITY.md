@@ -50,7 +50,7 @@ npm run security:config
 If you discover a security vulnerability:
 
 1. **DO NOT** create a public GitHub issue
-2. Email security reports to: security@vibebuildlab.com
+2. Email security reports to: security@buildproven.ai
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -76,7 +76,7 @@ If you discover a security vulnerability:
 
 ## Security Contact
 
-For security-related questions: security@vibebuildlab.com
+For security-related questions: security@buildproven.ai
 
 ## Policy Updates
 
@@ -87,9 +87,9 @@ Last updated: November 29, 2025
 
 ## Legal
 
-- [Privacy Policy](https://vibebuildlab.com/privacy-policy)
-- [Terms of Service](https://vibebuildlab.com/terms)
+- [Privacy Policy](https://buildproven.ai/privacy-policy)
+- [Terms of Service](https://buildproven.ai/terms)
 
 ---
 
-> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)
+> **BuildProven LLC** · [buildproven.ai](https://buildproven.ai)

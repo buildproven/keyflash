@@ -73,7 +73,7 @@ const keywords = await provider.getKeywordData(['seo tools'], {
 Check circuit breaker health via health endpoint:
 
 ```bash
-curl https://keyflash.vibebuildlab.com/api/health
+curl https://keyflash.buildproven.ai/api/health
 ```
 
 Response includes circuit breaker stats:

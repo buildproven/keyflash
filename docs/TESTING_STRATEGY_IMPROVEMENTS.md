@@ -3,7 +3,7 @@
 **Date**: 2025-11-20
 **Status**: Proposal
 **Priority**: HIGH
-**Reference**: [create-qa-architect TEST_STRATEGY_AUDIT.md](https://github.com/vibebuildlab/qa-architect/blob/claude/fix-eslint-command-01Eg8BZZe58yiZ7RNGsGHkXL/TEST_STRATEGY_AUDIT.md)
+**Reference**: [create-qa-architect TEST_STRATEGY_AUDIT.md](https://github.com/buildproven/qa-architect/blob/claude/fix-eslint-command-01Eg8BZZe58yiZ7RNGsGHkXL/TEST_STRATEGY_AUDIT.md)
 
 ---
 
@@ -782,9 +782,9 @@ jobs:
 
 ## References
 
-- [Original Audit Document](https://github.com/vibebuildlab/qa-architect/blob/claude/fix-eslint-command-01Eg8BZZe58yiZ7RNGsGHkXL/TEST_STRATEGY_AUDIT.md)
+- [Original Audit Document](https://github.com/buildproven/qa-architect/blob/claude/fix-eslint-command-01Eg8BZZe58yiZ7RNGsGHkXL/TEST_STRATEGY_AUDIT.md)
 - [KeyFlash Testing Strategy](docs/TESTING_STRATEGY.md)
-- [create-qa-architect Testing Failures](https://github.com/vibebuildlab/qa-architect/issues)
+- [create-qa-architect Testing Failures](https://github.com/buildproven/qa-architect/issues)
 
 ---
 

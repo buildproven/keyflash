@@ -583,7 +583,7 @@ export function getAppUrl(): string {
       throw new Error('NEXT_PUBLIC_APP_URL required in production')
     }
     logger.warn('NEXT_PUBLIC_APP_URL not set, using default')
-    return 'https://keyflash.vibebuildlab.com'
+    return 'https://keyflash.buildproven.ai'
   }
   return url
 }

@@ -382,8 +382,8 @@ The Web Content Accessibility Guidelines (WCAG) defines requirements for designe
 
 We welcome feedback on the accessibility of KeyFlash. Please contact us:
 
-- Email: accessibility@vibebuildlab.com
-- GitHub Issues: https://github.com/vibebuildlab/keyflash/issues (label: accessibility)
+- Email: accessibility@buildproven.ai
+- GitHub Issues: https://github.com/buildproven/keyflash/issues (label: accessibility)
 
 ---
 

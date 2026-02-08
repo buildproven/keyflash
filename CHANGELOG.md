@@ -120,9 +120,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk Authentication** - Full user authentication with sign-in/sign-up flows
 - **Stripe Payments** - $29/mo Pro subscription with checkout and webhook handling
 - **User Tier System** - Trial (7 days, 300 keywords, mock data) → Pro (1,000 keywords/month, real data)
-- **VibeBuildLab Favicon** - Consistent branding with main VBL site
+- **BuildProven Favicon** - Consistent branding with main VBL site
 - **Comprehensive Audit Report** - Security, performance, and accessibility documentation
-- Standard VibeBuildLab footer component with legal links (Privacy, Terms)
+- Standard BuildProven footer component with legal links (Privacy, Terms)
 - Dynamic copyright year that auto-updates
 - Request body size limiting utility (`src/lib/utils/request.ts`)
 - Shared Stripe testing utilities for unit tests
@@ -258,7 +258,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Links
 
-- [Repository](https://github.com/vibebuildlab/keyflash)
-- [Issues](https://github.com/vibebuildlab/keyflash/issues)
-- [Pull Requests](https://github.com/vibebuildlab/keyflash/pulls)
-- [License](https://github.com/vibebuildlab/keyflash/blob/main/LICENSE) (AGPL-3.0)
+- [Repository](https://github.com/buildproven/keyflash)
+- [Issues](https://github.com/buildproven/keyflash/issues)
+- [Pull Requests](https://github.com/buildproven/keyflash/pulls)
+- [License](https://github.com/buildproven/keyflash/blob/main/LICENSE) (AGPL-3.0)

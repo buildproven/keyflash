@@ -894,7 +894,7 @@ KeyFlash MVP is **complete and production-ready** with the following highlights:
 
 **Development Team**: Claude (AI Assistant)
 **Project Owner**: Brett Stark
-**Repository**: https://github.com/vibebuildlab/keyflash
+**Repository**: https://github.com/buildproven/keyflash
 **License**: AGPL-3.0
 
 **Status**: ✅ Ready for API Integration & Deployment

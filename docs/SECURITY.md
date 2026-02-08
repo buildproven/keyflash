@@ -1187,13 +1187,13 @@ if (apiKeyMissing) {
 
 ```yaml
 P0_Incidents:
-  - Admin: security@vibebuildlab.com
+  - Admin: security@buildproven.ai
   - Vercel Support: support@vercel.com
   - API Provider Support: (see provider documentation)
 
 P1_Incidents:
-  - Security Lead: security@vibebuildlab.com
-  - Dev Team: support@vibebuildlab.com
+  - Security Lead: security@buildproven.ai
+  - Dev Team: support@buildproven.ai
 ```
 
 ## Security Resources

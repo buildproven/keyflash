@@ -129,4 +129,4 @@ _Updated 2025-12-30 with saved searches and lazy loading features_
 
 ---
 
-> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)
+> **BuildProven LLC** · [buildproven.ai](https://buildproven.ai)

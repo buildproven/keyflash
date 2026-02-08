@@ -548,7 +548,7 @@ vbl adopt                    # "Ugh, now I have to read 3 reports"
 1. **Approve this spec** (Decision: Proceed with Phase 1 or full implementation?)
 2. **Phase 1 implementation** (< 4 hours)
 3. **Test on KeyFlash** (Validate gap elimination)
-4. **Ship Phase 1** (Update vibelab-claude-setup)
+4. **Ship Phase 1** (Update claude-setup)
 5. **Evaluate Phase 2** (Based on Phase 1 success)
 
 ---

@@ -189,7 +189,7 @@ describe('Documentation smoke tests', () => {
 
     // KeyFlash uses MIT license (open source)
     expect(content).toContain('MIT License')
-    expect(content).toContain('Vibe Build Lab')
+    expect(content).toContain('BuildProven')
   })
 })
 

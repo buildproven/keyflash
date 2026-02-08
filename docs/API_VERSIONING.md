@@ -176,7 +176,7 @@ if (deprecated) {
 
 ```bash
 # Check response includes version header
-curl -i https://keyflash.vibebuildlab.com/api/v1/health
+curl -i https://keyflash.buildproven.ai/api/v1/health
 
 # Expected:
 # HTTP/1.1 200 OK
@@ -188,7 +188,7 @@ curl -i https://keyflash.vibebuildlab.com/api/v1/health
 
 ```bash
 # Verify unversioned paths work
-curl -i https://keyflash.vibebuildlab.com/api/health
+curl -i https://keyflash.buildproven.ai/api/health
 
 # Expected:
 # HTTP/1.1 200 OK

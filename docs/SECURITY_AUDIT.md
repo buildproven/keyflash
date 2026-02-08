@@ -297,7 +297,7 @@ All user inputs validated with Zod schemas:
 **Reporting Vulnerabilities**:
 
 - Email: [To be configured]
-- GitHub Security: https://github.com/vibebuildlab/keyflash/security
+- GitHub Security: https://github.com/buildproven/keyflash/security
 
 **Response Time**: Within 48 hours
 

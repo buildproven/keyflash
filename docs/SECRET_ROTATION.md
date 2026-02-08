@@ -59,7 +59,7 @@ After 24 hours of dual-secret operation:
 
 ```bash
 # Test API endpoint with rate limiting
-curl -X POST https://keyflash.vibebuildlab.com/api/keywords \
+curl -X POST https://keyflash.buildproven.ai/api/keywords \
   -H "Content-Type: application/json" \
   -d '{"keywords": ["test"]}'
 
@@ -119,7 +119,7 @@ vercel --prod
 
    ```bash
    # Create test checkout session
-   curl -X POST https://keyflash.vibebuildlab.com/api/checkout \
+   curl -X POST https://keyflash.buildproven.ai/api/checkout \
      -H "Content-Type: application/json" \
      -d '{"email": "test@example.com"}'
 
@@ -176,7 +176,7 @@ vercel --prod
 ### Step 4: Verify
 
 1. **Test Sign-In Flow**:
-   - Visit https://keyflash.vibebuildlab.com
+   - Visit https://keyflash.buildproven.ai
    - Click "Sign In"
    - Authenticate with test account
    - Verify successful authentication
@@ -185,7 +185,7 @@ vercel --prod
 
    ```bash
    # Test protected API endpoint
-   curl -X GET https://keyflash.vibebuildlab.com/api/searches \
+   curl -X GET https://keyflash.buildproven.ai/api/searches \
      -H "Authorization: Bearer YOUR_CLERK_JWT"
 
    # Should return 200 OK with user's saved searches
@@ -240,7 +240,7 @@ vercel --prod
 
    ```bash
    # Submit keyword search (should cache results)
-   curl -X POST https://keyflash.vibebuildlab.com/api/keywords \
+   curl -X POST https://keyflash.buildproven.ai/api/keywords \
      -H "Content-Type: application/json" \
      -d '{"keywords": ["seo tools"], "location": "United States", "language": "en"}'
 
@@ -253,7 +253,7 @@ vercel --prod
    ```bash
    # Make 11 requests rapidly (exceeds 10/hour limit)
    for i in {1..11}; do
-     curl -X POST https://keyflash.vibebuildlab.com/api/keywords \
+     curl -X POST https://keyflash.buildproven.ai/api/keywords \
        -H "Content-Type: application/json" \
        -d "{\"keywords\": [\"test $i\"]}"
    done

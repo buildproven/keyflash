@@ -913,4 +913,4 @@ _Run `vbl qa` to verify requirements traceability_
 
 ---
 
-> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)
+> **BuildProven LLC** · [buildproven.ai](https://buildproven.ai)

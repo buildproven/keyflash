@@ -33,7 +33,7 @@ This project follows a standard code of conduct:
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/vibebuildlab/keyflash.git
+   git remote add upstream https://github.com/buildproven/keyflash.git
    ```
 
 ## Development Setup
@@ -285,4 +285,4 @@ Thank you for contributing to KeyFlash! 🚀
 
 ---
 
-> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)
+> **BuildProven LLC** · [buildproven.ai](https://buildproven.ai)

@@ -1,15 +1,15 @@
 # KeyFlash
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Built by Vibe Build Lab](https://img.shields.io/badge/Built%20by-Vibe%20Build%20Lab-blue)](https://vibebuildlab.com)
+[![Built by BuildProven](https://img.shields.io/badge/Built%20by-Vibe%20Build%20Lab-blue)](https://buildproven.ai)
 
 AI-powered keyword research tool. Get keyword data in under 3 seconds. **Free and open source** - bring your own DataForSEO API key.
 
 ---
 
-> **Open Source by Vibe Build Lab**
-> This project is maintained by **Vibe Build Lab LLC**, a studio focused on AI-assisted product development, micro-SaaS, and "vibe coding" workflows for solo founders and small teams.
-> Learn more at **https://www.vibebuildlab.com**.
+> **Open Source by BuildProven**
+> This project is maintained by **BuildProven LLC**, a studio focused on AI-assisted product development, micro-SaaS, and "vibe coding" workflows for solo founders and small teams.
+> Learn more at **https://www.buildproven.ai**.
 
 ---
 
@@ -37,7 +37,7 @@ AI-powered keyword research tool. Get keyword data in under 3 seconds. **Free an
 
 ```bash
 # Clone the repo
-git clone https://github.com/vibebuildlab/keyflash.git
+git clone https://github.com/buildproven/keyflash.git
 cd keyflash
 
 # Install dependencies
@@ -108,9 +108,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Legal
 
-- [Privacy Policy](https://vibebuildlab.com/privacy-policy)
-- [Terms of Service](https://vibebuildlab.com/terms)
+- [Privacy Policy](https://buildproven.ai/privacy-policy)
+- [Terms of Service](https://buildproven.ai/terms)
 
 ---
 
-> **Vibe Build Lab LLC** · [vibebuildlab.com](https://vibebuildlab.com)
+> **BuildProven LLC** · [buildproven.ai](https://buildproven.ai)

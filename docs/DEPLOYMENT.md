@@ -10,7 +10,7 @@ The simplest way to run KeyFlash:
 
 ```bash
 # Clone the repo
-git clone https://github.com/vibebuildlab/keyflash.git
+git clone https://github.com/buildproven/keyflash.git
 cd keyflash
 
 # Install dependencies
@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000) to use the app.
 
 One-click deploy to Vercel:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvibebuildlab%2Fkeyflash)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbuildproven%2Fkeyflash)
 
 Or deploy manually:
 
@@ -177,4 +177,4 @@ npm run build
 
 ---
 
-> **Open source by [Vibe Build Lab](https://vibebuildlab.com)** - AI-assisted product development for solo founders and small teams.
+> **Open source by [BuildProven](https://buildproven.ai)** - AI-assisted product development for solo founders and small teams.

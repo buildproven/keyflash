@@ -61,7 +61,7 @@ Failed audits will block the build if scores fall below thresholds.
 
 ### Low Accessibility Score
 
-1. Run axe: `npx @axe-core/cli https://keyflash.vibebuildlab.com`
+1. Run axe: `npx @axe-core/cli https://keyflash.buildproven.ai`
 2. Check color contrast
 3. Verify ARIA labels
 4. Test keyboard navigation

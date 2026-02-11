@@ -1,7 +1,7 @@
 {
   "name": "keyflash",
   "version": "0.1.0",
-  "description": "Fast and affordable keyword research tool. Get keyword data in under 3 seconds - 10x cheaper than Ahrefs, SEMrush, and Moz.",
+  "description": "Free and open source AI-powered keyword research tool. Get keyword data in under 3 seconds. Bring your own DataForSEO API key.",
   "keywords": [
     "keyword-research",
     "seo",

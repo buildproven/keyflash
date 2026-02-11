@@ -1,15 +1,14 @@
 # KeyFlash
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Built by BuildProven](https://img.shields.io/badge/Built%20by-Vibe%20Build%20Lab-blue)](https://buildproven.ai)
+[![Built by BuildProven](https://img.shields.io/badge/Built%20by-BuildProven-blue)](https://buildproven.ai)
 
 AI-powered keyword research tool. Get keyword data in under 3 seconds. **Free and open source** - bring your own DataForSEO API key.
 
 ---
 
-> **Open Source by BuildProven**
-> This project is maintained by **BuildProven LLC**, a studio focused on AI-assisted product development, micro-SaaS, and "vibe coding" workflows for solo founders and small teams.
-> Learn more at **https://www.buildproven.ai**.
+> **Built by [BuildProven](https://buildproven.ai)**
+> AI-assisted product development for experienced professionals. Built by Brett Stark.
 
 ---
 
@@ -106,11 +105,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## Legal
-
-- [Privacy Policy](https://buildproven.ai/privacy-policy)
-- [Terms of Service](https://buildproven.ai/terms)
-
 ---
 
-> **BuildProven LLC** · [buildproven.ai](https://buildproven.ai)
+> **[BuildProven](https://buildproven.ai)** · Built by Brett Stark

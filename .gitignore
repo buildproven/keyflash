@@ -52,3 +52,15 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Internal development files
+CLAUDE.md
+AGENTS.md
+BACKLOG.md
+ROADMAP.md
+DEEP_REVIEW*.md
+*_AUDIT*.md
+PERFORMANCE_*SUMMARY*.md
+QUALITY_TROUBLESHOOTING.md
+ARCHITECTURE_EXCEPTIONS.md
+DEPLOYMENT_CHECKLIST.md

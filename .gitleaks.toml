@@ -67,6 +67,4 @@ paths = [
   '''pnpm-lock\.yaml$''',
   '''\.map$''',
   '''\.html$''',
-  # Claude Code submodule
-  '''.claude-setup/.*'''
 ]

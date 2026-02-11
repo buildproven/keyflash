@@ -64,3 +64,12 @@ PERFORMANCE_*SUMMARY*.md
 QUALITY_TROUBLESHOOTING.md
 ARCHITECTURE_EXCEPTIONS.md
 DEPLOYMENT_CHECKLIST.md
+pricing.config.ts
+
+# Dev tool configs
+/.claude/
+/.serena/
+/.playwright-mcp/
+/.lighthouse/
+.qualityrc.json
+.defensive-patterns.json

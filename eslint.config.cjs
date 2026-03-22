@@ -17,6 +17,13 @@ try {
   // Security plugin not installed yet; fall back to basic config
 }
 
+let nodePlugin = null
+try {
+  nodePlugin = require('eslint-plugin-n')
+} catch {
+  // Node plugin not installed yet; skip import verification
+}
+
 const configs = [
   {
     ignores: [
@@ -164,6 +171,19 @@ if (tsPlugin && tsParser) {
       'security/detect-object-injection': 'off',
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',
+    },
+  })
+}
+
+// Node.js import verification
+if (nodePlugin) {
+  configs.push({
+    plugins: { n: nodePlugin },
+    rules: {
+      'n/no-missing-import': 'off', // Often conflicts with bundlers/aliases
+      'n/no-missing-require': 'error',
+      'n/no-unpublished-import': 'off', // Too noisy for app code
+      'n/no-unpublished-require': 'off',
     },
   })
 }

@@ -2,7 +2,7 @@
  * Stripe Test Utilities
  *
  * Reusable mocks, factories, and fixtures for testing Stripe integrations.
- * Mirrors @vbl/shared/stripe/testing for consistency across VBL projects.
+ * Mirrors buildproven shared stripe/testing for consistency across BuildProven projects.
  *
  * @example
  * ```typescript

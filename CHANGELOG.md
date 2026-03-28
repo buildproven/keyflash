@@ -120,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clerk Authentication** - Full user authentication with sign-in/sign-up flows
 - **Stripe Payments** - $29/mo Pro subscription with checkout and webhook handling
 - **User Tier System** - Trial (7 days, 300 keywords, mock data) → Pro (1,000 keywords/month, real data)
-- **BuildProven Favicon** - Consistent branding with main VBL site
+- **BuildProven Favicon** - Consistent branding with main BuildProven site
 - **Comprehensive Audit Report** - Security, performance, and accessibility documentation
 - Standard BuildProven footer component with legal links (Privacy, Terms)
 - Dynamic copyright year that auto-updates

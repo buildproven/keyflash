@@ -54,8 +54,6 @@ next-env.d.ts
 /.clerk/
 
 # Internal development files
-CLAUDE.md
-AGENTS.md
 BACKLOG.md
 ROADMAP.md
 DEEP_REVIEW*.md

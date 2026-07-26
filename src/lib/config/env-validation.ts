@@ -185,7 +185,7 @@ export function validateEnvironment() {
       console.error('❌ Environment configuration validation failed:')
     }
 
-    let errorMessage = 'Environment validation failed'
+    let errorMessage
 
     if (error instanceof z.ZodError) {
       const issues = error.issues.map(
@@ -216,7 +216,7 @@ export function validateEnvironment() {
     // Throw error instead of process.exit to allow proper error handling
     // In development, this will be caught by startup.ts try/catch
     // In production, this will still cause the app to fail but with better logging
-    throw new Error(errorMessage)
+    throw new Error(errorMessage, { cause: error })
   }
 }
 

@@ -9,18 +9,21 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { resolveCheckoutOrigin } from '@/app/api/checkout/route'
+import Stripe from 'stripe'
+import { resolveCheckoutOrigin, getStripe } from '@/app/api/checkout/route'
 
 // Mock Stripe
 const mockCheckoutCreate = vi.fn()
 vi.mock('stripe', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    checkout: {
-      sessions: {
-        create: mockCheckoutCreate,
+  default: vi.fn().mockImplementation(function () {
+    return {
+      checkout: {
+        sessions: {
+          create: mockCheckoutCreate,
+        },
       },
-    },
-  })),
+    }
+  }),
 }))
 
 // Mock logger
@@ -61,6 +64,15 @@ describe('Checkout API Route', () => {
       expect(priceId).toBeUndefined()
       // Restore for subsequent tests
       process.env.STRIPE_PRICE_PRO = originalPrice
+    })
+
+    it('should initialize the Stripe client with the SDK-supported apiVersion', () => {
+      getStripe()
+
+      expect(Stripe).toHaveBeenCalledWith(
+        process.env.STRIPE_SECRET_KEY,
+        expect.objectContaining({ apiVersion: '2026-03-25.dahlia' })
+      )
     })
   })
 
@@ -252,8 +264,7 @@ describe('Checkout API Route', () => {
     })
 
     it('should redirect to search page after successful checkout', () => {
-      const successUrl =
-        'https://keyflash.buildproven.ai/search?upgraded=true'
+      const successUrl = 'https://keyflash.buildproven.ai/search?upgraded=true'
 
       expect(successUrl).toContain('/search')
       expect(successUrl).toContain('upgraded=true')

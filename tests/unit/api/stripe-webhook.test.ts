@@ -11,7 +11,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import type Stripe from 'stripe'
+import Stripe from 'stripe'
+import { getStripe } from '@/app/api/webhooks/stripe/route'
 import {
   createCheckoutEvent,
   createSubscriptionCreatedEvent,
@@ -32,11 +33,13 @@ import {
 // Mock Stripe
 const mockConstructEvent = vi.fn()
 vi.mock('stripe', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    webhooks: {
-      constructEvent: mockConstructEvent,
-    },
-  })),
+  default: vi.fn().mockImplementation(function () {
+    return {
+      webhooks: {
+        constructEvent: mockConstructEvent,
+      },
+    }
+  }),
 }))
 
 // Mock logger
@@ -85,6 +88,15 @@ describe('Stripe Webhook API Route', () => {
       expect(webhookSecret).toBeUndefined()
       // Restore for subsequent tests
       process.env.STRIPE_WEBHOOK_SECRET = originalSecret
+    })
+
+    it('should initialize the Stripe client with the SDK-supported apiVersion', () => {
+      getStripe()
+
+      expect(Stripe).toHaveBeenCalledWith(
+        process.env.STRIPE_SECRET_KEY,
+        expect.objectContaining({ apiVersion: '2026-03-25.dahlia' })
+      )
     })
   })
 

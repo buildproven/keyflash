@@ -22,7 +22,7 @@ const CHECKOUT_RATE_LIMIT: RateLimitConfig = {
 }
 
 // Lazy initialization to avoid build-time errors
-function getStripe() {
+export function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY
   if (!key) {
     throw new Error('STRIPE_SECRET_KEY not configured')

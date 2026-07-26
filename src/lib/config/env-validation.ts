@@ -185,7 +185,7 @@ export function validateEnvironment() {
       console.error('❌ Environment configuration validation failed:')
     }
 
-    let errorMessage
+    let errorMessage: string
 
     if (error instanceof z.ZodError) {
       const issues = error.issues.map(

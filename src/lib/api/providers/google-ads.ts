@@ -140,9 +140,13 @@ export class GoogleAdsProvider implements KeywordAPIProvider {
 
       // Re-throw with more context
       if (error instanceof Error) {
-        throw new Error(`Google Ads API failed: ${error.message}`)
+        throw new Error(`Google Ads API failed: ${error.message}`, {
+          cause: error,
+        })
       }
-      throw new Error('Google Ads API failed with unknown error')
+      throw new Error('Google Ads API failed with unknown error', {
+        cause: error,
+      })
     }
   }
 

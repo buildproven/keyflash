@@ -76,7 +76,7 @@ export default async function RootLayout({
   const nonce = headersList.get('x-nonce') || undefined
 
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/">
       <html lang="en">
         <head>
           {/* Preconnect only to critical origins used on initial page load */}

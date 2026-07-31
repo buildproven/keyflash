@@ -1,17 +1,11 @@
 'use client'
 
-import {
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs'
+import { SignInButton, SignUpButton, Show, UserButton } from '@clerk/nextjs'
 
 export function AuthHeader() {
   return (
     <header role="banner" className="fixed top-0 right-0 p-4 z-50">
-      <SignedOut>
+      <Show when="signed-out">
         <div className="flex items-center gap-2">
           <SignInButton mode="modal">
             <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors">
@@ -24,17 +18,16 @@ export function AuthHeader() {
             </button>
           </SignUpButton>
         </div>
-      </SignedOut>
-      <SignedIn>
+      </Show>
+      <Show when="signed-in">
         <UserButton
-          afterSignOutUrl="/"
           appearance={{
             elements: {
               avatarBox: 'w-10 h-10',
             },
           }}
         />
-      </SignedIn>
+      </Show>
     </header>
   )
 }

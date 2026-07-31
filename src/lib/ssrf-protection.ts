@@ -158,34 +158,27 @@ class SSRFProtection {
     limitMap: Map<string, RateLimitRecord>
   ): Promise<boolean> {
     const startTime = Date.now()
-    let acquiring = true
-
-    while (acquiring) {
+    for (;;) {
       const record = limitMap.get(key)
 
       if (!record) {
-        acquiring = false
         return true
       }
 
       if (!record.locked) {
         record.locked = true
         limitMap.set(key, record)
-        acquiring = false
         return true
       }
 
       if (Date.now() - startTime > this.LOCK_TIMEOUT) {
         record.locked = false
         limitMap.set(key, record)
-        acquiring = false
         return true
       }
 
       await new Promise(resolve => setTimeout(resolve, 10))
     }
-
-    return true
   }
 
   private releaseLock(

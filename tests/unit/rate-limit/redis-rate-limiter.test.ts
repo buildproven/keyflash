@@ -73,6 +73,34 @@ describe('RedisRateLimiter', () => {
     process.env = originalEnv
   })
 
+  describe('Production runtime validation', () => {
+    it('allows build-time construction without runtime secrets', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      delete process.env.RATE_LIMIT_HMAC_SECRET
+      delete process.env.UPSTASH_REDIS_REST_URL
+      delete process.env.UPSTASH_REDIS_REST_TOKEN
+
+      expect(() => new RedisRateLimiter()).not.toThrow()
+    })
+
+    it('fails every enabled production request when runtime secrets are absent', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      delete process.env.RATE_LIMIT_HMAC_SECRET
+      delete process.env.UPSTASH_REDIS_REST_URL
+      delete process.env.UPSTASH_REDIS_REST_TOKEN
+      const productionLimiter = new RedisRateLimiter()
+      const request = new Request('https://example.com')
+      const config = { requestsPerHour: 10, enabled: true }
+
+      await expect(
+        productionLimiter.checkRateLimit(request, config)
+      ).rejects.toThrow('RATE_LIMIT_HMAC_SECRET is required in production')
+      await expect(
+        productionLimiter.checkRateLimit(request, config)
+      ).rejects.toThrow('RATE_LIMIT_HMAC_SECRET is required in production')
+    })
+  })
+
   describe('Client ID Generation', () => {
     it('uses CF-Connecting-IP when available', async () => {
       const request = new Request('https://example.com', {

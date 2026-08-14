@@ -92,7 +92,6 @@
     "license:check": "license-checker --onlyAllow \"MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;BlueOak-1.0.0;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;Python-2.0;MPL-2.0\" --excludePrivatePackages"
   },
   "devDependencies": {
-    "@axe-core/cli": "^4.11.0",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
@@ -139,6 +138,19 @@
     "vitest": "^4.0.10"
   },
   "overrides": {
+    "@lhci/cli": {
+      "lighthouse": "13.4.1"
+    },
+    "@lhci/utils": {
+      "js-yaml": "3.15.1",
+      "lighthouse": "13.4.1"
+    },
+    "cosmiconfig": {
+      "js-yaml": "4.3.1"
+    },
+    "next": {
+      "postcss": "8.5.23"
+    },
     "tmp": "0.2.7",
     "hono": ">=4.11.4",
     "sharp": ">=0.35.0",

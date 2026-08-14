@@ -10,7 +10,7 @@ import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
 import { getProvider } from '@/lib/api/factory'
 import { cache } from '@/lib/cache/redis'
 import { logger } from '@/lib/utils/logger'
-import { normalizeLocationForProvider } from '../route'
+import { normalizeLocationForProvider } from '@/lib/utils/location-normalization'
 import { readJsonWithLimit } from '@/lib/utils/request'
 import type {
   RelatedKeyword,

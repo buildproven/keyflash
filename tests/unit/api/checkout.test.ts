@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { resolveCheckoutOrigin } from '@/app/api/checkout/route'
+import { resolveCheckoutOrigin } from '@/lib/utils/checkout-origin'
 
 // Mock Stripe
 const mockCheckoutCreate = vi.fn()

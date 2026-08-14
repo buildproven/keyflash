@@ -66,6 +66,8 @@ const jsonLd = {
   },
 }
 
+export const CLERK_AFTER_SIGN_OUT_URL = '/'
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -76,7 +78,7 @@ export default async function RootLayout({
   const nonce = headersList.get('x-nonce') || undefined
 
   return (
-    <ClerkProvider afterSignOutUrl="/">
+    <ClerkProvider afterSignOutUrl={CLERK_AFTER_SIGN_OUT_URL}>
       <html lang="en">
         <head>
           {/* Preconnect only to critical origins used on initial page load */}

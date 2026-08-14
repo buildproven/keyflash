@@ -138,12 +138,8 @@
     "vitest": "^4.0.10"
   },
   "overrides": {
-    "@lhci/cli": {
-      "lighthouse": "13.4.1"
-    },
     "@lhci/utils": {
-      "js-yaml": "3.15.1",
-      "lighthouse": "13.4.1"
+      "js-yaml": "3.15.1"
     },
     "cosmiconfig": {
       "js-yaml": "4.3.1"

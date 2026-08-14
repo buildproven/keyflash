@@ -27,6 +27,39 @@ interface RateLimitEntry {
   resetTime: number
 }
 
+export function assertRateLimitRuntimeReady(options?: {
+  isProduction?: boolean
+  redisAvailable?: boolean
+}): void {
+  const isProduction =
+    options?.isProduction ?? process.env.NODE_ENV === 'production'
+  if (!isProduction) return
+
+  const hmacSecret = process.env.RATE_LIMIT_HMAC_SECRET
+  if (!hmacSecret) {
+    throw new Error(
+      'RATE_LIMIT_HMAC_SECRET is required in production for secure rate limiting'
+    )
+  }
+  if (hmacSecret.length < 32) {
+    throw new Error(
+      'RATE_LIMIT_HMAC_SECRET must be at least 32 characters for security'
+    )
+  }
+
+  const redisAvailable =
+    options?.redisAvailable ??
+    Boolean(
+      process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    )
+  if (!redisAvailable) {
+    throw new Error(
+      'Redis configuration required in production for distributed rate limiting. ' +
+        'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
+    )
+  }
+}
+
 export class RedisRateLimiter {
   private redis: Redis | null = null
   private fallbackStore = new Map<string, RateLimitEntry>()
@@ -94,25 +127,10 @@ export class RedisRateLimiter {
   }
 
   private validateRuntimeConfig(): void {
-    if (!this.isProduction) return
-
-    const hmacSecret = process.env.RATE_LIMIT_HMAC_SECRET
-    if (!hmacSecret) {
-      throw this.createConfigError(
-        'RATE_LIMIT_HMAC_SECRET is required in production for secure rate limiting'
-      )
-    }
-    if (hmacSecret.length < 32) {
-      throw this.createConfigError(
-        'RATE_LIMIT_HMAC_SECRET must be at least 32 characters for security'
-      )
-    }
-    if (!this.isRedisAvailable) {
-      throw this.createConfigError(
-        'Redis configuration required in production for distributed rate limiting. ' +
-          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
-      )
-    }
+    assertRateLimitRuntimeReady({
+      isProduction: this.isProduction,
+      redisAvailable: this.isRedisAvailable,
+    })
   }
 
   /**

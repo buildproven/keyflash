@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { RedisRateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
+import {
+  assertRateLimitRuntimeReady,
+  RedisRateLimiter,
+} from '@/lib/rate-limit/redis-rate-limiter'
 
 // Mock Redis
 const mockRedis = {
@@ -98,6 +101,16 @@ describe('RedisRateLimiter', () => {
       await expect(
         productionLimiter.checkRateLimit(request, config)
       ).rejects.toThrow('RATE_LIMIT_HMAC_SECRET is required in production')
+    })
+
+    it('fails deployment readiness before customer traffic without secrets', () => {
+      delete process.env.RATE_LIMIT_HMAC_SECRET
+      delete process.env.UPSTASH_REDIS_REST_URL
+      delete process.env.UPSTASH_REDIS_REST_TOKEN
+
+      expect(() => assertRateLimitRuntimeReady({ isProduction: true })).toThrow(
+        'RATE_LIMIT_HMAC_SECRET is required in production'
+      )
     })
   })
 

@@ -13,6 +13,7 @@ vi.mock('@/lib/cache/redis', () => ({
 
 // Mock the rate limiter to always allow requests in tests
 vi.mock('@/lib/rate-limit/redis-rate-limiter', () => ({
+  assertRateLimitRuntimeReady: vi.fn(),
   rateLimiter: {
     checkRateLimit: vi.fn().mockResolvedValue({
       allowed: true,

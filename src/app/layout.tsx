@@ -6,6 +6,7 @@ import { ErrorBoundary } from '@/components/error-boundary'
 import { WebVitals } from './web-vitals'
 import { PerformanceMonitor } from './performance-monitor'
 import { getAppUrl } from '@/lib/utils/app-url'
+import { CLERK_AFTER_SIGN_OUT_URL } from '@/lib/integration-contracts'
 import './globals.css'
 
 const baseUrl = getAppUrl()
@@ -65,8 +66,6 @@ const jsonLd = {
     ratingCount: '50',
   },
 }
-
-export const CLERK_AFTER_SIGN_OUT_URL = '/'
 
 export default async function RootLayout({
   children,

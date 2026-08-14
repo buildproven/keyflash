@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { STRIPE_API_VERSION } from '@/lib/integration-contracts'
 import { Redis } from '@upstash/redis'
 import https from 'https'
 import { logger } from '@/lib/utils/logger'
@@ -138,8 +139,6 @@ function getSubscriptionId(
 }
 
 // Lazy initialization to avoid build-time errors
-export const STRIPE_API_VERSION = '2026-03-25.dahlia' as const
-
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY
   if (!key) {

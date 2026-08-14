@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { STRIPE_API_VERSION as checkoutStripeApiVersion } from '@/app/api/checkout/route'
-import { STRIPE_API_VERSION as webhookStripeApiVersion } from '@/app/api/webhooks/stripe/route'
-import { CLERK_AFTER_SIGN_OUT_URL } from '@/app/layout'
+import {
+  CLERK_AFTER_SIGN_OUT_URL,
+  STRIPE_API_VERSION,
+} from '@/lib/integration-contracts'
 
 describe('third-party integration contracts', () => {
   it('uses one current Stripe API version for checkout and webhooks', () => {
-    expect(checkoutStripeApiVersion).toBe('2026-03-25.dahlia')
-    expect(webhookStripeApiVersion).toBe(checkoutStripeApiVersion)
+    expect(STRIPE_API_VERSION).toBe('2026-03-25.dahlia')
   })
 
   it('returns signed-out users to the application root', () => {

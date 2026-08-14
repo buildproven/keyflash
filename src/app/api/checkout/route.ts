@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import Stripe from 'stripe'
+import { STRIPE_API_VERSION } from '@/lib/integration-contracts'
 import { logger } from '@/lib/utils/logger'
 import { getAppUrl } from '@/lib/utils/app-url'
 import { userService } from '@/lib/user/user-service'
@@ -22,8 +23,6 @@ const CHECKOUT_RATE_LIMIT: RateLimitConfig = {
 }
 
 // Lazy initialization to avoid build-time errors
-export const STRIPE_API_VERSION = '2026-03-25.dahlia' as const
-
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY
   if (!key) {

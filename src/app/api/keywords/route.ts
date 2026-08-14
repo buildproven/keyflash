@@ -14,37 +14,12 @@ import { userService } from '@/lib/user/user-service'
 import { isBillingEnabled } from '@/lib/billing'
 import type { KeywordSearchResponse } from '@/types/keyword'
 import { readJsonWithLimit } from '@/lib/utils/request'
+import { normalizeLocationForProvider } from '@/lib/utils/location-normalization'
 
 // Route segment config for security and performance
 export const runtime = 'nodejs'
 export const maxDuration = 30 // 30 second timeout
 export const dynamic = 'force-dynamic'
-
-// CRITICAL: Enforce request body size limit to prevent abuse
-// This is enforced at the Next.js level, preventing bypass via header spoofing
-export const bodyParser = {
-  sizeLimit: '1mb', // 1MB maximum request size
-}
-
-/**
- * Normalize location codes for provider and cache compatibility
- * UI uses ISO codes (US, GB, GL) but providers expect descriptive names
- */
-const LOCATION_MAP = new Map<string, string>([
-  ['US', 'United States'],
-  ['GB', 'United Kingdom'],
-  ['CA', 'Canada'],
-  ['AU', 'Australia'],
-  ['DE', 'Germany'],
-  ['FR', 'France'],
-  ['IN', 'India'],
-  ['GL', 'Worldwide'], // Global maps to provider-friendly term
-])
-
-export function normalizeLocationForProvider(location?: string): string {
-  if (!location) return 'United States' // Default fallback
-  return LOCATION_MAP.get(location) ?? 'United States'
-}
 
 /**
  * Rate limit configuration from environment

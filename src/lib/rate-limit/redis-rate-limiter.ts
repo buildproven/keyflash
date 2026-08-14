@@ -27,6 +27,39 @@ interface RateLimitEntry {
   resetTime: number
 }
 
+export function assertRateLimitRuntimeReady(options?: {
+  isProduction?: boolean
+  redisAvailable?: boolean
+}): void {
+  const isProduction =
+    options?.isProduction ?? process.env.NODE_ENV === 'production'
+  if (!isProduction) return
+
+  const hmacSecret = process.env.RATE_LIMIT_HMAC_SECRET
+  if (!hmacSecret) {
+    throw new Error(
+      'RATE_LIMIT_HMAC_SECRET is required in production for secure rate limiting'
+    )
+  }
+  if (hmacSecret.length < 32) {
+    throw new Error(
+      'RATE_LIMIT_HMAC_SECRET must be at least 32 characters for security'
+    )
+  }
+
+  const redisAvailable =
+    options?.redisAvailable ??
+    Boolean(
+      process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    )
+  if (!redisAvailable) {
+    throw new Error(
+      'Redis configuration required in production for distributed rate limiting. ' +
+        'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.'
+    )
+  }
+}
+
 export class RedisRateLimiter {
   private redis: Redis | null = null
   private fallbackStore = new Map<string, RateLimitEntry>()
@@ -35,7 +68,6 @@ export class RedisRateLimiter {
   private trustProxy =
     process.env.RATE_LIMIT_TRUST_PROXY === 'true' ||
     (process.env.RATE_LIMIT_TRUST_PROXY !== 'false' && this.isProduction)
-  private runtimeValidationDone = false // Track if we've validated Redis at runtime
   // Keep a typed error helper for attaching HTTP-friendly metadata
   private createConfigError(
     message: string,
@@ -49,24 +81,6 @@ export class RedisRateLimiter {
   }
 
   constructor() {
-    // Fail-fast validation for production
-    if (this.isProduction) {
-      // Validate HMAC secret for spoof-resistant client identification
-      const hmacSecret = process.env.RATE_LIMIT_HMAC_SECRET
-      if (!hmacSecret) {
-        throw this.createConfigError(
-          'RATE_LIMIT_HMAC_SECRET is required in production for secure rate limiting',
-          500
-        )
-      }
-      if (hmacSecret.length < 32) {
-        throw this.createConfigError(
-          'RATE_LIMIT_HMAC_SECRET must be at least 32 characters for security',
-          500
-        )
-      }
-    }
-
     const redisUrl = process.env.UPSTASH_REDIS_REST_URL
     const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
 
@@ -110,6 +124,13 @@ export class RedisRateLimiter {
       // This allows the build process to succeed without Redis configuration
       this.isRedisAvailable = false
     }
+  }
+
+  private validateRuntimeConfig(): void {
+    assertRateLimitRuntimeReady({
+      isProduction: this.isProduction,
+      redisAvailable: this.isRedisAvailable,
+    })
   }
 
   /**
@@ -227,20 +248,9 @@ export class RedisRateLimiter {
       }
     }
 
-    // Runtime validation: In production, require Redis for distributed rate limiting
-    // This is deferred from constructor to allow build-time module loading without Redis
-    if (
-      this.isProduction &&
-      !this.isRedisAvailable &&
-      !this.runtimeValidationDone
-    ) {
-      this.runtimeValidationDone = true // Only throw once
-      throw this.createConfigError(
-        'Redis configuration required in production for distributed rate limiting. ' +
-          'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.',
-        500
-      )
-    }
+    // Module loading also occurs during production builds. Validate secrets and
+    // distributed storage only when an enabled limiter handles a real request.
+    this.validateRuntimeConfig()
 
     const clientId = this.generateClientId(request)
     const now = Date.now()

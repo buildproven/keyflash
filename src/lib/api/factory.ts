@@ -212,7 +212,8 @@ export function getProvider(): KeywordAPIProvider {
           '1. Copy .env.example to .env.local\n' +
           '2. Add your API credentials\n' +
           '3. Restart the development server\n\n' +
-          'Or set KEYWORD_API_PROVIDER=mock to use mock data.'
+          'Or set KEYWORD_API_PROVIDER=mock to use mock data.',
+        { cause: error }
       )
     }
     throw error

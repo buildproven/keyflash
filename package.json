@@ -74,8 +74,8 @@
     "python:type-check": "mypy .",
     "python:quality": "black --check . && ruff check . && isort --check-only . && mypy .",
     "python:test": "pytest",
-    "test:fast": "vitest run --reporter=basic --coverage=false",
-    "test:medium": "vitest run --reporter=basic --testPathIgnorePatterns=e2e,integration",
+    "test:fast": "vitest run --coverage=false",
+    "test:medium": "vitest run --exclude='**/*.{e2e,integration}.test.{ts,tsx}'",
     "test:comprehensive": "vitest run && npm run lint && npm run format:check && npm run security:audit 2>/dev/null || true",
     "test:smart": "bash scripts/smart-test-strategy.sh",
     "size": "size-limit",
@@ -92,14 +92,13 @@
     "license:check": "license-checker --onlyAllow \"MIT;ISC;BSD-2-Clause;BSD-3-Clause;Apache-2.0;0BSD;BlueOak-1.0.0;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;Python-2.0;MPL-2.0\" --excludePrivatePackages"
   },
   "devDependencies": {
-    "@axe-core/cli": "^4.11.0",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/js": "^10.0.1",
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.2.3",
     "@playwright/test": "^1.59.1",
-    "@prisma/client": "^7.7.0",
+    "@prisma/client": "7.7.0",
     "@size-limit/file": "^12.0.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
@@ -116,7 +115,7 @@
     "commitlint": "^20.5.0",
     "dotenv": "^17.4.1",
     "eslint": "^10.2.0",
-    "eslint-config-next": "^16.2.3",
+    "eslint-config-next": "^16.3.1",
     "eslint-plugin-n": "^17.24.0",
     "eslint-plugin-security": "^4.0.0",
     "globals": "^17.4.0",
@@ -125,10 +124,10 @@
     "knip": "^6.3.1",
     "license-checker": "^25.0.1",
     "lint-staged": "^16.4.0",
-    "next": "^16.2.3",
+    "next": "^16.3.1",
     "postcss": "^8.5.18",
     "prettier": "^3.3.3",
-    "prisma": "^7.7.0",
+    "prisma": "7.7.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "size-limit": "^12.0.1",
@@ -139,8 +138,19 @@
     "vitest": "^4.0.10"
   },
   "overrides": {
-    "tmp": "0.2.4",
-    "hono": ">=4.11.4"
+    "@lhci/utils": {
+      "js-yaml": "3.15.1"
+    },
+    "cosmiconfig": {
+      "js-yaml": "4.3.1"
+    },
+    "next": {
+      "postcss": "8.5.23"
+    },
+    "tmp": "0.2.7",
+    "hono": ">=4.11.4",
+    "sharp": "0.35.3",
+    "uuid": "11.1.1"
   },
   "lint-staged": {
     "package.json": [
@@ -164,8 +174,7 @@
     "tests/**/*.{ts,tsx,js,jsx}": [
       "eslint --fix",
       "prettier --write",
-      "bash -c 'tsc --noEmit --project tests/tsconfig.json'",
-      "tsc --noEmit --project tests/tsconfig.json"
+      "bash -c 'tsc --noEmit --project tests/tsconfig.json'"
     ],
     "**/*.py": [
       "black --check --diff",
@@ -187,16 +196,15 @@
     "**/*.{ts,tsx}": [
       "bash -c 'tsc --noEmit --skipLibCheck'",
       "eslint --fix",
-      "prettier --write",
-      "tsc --noEmit --skipLibCheck"
+      "prettier --write"
     ]
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=22.19",
     "npm": ">=10.2.4"
   },
   "volta": {
-    "node": "20.11.1",
+    "node": "22.19.0",
     "npm": "10.2.4"
   },
   "dependencies": {
@@ -205,7 +213,7 @@
     "@upstash/redis": "^1.37.0",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.2",
-    "stripe": "^22.0.1",
+    "stripe": "22.0.1",
     "zod": "^4.1.12"
   },
   "size-limit": [

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import Stripe from 'stripe'
+import { STRIPE_API_VERSION } from '@/lib/integration-contracts'
 import { logger } from '@/lib/utils/logger'
 import { getAppUrl } from '@/lib/utils/app-url'
 import { userService } from '@/lib/user/user-service'
@@ -28,7 +29,7 @@ function getStripe() {
     throw new Error('STRIPE_SECRET_KEY not configured')
   }
   return new Stripe(key, {
-    apiVersion: '2026-01-28.clover',
+    apiVersion: STRIPE_API_VERSION,
   })
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { STRIPE_API_VERSION } from '@/lib/integration-contracts'
 import { Redis } from '@upstash/redis'
 import https from 'https'
 import { logger } from '@/lib/utils/logger'
@@ -144,7 +145,7 @@ function getStripe() {
     throw new Error('STRIPE_SECRET_KEY not configured')
   }
   return new Stripe(key, {
-    apiVersion: '2026-01-28.clover',
+    apiVersion: STRIPE_API_VERSION,
   })
 }
 

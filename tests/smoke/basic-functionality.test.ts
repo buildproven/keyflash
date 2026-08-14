@@ -90,7 +90,7 @@ describe('Dependencies smoke tests', () => {
     const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
 
     expect(pkgJson.engines).toHaveProperty('node')
-    expect(pkgJson.engines.node).toContain('20')
+    expect(pkgJson.engines.node).toBe('>=22.19')
   })
 })
 

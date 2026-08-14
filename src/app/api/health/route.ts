@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cache } from '@/lib/cache/redis'
 import { createProvider, type ProviderName } from '@/lib/api/factory'
-import { rateLimiter } from '@/lib/rate-limit/redis-rate-limiter'
+import {
+  assertRateLimitRuntimeReady,
+  rateLimiter,
+} from '@/lib/rate-limit/redis-rate-limiter'
 import {
   handleAPIError,
   createSuccessResponse,
@@ -193,6 +196,10 @@ async function checkProvider(): Promise<HealthCheckResult> {
  * Enhanced health check endpoint for monitoring system dependencies
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  // A deployment is not ready if production rate-limit secrets or distributed
+  // storage are absent, even before the first protected customer request.
+  assertRateLimitRuntimeReady()
+
   // Rate limit health checks to prevent DoS
   const rateLimitResult = await rateLimiter.checkRateLimit(
     request,

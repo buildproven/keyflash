@@ -84,10 +84,10 @@ describe('GitHub Actions workflow validation', () => {
     expect(workflowContent).toContain('actions/setup-node')
   })
 
-  it('uses the supported Node.js 22.19 runtime', () => {
+  it('uses the supported Node.js 22.22 runtime', () => {
     workflowContent = readFileSync(workflowPath, 'utf-8')
 
-    expect(workflowContent).toMatch(/node-version:\s*['"]22\.19\.0['"]/)
+    expect(workflowContent).toMatch(/node-version:\s*['"]22\.22\.2['"]/)
   })
 
   it('has dependency installation step', () => {

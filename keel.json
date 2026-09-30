@@ -6,5 +6,6 @@
   },
   "testCommand": "npm test",
   "linearProject": "keyflash",
-  "dailyBudgetUsd": 5
+  "dailyBudgetUsd": 5,
+  "install": "npm ci"
 }

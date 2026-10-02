@@ -135,7 +135,7 @@
     "stylelint-config-standard": "^40.0.0",
     "tailwindcss": "^4",
     "typescript": "^6.0.2",
-    "vitest": "^4.0.10"
+    "vitest": "^4.1.11"
   },
   "overrides": {
     "@lhci/utils": {

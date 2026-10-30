@@ -22,6 +22,7 @@ npm run security:secrets     # gitleaks secrets scan
 ```
 
 Run a single test file:
+
 ```bash
 npx vitest run tests/unit/your-file.test.ts
 ```
@@ -50,30 +51,30 @@ All providers implement `KeywordAPIProvider` from `src/lib/api/types.ts`. Withou
 
 ### Key `src/lib/` Modules
 
-| Module | Purpose |
-|---|---|
-| `api/factory.ts` | Provider selection factory |
-| `api/providers/` | DataForSEO + GoogleAds implementations |
-| `billing.ts` | `BILLING_ENABLED` flag — gates Stripe/Pro features |
-| `cache/` | Upstash Redis wrappers; cache key conventions |
-| `rate-limit/` | Redis-based rate limiting (10 req/hr per IP) |
-| `saved-searches/` | CRUD for user saved searches in Redis |
-| `user/` | User service (tier resolution, Redis persistence) |
-| `validation/schemas.ts` | Zod schemas for all API inputs |
-| `ssrf-protection.ts` | URL validation for external fetches |
+| Module                  | Purpose                                            |
+| ----------------------- | -------------------------------------------------- |
+| `api/factory.ts`        | Provider selection factory                         |
+| `api/providers/`        | DataForSEO + GoogleAds implementations             |
+| `billing.ts`            | `BILLING_ENABLED` flag — gates Stripe/Pro features |
+| `cache/`                | Upstash Redis wrappers; cache key conventions      |
+| `rate-limit/`           | Redis-based rate limiting (10 req/hr per IP)       |
+| `saved-searches/`       | CRUD for user saved searches in Redis              |
+| `user/`                 | User service (tier resolution, Redis persistence)  |
+| `validation/schemas.ts` | Zod schemas for all API inputs                     |
+| `ssrf-protection.ts`    | URL validation for external fetches                |
 
 ### API Routes (`src/app/api/`)
 
-| Endpoint | Description |
-|---|---|
-| `POST /api/keywords` | Main keyword search (rate-limited, cached 7d) |
-| `POST /api/keywords/related` | Related keyword lookup |
-| `POST /api/content-brief` | Content brief generation |
-| `GET/POST /api/searches` | List / create saved searches |
-| `GET/PUT/DELETE /api/searches/[id]` | Single saved search CRUD |
-| `POST /api/checkout` | Stripe checkout session |
-| `POST /api/webhooks/stripe` | Stripe webhook (signature-validated) |
-| `GET /api/health` | Health check (no auth/CSRF) |
+| Endpoint                            | Description                                   |
+| ----------------------------------- | --------------------------------------------- |
+| `POST /api/keywords`                | Main keyword search (rate-limited, cached 7d) |
+| `POST /api/keywords/related`        | Related keyword lookup                        |
+| `POST /api/content-brief`           | Content brief generation                      |
+| `GET/POST /api/searches`            | List / create saved searches                  |
+| `GET/PUT/DELETE /api/searches/[id]` | Single saved search CRUD                      |
+| `POST /api/checkout`                | Stripe checkout session                       |
+| `POST /api/webhooks/stripe`         | Stripe webhook (signature-validated)          |
+| `GET /api/health`                   | Health check (no auth/CSRF)                   |
 
 ### Redis Key Patterns
 
@@ -125,14 +126,15 @@ PRs follow `.github/PULL_REQUEST_TEMPLATE.md`: link issues, summarize changes, i
 
 Copy `.env.example` to `.env.local`. Key variables:
 
-| Variable | Purpose |
-|---|---|
-| `KEYWORD_API_PROVIDER` | `dataforseo`, `google-ads`, or `mock` |
-| `DATAFORSEO_API_LOGIN` / `DATAFORSEO_API_PASSWORD` | DataForSEO credentials |
-| `BILLING_ENABLED` | `true` to enable Stripe payments |
-| `PRIVACY_MODE` | `true` to disable keyword caching |
-| `NEXT_PUBLIC_APP_URL` | Canonical app URL (used in CORS allowlist) |
-| `ALLOWED_ORIGINS` | Comma-separated extra allowed CORS origins |
+| Variable                                           | Purpose                                    |
+| -------------------------------------------------- | ------------------------------------------ |
+| `KEYWORD_API_PROVIDER`                             | `dataforseo`, `google-ads`, or `mock`      |
+| `DATAFORSEO_API_LOGIN` / `DATAFORSEO_API_PASSWORD` | DataForSEO credentials                     |
+| `BILLING_ENABLED`                                  | `true` to enable Stripe payments           |
+| `PRIVACY_MODE`                                     | `true` to disable keyword caching          |
+| `NEXT_PUBLIC_APP_URL`                              | Canonical app URL (used in CORS allowlist) |
+| `ALLOWED_ORIGINS`                                  | Comma-separated extra allowed CORS origins |
 
 ---
+
 **Last Updated:** 2026-03-01

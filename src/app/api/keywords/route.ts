@@ -92,8 +92,7 @@ export async function POST(request: NextRequest) {
 
     // Get email from Clerk session
     const sessionClaims = authResult.sessionClaims as
-      | { email?: string }
-      | undefined
+      { email?: string } | undefined
     const email = sessionClaims?.email || `${userId}@keyflash.local`
 
     // Get user from database (or create if new) - race-condition safe

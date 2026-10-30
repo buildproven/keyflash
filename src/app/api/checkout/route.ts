@@ -83,8 +83,7 @@ export async function POST(request: NextRequest) {
 
     // Ensure user exists so webhook can link subscription
     const sessionClaims = authResult.sessionClaims as
-      | { email?: string }
-      | undefined
+      { email?: string } | undefined
     const fallbackEmail = `${authResult.userId}@keyflash.local`
     const userEmail = sessionClaims?.email || fallbackEmail
     const user = await userService.getOrCreateUser(authResult.userId, userEmail)

@@ -43,8 +43,7 @@ describe('Vitest configuration', () => {
       const config = await import('../../vitest.config')
 
       const coverage = config.default.test?.coverage as
-        | { thresholds?: Record<string, number> }
-        | undefined
+        { thresholds?: Record<string, number> } | undefined
       const thresholds = coverage?.thresholds
 
       if (thresholds) {

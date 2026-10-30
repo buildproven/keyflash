@@ -2,10 +2,7 @@
  * Keyword search intent types
  */
 export type KeywordIntent =
-  | 'informational'
-  | 'commercial'
-  | 'transactional'
-  | 'navigational'
+  'informational' | 'commercial' | 'transactional' | 'navigational'
 
 /**
  * Keyword match types supported by the API

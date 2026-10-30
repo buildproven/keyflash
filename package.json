@@ -43,7 +43,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "security:audit": "npm audit --audit-level high --omit=dev",
-    "security:secrets": "gitleaks detect --no-git --verbose --exit-code=1 2>&1 || (echo '\u274c Secrets detected! Review output above' && exit 1)",
+    "security:secrets": "gitleaks detect --no-git --verbose --exit-code=1 2>&1 || (echo '❌ Secrets detected! Review output above' && exit 1)",
     "security:config": "npx create-qa-architect@latest --security-config",
     "lighthouse:ci": "lhci autorun",
     "lighthouse:upload": "lhci upload",
@@ -110,7 +110,7 @@
     "@typescript-eslint/eslint-plugin": "^8.58.1",
     "@typescript-eslint/parser": "^8.58.1",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^4.1.12",
     "axe-core": "^4.11.2",
     "commitlint": "^20.5.0",
     "dotenv": "^17.4.1",
@@ -135,7 +135,7 @@
     "stylelint-config-standard": "^40.0.0",
     "tailwindcss": "^4",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "overrides": {
     "@lhci/utils": {

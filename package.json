@@ -43,7 +43,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "security:audit": "npm audit --audit-level high --omit=dev",
-    "security:secrets": "gitleaks detect --no-git --verbose --exit-code=1 2>&1 || (echo '❌ Secrets detected! Review output above' && exit 1)",
+    "security:secrets": "gitleaks detect --no-git --verbose --exit-code=1 2>&1 || (echo '\u274c Secrets detected! Review output above' && exit 1)",
     "security:config": "npx create-qa-architect@latest --security-config",
     "lighthouse:ci": "lhci autorun",
     "lighthouse:upload": "lhci upload",
@@ -124,7 +124,7 @@
     "knip": "^6.3.1",
     "license-checker": "^25.0.1",
     "lint-staged": "^16.4.0",
-    "next": "^16.3.1",
+    "next": "^16.4.3",
     "postcss": "^8.5.18",
     "prettier": "^3.3.3",
     "prisma": "7.7.0",
@@ -149,7 +149,7 @@
     },
     "tmp": "0.2.7",
     "hono": ">=4.11.4",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "uuid": "11.1.1"
   },
   "lint-staged": {

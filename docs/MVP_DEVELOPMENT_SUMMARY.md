@@ -150,11 +150,12 @@ tests/unit/api/providers.test.ts   # 17 provider tests
 ```
 
 **Provider Features**:
-| Provider | Batch Limit | Rate Limit | Auth Method |
-|-------------|-------------|----------------|-------------|
-| Google Ads | 1,000 | 1,000/day | OAuth2 |
-| DataForSEO | 10,000 | 2,000/day | Basic Auth |
-| Mock | 200 | Unlimited | None |
+
+| Provider   | Batch Limit | Rate Limit | Auth Method |
+| ---------- | ----------- | ---------- | ----------- |
+| Google Ads | 1,000       | 1,000/day  | OAuth2      |
+| DataForSEO | 10,000      | 2,000/day  | Basic Auth  |
+| Mock       | 200         | Unlimited  | None        |
 
 **Environment Variables**:
 
@@ -334,14 +335,15 @@ npm run test:all          # Run unit + E2E tests
 ### Overall Coverage: 76.09%
 
 **Breakdown by Category**:
-| Category | Statements | Branches | Functions | Lines |
-|----------------|------------|----------|-----------|--------|
-| **API Routes** | 82.14% | 75% | 66.66% | 82.14% |
-| **Components** | 96.84% | 70.73% | 90.47% | 96.84% |
-| **Validation** | 100% | 100% | 100% | 100% |
-| **Utilities** | 100% | 85% | 100% | 100% |
-| **Providers** | 53.06% | 71.87% | 37.5% | 47.5% |
-| **Caching** | 61.9% | 74.07% | 100% | 61.29% |
+
+| Category       | Statements | Branches | Functions | Lines  |
+| -------------- | ---------- | -------- | --------- | ------ |
+| **API Routes** | 82.14%     | 75%      | 66.66%    | 82.14% |
+| **Components** | 96.84%     | 70.73%   | 90.47%    | 96.84% |
+| **Validation** | 100%       | 100%     | 100%      | 100%   |
+| **Utilities**  | 100%       | 85%      | 100%      | 100%   |
+| **Providers**  | 53.06%     | 71.87%   | 37.5%     | 47.5%  |
+| **Caching**    | 61.9%      | 74.07%   | 100%      | 61.29% |
 
 **Notes**:
 

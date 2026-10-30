@@ -321,10 +321,7 @@ describe('Stripe Webhook API Route', () => {
     it('should return appropriate HTTP status codes', () => {
       const getStatusCode = (
         error:
-          | 'missing_signature'
-          | 'invalid_signature'
-          | 'handler_error'
-          | null
+          'missing_signature' | 'invalid_signature' | 'handler_error' | null
       ): number => {
         switch (error) {
           case 'missing_signature':

@@ -158,9 +158,7 @@ fetch('/api/v2/keywords', {
 ### Version Detection in Client Code
 
 ```typescript
-const response = await fetch('/api/v1/keywords', {
-  /* ... */
-})
+const response = await fetch('/api/v1/keywords', {/* ... */})
 const apiVersion = response.headers.get('API-Version')
 const deprecated = response.headers.get('Deprecation') === 'true'
 

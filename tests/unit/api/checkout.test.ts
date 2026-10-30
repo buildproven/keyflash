@@ -252,8 +252,7 @@ describe('Checkout API Route', () => {
     })
 
     it('should redirect to search page after successful checkout', () => {
-      const successUrl =
-        'https://keyflash.buildproven.ai/search?upgraded=true'
+      const successUrl = 'https://keyflash.buildproven.ai/search?upgraded=true'
 
       expect(successUrl).toContain('/search')
       expect(successUrl).toContain('upgraded=true')

@@ -15,6 +15,10 @@ updates:
       prefix: 'deps'
       include: 'scope'
     groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - '*'
       all-dependencies:
         patterns:
           - '*'
@@ -30,6 +34,10 @@ updates:
     commit-message:
       prefix: 'deps(actions)'
     groups:
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - '*'
       github-actions:
         patterns:
           - '*'
